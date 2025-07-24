@@ -5,6 +5,9 @@ from system_info import collect_system_info
 import json 
 import requests
 from pydantic import BaseModel
+from crud import store_power_breakdown, store_carbon_intensity, save_ram,save_gpu,save_hdd,save_ssd, save_cpu
+from database import init_db, get_db
+
  
 
 app = FastAPI()
@@ -32,30 +35,45 @@ class CaseSpec(BaseModel):
     case_type : str
 
 class GPUInput(BaseModel):
+    model : str
     die_size_mm2: float
     ram_size_gb: float
 
-@app.get("/")
-async def root():
-    return {"message": "Hello from FastAPI backend!"}
+@app.on_event("startup")
+def on_startup():
+    init_db()
 
 @app.get("/system-info")
 async def system_info():
     return collect_system_info()
 
 @app.post("/CPU_Calc/")
-async def cpu_calc(request: CPURequest):
+async def cpu_calc(cpu_spec: CPURequest):
     try:
         response = requests.post(
                     "http://localhost:5000/v1/component/cpu",
-                    json={"name": request.name},
+                    json={"name": cpu_spec.name},
                     headers={
                         "accept": "application/json",
                         "Content-Type": "application/json"
                     }
                 )    
         response.raise_for_status()  # Handle HTTP errors
-        return response.json()
+        data = response.json()
+         # Extract required fields
+        impacts = data.get("impacts", {})
+        gwp = impacts.get("gwp", {}).get("manufacture", 0)
+        adp = impacts.get("adp", {}).get("manufacture", 0)
+        pe  = impacts.get("pe", {}).get("manufacture", 0)
+
+        # Save to DB
+        save_cpu(
+            model=cpu_spec.name,
+            gwp=gwp,
+            adp=adp,
+            pe=pe
+        )
+        return data
     except requests.RequestException as e:
         raise HTTPException(status_code=500, detail=f"Failed to connect to Boavizta API: {str(e)}")
     
@@ -73,7 +91,23 @@ async def ram_calc(ram_spec: RAMSpec):
         response = requests.post("http://localhost:5000/v1/component/ram", headers={"accept": "application/json"}, json=payload)
         #print(response.json())
         response.raise_for_status()  # Handle HTTP errors
-        return response.json()
+        data = response.json()
+         # Extract required fields
+        impacts = data.get("impacts", {})
+        gwp = impacts.get("gwp", {}).get("manufacture", 0)
+        adp = impacts.get("adp", {}).get("manufacture", 0)
+        pe  = impacts.get("pe", {}).get("manufacture", 0)
+
+        # Save to DB
+        save_ram(
+            manufacturer=ram_spec.manufacturer,
+            capacity=ram_spec.capacity,
+            process=ram_spec.process,
+            gwp=gwp,
+            adp=adp,
+            pe=pe
+        )
+        return data
     except requests.RequestException as e:
         raise HTTPException(status_code=500, detail=f"Failed to connect to Boavizta API: {str(e)}")
 
@@ -88,7 +122,22 @@ async def ssd_calc(ssd_spec: SSDSpec):
         response = requests.post("http://localhost:5000/v1/component/ssd", headers={"accept": "application/json"}, json=payload)
         print(response.json())
         response.raise_for_status()  # Handle HTTP errors
-        return response.json()
+        data = response.json()
+         # Extract required fields
+        impacts = data.get("impacts", {})
+        gwp = impacts.get("gwp", {}).get("manufacture", 0)
+        adp = impacts.get("adp", {}).get("manufacture", 0)
+        pe  = impacts.get("pe", {}).get("manufacture", 0)
+
+        # Save to DB
+        save_ssd(
+            manufacturer=ssd_spec.manufacturer,
+            capacity=ssd_spec.capacity,
+            gwp=gwp,
+            adp=adp,
+            pe=pe
+        )
+        return data
     except requests.RequestException as e:
         raise HTTPException(status_code=500, detail=f"Failed to connect to Boavizta API: {str(e)}")
     
@@ -104,7 +153,22 @@ async def hdd_calc(hdd_spec: HDDSpec):
         response = requests.post("http://boaviztapi:5000/v1/component/hdd", headers={"accept": "application/json"}, json=payload)
         print(response.json())
         response.raise_for_status()  # Handle HTTP errors
-        return response.json()
+        data = response.json()
+         # Extract required fields
+        impacts = data.get("impacts", {})
+        gwp = impacts.get("gwp", {}).get("manufacture", 0)
+        adp = impacts.get("adp", {}).get("manufacture", 0)
+        pe  = impacts.get("pe", {}).get("manufacture", 0)
+
+        # Save to DB
+        save_hdd(
+            units=hdd_spec.units,
+            capacity=hdd_spec.capacity,
+            gwp=gwp,
+            adp=adp,
+            pe=pe
+        )
+        return data
     except requests.RequestException as e:
         raise HTTPException(status_code=500, detail=f"Failed to connect to Boavizta API: {str(e)}")
     
@@ -126,6 +190,7 @@ async def case_calc(case_spec: CaseSpec):
 
 @app.post("/GPU-Calc")
 def calculate_gpu(gpu: GPUInput):
+    model = gpu.model
     die_mm2 = gpu.die_size_mm2
     ram_gb = gpu.ram_size_gb
 
@@ -160,6 +225,16 @@ def calculate_gpu(gpu: GPUInput):
     gpu_gwp = (die_mm2 * die_gwp) + ram_gwp + gpu_base
     gpu_adp = (die_mm2 * die_adp) + ram_adp + gpu_base
     gpu_pe = (die_mm2 * die_pe) + (ram_gb / ram_density) * ram_pe + gpu_base
+    
+     # Store in database
+    save_gpu(
+        model= model,
+        die_size=die_mm2,
+        ram_size=ram_gb,
+        gwp=gpu_gwp,
+        adp=gpu_adp,
+        pe=gpu_pe
+    )
 
     return {
         "gwp": round(gpu_gwp, 2),
@@ -175,6 +250,7 @@ async def get_power_breakdown(zone: str = 'FR'):
         data = fetch_power_breakdown(zone)
 
         #Store data in database
+        store_power_breakdown(zone,data)
         #store_power_breakdown(zone,data)
         return data
     except Exception as e:
@@ -186,6 +262,7 @@ async def get_carbon_intensity(zone: str = 'FR'):
     try:
         data = fetch_carbon_intensity(zone)
         #store_carbon_intensity(zone, data)
+        store_carbon_intensity(zone,data)
         return data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

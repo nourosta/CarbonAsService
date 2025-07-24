@@ -298,6 +298,7 @@ if gpus:
 
     if st.button("Calculate GPU Impact"):
         payload = {
+            "model" : selected_gpu,
             "die_size_mm2": die_size_input,
             "ram_size_gb": ram_size_input
         }
