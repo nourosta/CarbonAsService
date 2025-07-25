@@ -23,60 +23,57 @@ def get_process_name(pid):
         return "unknown"
 
 
-def run_ecofloc_for_pid(pid, resource, interval_ms=1000, duration_s=5):
+def run_ecofloc_for_pid(pid, resource, interval_ms=1000, duration_s=5, timeout_buffer=10):
+    command = [
+        "ecofloc", f"--{resource}", "-p", str(pid),
+        "-i", str(interval_ms), "-t", str(duration_s)
+    ]
+    process = subprocess.Popen(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True
+    )
     try:
-        command = [
-            "ecofloc", f"--{resource}", "-p", str(pid),
-            "-i", str(interval_ms), "-t", str(duration_s)
-        ]
-        # Use Popen to run the command with a timeout
-        process = subprocess.Popen(
-            command,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True
-        )
-        # Wait for the process to complete or timeout
+        stdout, stderr = process.communicate(timeout=duration_s + timeout_buffer)
+        if process.returncode == 0:
+            return {
+                "pid": pid,
+                "resource": resource,
+                "name": get_process_name(pid),
+                "output": stdout
+            }
+        else:
+            return {
+                "pid": pid,
+                "resource": resource,
+                "name": get_process_name(pid),
+                "error": stderr or "Process failed with non-zero exit code"
+            }
+    except subprocess.TimeoutExpired:
+        # Terminate the process gracefully
+        process.terminate()
         try:
-            stdout, stderr = process.communicate(timeout=duration_s + 5)
-            if process.returncode == 0:
-                return {
-                    "pid": pid,
-                    "resource": resource,
-                    "name": get_process_name(pid),
-                    "output": stdout
-                }
-            else:
-                return {
-                    "pid": pid,
-                    "resource": resource,
-                    "name": get_process_name(pid),
-                    "error": stderr or "Process failed with non-zero exit code"
-                }
+            # Give it a short time to terminate
+            stdout, stderr = process.communicate(timeout=1)
+            return {
+                "pid": pid,
+                "resource": resource,
+                "name": get_process_name(pid),
+                "output": stdout or "",
+                "error": "Timeout occurred, partial output captured"
+            }
         except subprocess.TimeoutExpired:
-            # Terminate the process gracefully
-            process.terminate()
-            try:
-                # Give it a short time to terminate
-                stdout, stderr = process.communicate(timeout=1)
-                return {
-                    "pid": pid,
-                    "resource": resource,
-                    "name": get_process_name(pid),
-                    "output": stdout or "",
-                    "error": "Timeout occurred, partial output captured"
-                }
-            except subprocess.TimeoutExpired:
-                # If it doesn't terminate, kill it
-                process.kill()
-                stdout, stderr = process.communicate()
-                return {
-                    "pid": pid,
-                    "resource": resource,
-                    "name": get_process_name(pid),
-                    "output": stdout or "",
-                    "error": "Process killed after timeout, partial output captured"
-                }
+            # If it doesn't terminate, kill it
+            process.kill()
+            stdout, stderr = process.communicate()
+            return {
+                "pid": pid,
+                "resource": resource,
+                "name": get_process_name(pid),
+                "output": stdout or "",
+                "error": "Process killed after timeout, partial output captured"
+            }
     except Exception as e:
         return {
             "pid": pid,
