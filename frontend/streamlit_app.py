@@ -527,3 +527,44 @@ with tab2 :
 
             if "Energy (J)" in df_results.columns:
                 st.bar_chart(df_results.set_index("Name")[["Energy (J)"]])
+
+    st.subheader("EcoFloc Monitoring for Top Processes")
+
+    # User-configurable options
+    limit = st.slider("Number of Top Processes", 1, 20, 5)
+    interval = st.number_input("Sampling Interval (ms)", min_value=100, value=1000, step=100)
+    duration = st.number_input("Duration (s)", min_value=1, value=5, step=1)
+    resources = st.multiselect(
+        "Resources to Monitor", ["cpu", "ram", "gpu", "sd", "nic"], default=["cpu", "ram"]
+    )
+
+    if st.button("Run EcoFloc Monitor"):
+        with st.spinner("Running EcoFloc..."):
+            try:
+                query_params = {
+                    "limit": limit,
+                    "interval": interval,
+                    "duration": duration,
+                    "resources": ",".join(resources)
+                }
+
+                response = requests.get("http://localhost:8000/ecofloc/monitor", params=query_params)
+                data = response.json()
+
+                if "results" in data:
+                    df = pd.DataFrame(data["results"])
+                    if not df.empty:
+                        st.success("Monitoring complete.")
+                        st.dataframe(df[["pid", "name", "cpu_percent", "memory_percent", "resource"]])
+
+                        with st.expander("Raw Output Logs"):
+                            for row in data["results"]:
+                                st.text(f"PID {row['pid']} ({row['name']}) - {row['resource']}")
+                                st.code(row.get("ecofloc_output", "No output"))
+                    else:
+                        st.warning("No results returned.")
+                else:
+                    st.error(data.get("error", "Unknown error occurred."))
+
+            except Exception as e:
+                st.error(f"Failed to fetch data: {e}")

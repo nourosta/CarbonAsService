@@ -1,7 +1,7 @@
 from fastapi import FastAPI,HTTPException , APIRouter, Query
 from electricitymaps import fetch_power_breakdown
 from carbon_intensity import fetch_carbon_intensity
-from system_info import collect_system_info, get_top_processes_ps, measure_energy
+from system_info import collect_system_info, get_top_processes_ps, measure_energy, monitor_top_processes_with_ecofloc
 import json 
 import requests
 from pydantic import BaseModel
@@ -308,3 +308,22 @@ def energy_measurement(
     """
     result = measure_energy(pid, metric, interval_ms, duration_s)
     return result
+
+@app.get("/ecofloc/monitor")
+def run_ecofloc_endpoint(
+    limit: int = Query(5, ge=1, le=20),
+    interval: int = Query(1000, description="Sampling interval in ms"),
+    duration: int = Query(5, description="Duration in seconds"),
+    resources: str = Query("cpu,ram", description="Comma-separated list: cpu,ram,gpu,sd,nic")
+):
+    resource_list = [r.strip() for r in resources.split(",")]
+    try:
+        results = monitor_top_processes_with_ecofloc(
+            limit=limit,
+            resources=resource_list,
+            interval=interval,
+            duration=duration
+        )
+        return {"results": results}
+    except Exception as e:
+        return {"error": str(e)}
