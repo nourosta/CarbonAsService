@@ -456,8 +456,10 @@ with tab2 :
     if st.button("Measure Top 10 Processes"):
         with st.spinner("Gathering process list..."):
             try:
-                top_response = requests.get("http://localhost:8000/processes")
+                top_response = requests.get(f"{FASTAPI_BASE_URL}/processes")
                 top_data = top_response.json()
+                st.write("DEBUG top_data type:", type(top_data))
+                st.write("DEBUG top_data content:", top_data)
 
                 # FIX: Handle both dict and list responses
                 if isinstance(top_data, dict) and "processes" in top_data:
