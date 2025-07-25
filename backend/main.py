@@ -9,6 +9,7 @@ from crud import store_power_breakdown, store_carbon_intensity, save_ram,save_gp
 from database import init_db
 from fastapi.middleware.cors import CORSMiddleware
 from system_info import get_top_processes_ps
+from ecofloc_runner import run_ecofloc_for_pid
 
  
 
@@ -338,4 +339,3 @@ def run_ecofloc_endpoint(
         return {"results": results}
     except Exception as e:
         return {"error": str(e)}
-from ecofloc_runner import run_ecofloc_for_pid
