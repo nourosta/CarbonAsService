@@ -24,37 +24,66 @@ def get_process_name(pid):
 
 
 def run_ecofloc_for_pid(pid, resource, interval_ms=1000, duration_s=5):
-    command = [
-        "ecofloc", f"--{resource}", "-p", str(pid),
-        "-i", str(interval_ms), "-t", str(duration_s)
-    ]
-    
     try:
+        command = [
+            "ecofloc", f"--{resource}", "-p", str(pid),
+            "-i", str(interval_ms), "-t", str(duration_s)
+        ]
+        # Use Popen to run the command with a timeout
         process = subprocess.Popen(
             command,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True
         )
-
-        timer = threading.Timer(duration_s + 5, process.kill)  # Avoid hanging forever
+        # Wait for the process to complete or timeout
         try:
-            timer.start()
-            stdout, stderr = process.communicate()
-        finally:
-            timer.cancel()
-
+            stdout, stderr = process.communicate(timeout=duration_s + 5)
+            if process.returncode == 0:
+                return {
+                    "pid": pid,
+                    "resource": resource,
+                    "name": get_process_name(pid),
+                    "output": stdout
+                }
+            else:
+                return {
+                    "pid": pid,
+                    "resource": resource,
+                    "name": get_process_name(pid),
+                    "error": stderr or "Process failed with non-zero exit code"
+                }
+        except subprocess.TimeoutExpired:
+            # Terminate the process gracefully
+            process.terminate()
+            try:
+                # Give it a short time to terminate
+                stdout, stderr = process.communicate(timeout=1)
+                return {
+                    "pid": pid,
+                    "resource": resource,
+                    "name": get_process_name(pid),
+                    "output": stdout or "",
+                    "error": "Timeout occurred, partial output captured"
+                }
+            except subprocess.TimeoutExpired:
+                # If it doesn't terminate, kill it
+                process.kill()
+                stdout, stderr = process.communicate()
+                return {
+                    "pid": pid,
+                    "resource": resource,
+                    "name": get_process_name(pid),
+                    "output": stdout or "",
+                    "error": "Process killed after timeout, partial output captured"
+                }
+    except Exception as e:
         return {
             "pid": pid,
             "resource": resource,
             "name": get_process_name(pid),
-            "output": stdout.strip() if stdout else "",
-            "error": stderr.strip() if stderr else None
+            "error": str(e)
         }
-
-    except Exception as e:
-        return {"pid": pid, "resource": resource, "name": get_process_name(pid), "error": str(e)}
-
 def monitor_top_processes(resources=None, limit=5, interval=1000, duration=5):
     if resources is None:
         resources = ['cpu', 'ram']
