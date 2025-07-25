@@ -548,7 +548,7 @@ with tab2 :
                     "resources": ",".join(resources)
                 }
 
-                response = requests.get(f"{FASTAPI_BASE_URL}ecofloc/monitor", params=query_params)
+                response = requests.get(f"{FASTAPI_BASE_URL}/ecofloc/monitor", params=query_params)
                 data = response.json().get("results", [])
 
                 if "results" in data:
