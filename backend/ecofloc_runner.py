@@ -27,7 +27,7 @@ def run_ecofloc_for_pid(pid, resource, interval_ms=1000, duration_s=5):
             "ecofloc", f"--{resource}", "-p", str(pid),
             "-i", str(interval_ms), "-t", str(duration_s)
         ]
-        output = subprocess.check_output(command, stderr=subprocess.STDOUT, text=True, timeout=duration_s + 5)
+        output = subprocess.check_output(command, stderr=subprocess.STDOUT, text=True)
         return {
             "pid": pid,
             "resource": resource,
