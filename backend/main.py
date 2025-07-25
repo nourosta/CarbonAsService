@@ -312,24 +312,30 @@ def energy_measurement(
 @app.get("/ecofloc/monitor")
 def run_ecofloc_endpoint(
     limit: int = Query(5, ge=1, le=20),
-    interval: int = Query(1000, description="Sampling interval in ms"),
-    duration: int = Query(5, description="Duration in seconds"),
-    resources: str = Query("cpu,ram", description="Comma-separated list: cpu,ram,gpu,sd,nic")
+    interval: int = Query(1000),
+    duration: int = Query(5),
+    resources: str = Query("cpu,ram")
 ):
-     # Normalize resource list
-    resource_list = [r.strip().lower() for r in resources.split(",") if r.strip()]
-    valid_resources = {"cpu", "ram", "gpu", "sd", "nic"}
-    invalid = [r for r in resource_list if r not in valid_resources]
-    if invalid:
-        return {"error": f"Invalid resource(s): {', '.join(invalid)}"}
-
+    resource_list = [r.strip() for r in resources.split(",")]
     try:
-        results = monitor_top_processes_with_ecofloc(
-            limit=limit,
-            resources=resource_list,
-            interval=interval,
-            duration=duration
-        )
+        processes = get_top_processes_ps(limit=limit)
+        results = []
+
+        for proc in processes:
+            pid = proc["pid"]
+            for res in resource_list:
+                ecofloc_result = run_ecofloc_for_pid(pid, res, interval, duration)
+                results.append({
+                    "pid": pid,
+                    "name": proc["name"],
+                    "cpu_percent": proc["cpu_percent"],
+                    "memory_percent": proc["memory_percent"],
+                    "resource": res,
+                    "ecofloc_output": ecofloc_result.get("output", ""),
+                    "error": ecofloc_result.get("error", None)
+                })
+
         return {"results": results}
     except Exception as e:
         return {"error": str(e)}
+from ecofloc_runner import run_ecofloc_for_pid
