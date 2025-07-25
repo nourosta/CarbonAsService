@@ -561,7 +561,7 @@ with tab2 :
                             for row in data["results"]:
                                 st.text(f"PID {row['pid']} ({row['name']}) - {row['resource']}")
                                 st.code(row.get("ecofloc_output", "No output"))
-                    else:
+
                         st.warning("No results returned.")
                 else:
                     st.error(data.get("error", "Unknown error occurred."))
