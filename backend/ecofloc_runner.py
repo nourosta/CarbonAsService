@@ -21,23 +21,36 @@ def get_process_name(pid):
     except Exception:
         return "unknown"
 
+
 def run_ecofloc_for_pid(pid, resource, interval_ms=1000, duration_s=5):
+    command = [
+        "ecofloc", f"--{resource}", "-p", str(pid),
+        "-i", str(interval_ms), "-t", str(duration_s)
+    ]
+    
     try:
-        command = [
-            "ecofloc", f"--{resource}", "-p", str(pid),
-            "-i", str(interval_ms), "-t", str(duration_s)
-        ]
-        output = subprocess.check_output(command, stderr=subprocess.STDOUT, text=True)
+        process = subprocess.Popen(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+
+        timer = threading.Timer(duration_s + 5, process.kill)  # Avoid hanging forever
+        try:
+            timer.start()
+            stdout, stderr = process.communicate()
+        finally:
+            timer.cancel()
+
         return {
             "pid": pid,
             "resource": resource,
             "name": get_process_name(pid),
-            "output": output
+            "output": stdout.strip() if stdout else "",
+            "error": stderr.strip() if stderr else None
         }
-    except subprocess.TimeoutExpired:
-        return {"pid": pid, "resource": resource, "name": get_process_name(pid), "error": "Timeout"}
-    except subprocess.CalledProcessError as e:
-        return {"pid": pid, "resource": resource, "name": get_process_name(pid), "error": e.output}
+
     except Exception as e:
         return {"pid": pid, "resource": resource, "name": get_process_name(pid), "error": str(e)}
 
