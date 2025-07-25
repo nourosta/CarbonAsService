@@ -9,7 +9,7 @@ from crud import store_power_breakdown, store_carbon_intensity, save_ram,save_gp
 from database import init_db
 from fastapi.middleware.cors import CORSMiddleware
 from system_info import get_top_processes_ps
-from ecofloc_runner import run_ecofloc_for_pid
+from ecofloc_runner import group_results_by_pid, run_ecofloc_for_pid, run_ecofloc_simulated
 
  
 
@@ -297,18 +297,18 @@ app.add_middleware(
 def top_processes():
     return get_top_processes_ps()
 
-@app.get("/energy")
-def energy_measurement(
-    pid: int = Query(..., description="PID of the process to measure"),
-    metric: str = Query("cpu", description="Component to measure (cpu, ram, gpu, nic, sd)"),
-    interval_ms: int = Query(1000, ge=100, le=10000, description="Sampling interval in milliseconds"),
-    duration_s: int = Query(1, ge=1, le=30, description="Total measurement duration in seconds")
-):
-    """
-    Measure energy usage of a process using EcoFloc for one metric.
-    """
-    result = measure_energy(pid, metric, interval_ms, duration_s)
-    return result
+# @app.get("/energy")
+# def energy_measurement(
+#     pid: int = Query(..., description="PID of the process to measure"),
+#     metric: str = Query("cpu", description="Component to measure (cpu, ram, gpu, nic, sd)"),
+#     interval_ms: int = Query(1000, ge=100, le=10000, description="Sampling interval in milliseconds"),
+#     duration_s: int = Query(1, ge=1, le=30, description="Total measurement duration in seconds")
+# ):
+#     """
+#     Measure energy usage of a process using EcoFloc for one metric.
+#     """
+#     result = measure_energy(pid, metric, interval_ms, duration_s)
+#     return result
 
 @app.get("/ecofloc/monitor")
 def run_ecofloc_endpoint(
@@ -337,5 +337,16 @@ def run_ecofloc_endpoint(
                 })
 
         return {"results": results}
+    except Exception as e:
+        return {"error": str(e)}
+    
+
+
+@app.get("/api/ecofloc")
+async def get_ecofloc_data():
+    try:
+        raw_results = run_ecofloc_simulated()
+        grouped = group_results_by_pid(raw_results)
+        return {"results": grouped}
     except Exception as e:
         return {"error": str(e)}
