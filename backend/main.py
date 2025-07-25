@@ -9,7 +9,7 @@ from crud import store_power_breakdown, store_carbon_intensity, save_ram,save_gp
 from database import init_db
 from fastapi.middleware.cors import CORSMiddleware
 from system_info import get_top_processes_ps
-from ecofloc_runner import group_results_by_pid, monitor_top_processes, run_ecofloc_simulated
+from ecofloc_runner import  monitor_top_processes
 
  
 
@@ -331,11 +331,11 @@ def monitor_endpoint(
     
 
 
-@app.get("/api/ecofloc")
-async def get_ecofloc_data():
-    try:
-        raw_results = run_ecofloc_simulated()
-        grouped = group_results_by_pid(raw_results)
-        return {"results": grouped}
-    except Exception as e:
-        return {"error": str(e)}
+# @app.get("/api/ecofloc")
+# async def get_ecofloc_data():
+#     try:
+#         raw_results = run_ecofloc_simulated()
+#         grouped = group_results_by_pid(raw_results)
+#         return {"results": grouped}
+#     except Exception as e:
+#         return {"error": str(e)}
