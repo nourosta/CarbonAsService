@@ -316,7 +316,13 @@ def run_ecofloc_endpoint(
     duration: int = Query(5, description="Duration in seconds"),
     resources: str = Query("cpu,ram", description="Comma-separated list: cpu,ram,gpu,sd,nic")
 ):
-    resource_list = [r.strip() for r in resources.split(",")]
+     # Normalize resource list
+    resource_list = [r.strip().lower() for r in resources.split(",") if r.strip()]
+    valid_resources = {"cpu", "ram", "gpu", "sd", "nic"}
+    invalid = [r for r in resource_list if r not in valid_resources]
+    if invalid:
+        return {"error": f"Invalid resource(s): {', '.join(invalid)}"}
+
     try:
         results = monitor_top_processes_with_ecofloc(
             limit=limit,

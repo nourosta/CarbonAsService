@@ -548,8 +548,8 @@ with tab2 :
                     "resources": ",".join(resources)
                 }
 
-                response = requests.get("http://localhost:8000/ecofloc/monitor", params=query_params)
-                data = response.json()
+                response = requests.get(f"{FASTAPI_BASE_URL}ecofloc/monitor", params=query_params)
+                data = response.json().get("results", [])
 
                 if "results" in data:
                     df = pd.DataFrame(data["results"])

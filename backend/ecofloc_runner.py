@@ -74,13 +74,13 @@ def monitor_top_processes_with_ecofloc(limit=5, resources=None, interval=1000, d
         for res in resources:
             res_output = run_ecofloc_for_pid(pid, res, interval, duration)
             results.append({
-                "pid": pid,
-                "name": proc["name"],
-                "cpu_percent": proc["cpu_percent"],
-                "memory_percent": proc["memory_percent"],
-                "resource": res,
-                "ecofloc_output": res_output["output"],
-                "error": res_output.get("error", None)
-            })
+            "pid": pid,
+            "name": proc.get("name", "unknown"),
+            "cpu_percent": proc.get("cpu_percent", 0.0),
+            "memory_percent": proc.get("memory_percent", 0.0),
+            "resource": res,
+            "ecofloc_output": res_output.get("output", ""),
+            "error": res_output.get("error", None)
+        })
 
     return results
