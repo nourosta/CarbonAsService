@@ -419,7 +419,7 @@ if st.button("Measure Energy"):
     try:
         with st.spinner("Running EcoFloc..."):
             response = requests.get(
-                "http://localhost:8000/energy",  # Adjust if using another host
+                f"{FASTAPI_BASE_URL}/energy",  # Adjust if using another host
                 params={
                     "pid": pid,
                     "metric": metric,
