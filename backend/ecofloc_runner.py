@@ -1,62 +1,56 @@
-from typing import List, Dict, Any
 import subprocess
-import json
+import os
+from datetime import datetime
 
-# Simulate getting ecofloc results (you'll replace this with real execution logic)
-def run_ecofloc_simulated() -> List[Dict[str, Any]]:
-    # Example: replace this with actual ecofloc command output
-    with open("example_output.json") as f:
-        return json.load(f)["results"]
-    
-def run_ecofloc_for_pid(pid: str, resource: str, interval=1000, duration=5):
+def get_active_pids(limit=5):
+    """Get active PIDs sorted by CPU usage."""
+    try:
+        result = subprocess.check_output(
+            ['ps', '-u', os.getenv('USER'), '-o', 'pid=', '--sort=-%cpu', '--no-heading'],
+            text=True
+        )
+        lines = result.strip().splitlines()
+        return lines[:limit]
+    except Exception as e:
+        return []
+
+def get_process_name(pid):
+    try:
+        with open(f'/proc/{pid}/comm', 'r') as f:
+            return f.read().strip()
+    except Exception:
+        return "unknown"
+
+def run_ecofloc_for_pid(pid, resource, interval_ms=1000, duration_s=5):
     try:
         command = [
-            "ecofloc",
-            f"--{resource}",
-            "-p", str(pid),
-            "-i", str(interval),
-            "-t", str(duration)
+            "ecofloc", f"--{resource}", "-p", str(pid),
+            "-i", str(interval_ms), "-t", str(duration_s)
         ]
-        result = subprocess.run(
-            command,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            
-        )
+        output = subprocess.check_output(command, stderr=subprocess.STDOUT, text=True, timeout=duration_s + 5)
         return {
             "pid": pid,
             "resource": resource,
-            "output": result.stdout.strip(),
-            "error": result.stderr.strip()
+            "name": get_process_name(pid),
+            "output": output
         }
     except subprocess.TimeoutExpired:
-        return {"pid": pid, "resource": resource, "error": "Timeout"}
+        return {"pid": pid, "resource": resource, "name": get_process_name(pid), "error": "Timeout"}
+    except subprocess.CalledProcessError as e:
+        return {"pid": pid, "resource": resource, "name": get_process_name(pid), "error": e.output}
     except Exception as e:
-        return {"pid": pid, "resource": resource, "error": str(e)}
+        return {"pid": pid, "resource": resource, "name": get_process_name(pid), "error": str(e)}
 
+def monitor_top_processes(resources=None, limit=5, interval=1000, duration=5):
+    if resources is None:
+        resources = ['cpu', 'ram']
 
+    pids = get_active_pids(limit)
+    all_results = []
 
-def group_results_by_pid(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    grouped = {}
+    for pid in pids:
+        for res in resources:
+            result = run_ecofloc_for_pid(pid, res, interval, duration)
+            all_results.append(result)
 
-    for entry in data:
-        pid = entry["pid"]
-        name = entry["name"]
-
-        key = (pid, name)
-        if key not in grouped:
-            grouped[key] = {
-                "pid": pid,
-                "name": name,
-                "cpu_percent": entry.get("cpu_percent", 0),
-                "memory_percent": entry.get("memory_percent", 0),
-                "resources": {}
-            }
-
-        grouped[key]["resources"][entry["resource"]] = {
-            "output": entry.get("ecofloc_output", ""),
-            "error": entry.get("error", "")
-        }
-
-    return list(grouped.values())
+    return all_results

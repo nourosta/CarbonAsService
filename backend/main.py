@@ -311,31 +311,20 @@ def top_processes():
 #     return result
 
 @app.get("/ecofloc/monitor")
-def run_ecofloc_endpoint(
+def monitor_endpoint(
     limit: int = Query(5, ge=1, le=20),
-    interval: int = Query(1000),
-    duration: int = Query(5),
-    resources: str = Query("cpu,ram")
+    interval: int = Query(1000, description="Sampling interval (ms)"),
+    duration: int = Query(5, description="Duration in seconds"),
+    resources: str = Query("cpu,ram", description="Comma-separated: cpu,ram,gpu,sd,nic")
 ):
-    resource_list = [r.strip() for r in resources.split(",")]
     try:
-        processes = get_top_processes_ps(limit=limit)
-        results = []
-
-        for proc in processes:
-            pid = proc["pid"]
-            for res in resource_list:
-                ecofloc_result = run_ecofloc_for_pid(pid, res, interval, duration)
-                results.append({
-                    "pid": pid,
-                    "name": proc["name"],
-                    "cpu_percent": proc["cpu_percent"],
-                    "memory_percent": proc["memory_percent"],
-                    "resource": res,
-                    "ecofloc_output": ecofloc_result.get("output", ""),
-                    "error": ecofloc_result.get("error", None)
-                })
-
+        resource_list = [r.strip() for r in resources.split(",")]
+        results = monitor_top_processes(
+            resources=resource_list,
+            limit=limit,
+            interval=interval,
+            duration=duration
+        )
         return {"results": results}
     except Exception as e:
         return {"error": str(e)}

@@ -443,3 +443,38 @@ with tab2 :
                 st.error(f"Failed to fetch data: {e}")
 
 
+st.title("EcoFloc Monitor")
+
+limit = st.slider("Top Processes", 1, 20, 5)
+interval = st.number_input("Interval (ms)", 100, 5000, 1000)
+duration = st.number_input("Duration (s)", 1, 30, 5)
+resources = st.multiselect("Resources", ["cpu", "ram", "gpu", "sd", "nic"], default=["cpu", "ram"])
+
+if st.button("Run Monitoring"):
+    with st.spinner("Running..."):
+        try:
+            response = requests.get(
+                f"{FASTAPI_BASE_URL}/ecofloc/monitor",
+                params={
+                    "limit": limit,
+                    "interval": interval,
+                    "duration": duration,
+                    "resources": ",".join(resources)
+                }
+            )
+            result = response.json()
+
+            if "results" in result:
+                df = pd.DataFrame(result["results"])
+                st.success("Monitoring completed.")
+                st.dataframe(df[["pid", "name", "resource"]])
+
+                with st.expander("Raw Output"):
+                    for r in result["results"]:
+                        st.text(f"PID: {r['pid']} ({r['name']}) - {r['resource']}")
+                        st.code(r.get("output", r.get("error", "No data")))
+            else:
+                st.error(result.get("error", "Unknown error."))
+
+        except Exception as e:
+            st.error(f"Failed to fetch: {e}")
