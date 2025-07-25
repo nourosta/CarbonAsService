@@ -9,7 +9,7 @@ from crud import store_power_breakdown, store_carbon_intensity, save_ram,save_gp
 from database import init_db
 from fastapi.middleware.cors import CORSMiddleware
 from system_info import get_top_processes_ps
-from ecofloc_runner import group_results_by_pid, run_ecofloc_for_pid, run_ecofloc_simulated
+from ecofloc_runner import group_results_by_pid, monitor_top_processes, run_ecofloc_simulated
 
  
 
