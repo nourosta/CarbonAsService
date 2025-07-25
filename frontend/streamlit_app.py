@@ -148,7 +148,7 @@ with tab1:
 
     def parse_disk_size(size_str):
         """Convert disk size string (e.g., '1.9T', '500G', '320M') into GB."""
-        size_str = size_str.upper().strip()
+        size_str = size_str.upper().strip().replace(",",".")
         if size_str.endswith("T"):
             return float(size_str.replace("T", "")) * 1000  # or 1024 for TB -> GB
         elif size_str.endswith("G"):
@@ -202,7 +202,7 @@ with tab1:
             )
         selected_hdd = hdds[selected_hdd_index]
 
-        hdd_capacity = st.number_input("Enter HDD Capacity (GB):", min_value=1, value=int(float(selected_hdd["size"].replace("G", "").replace("T", "000"))))
+        hdd_capacity = st.number_input("Enter HDD Capacity (GB):", min_value=1, value=int(parse_disk_size(selected_hdd["size"])))
         hdd_units = st.number_input("Enter HDD Units:", min_value=1, value=1)
 
         if st.button("Fetch HDD Data"):
