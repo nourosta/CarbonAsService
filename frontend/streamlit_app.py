@@ -408,37 +408,114 @@ with tab2 :
 
     st.subheader("🔋 Measure Energy Usage with EcoFloc")
 
-# 1. Input fields
-pid = st.number_input("Process PID", min_value=1, step=1)
-metric = st.selectbox("Metric", ["cpu", "ram", "gpu", "nic", "sd"])
-interval_ms = st.number_input("Sampling Interval (ms)", 100, 5000, 1000)
-duration_s = st.number_input("Duration (s)", 1, 30, 2)
+    # 1. Input fields
+    pid = st.number_input("Process PID", min_value=1, step=1)
+    metric = st.selectbox("Metric", ["cpu", "ram", "gpu", "nic", "sd"])
+    interval_ms = st.number_input("Sampling Interval (ms)", 100, 5000, 1000)
+    duration_s = st.number_input("Duration (s)", 1, 30, 2)
 
-# 2. Run button
-if st.button("Measure Energy"):
-    try:
-        with st.spinner("Running EcoFloc..."):
-            response = requests.get(
-                f"{FASTAPI_BASE_URL}/energy",  # Adjust if using another host
-                params={
-                    "pid": pid,
-                    "metric": metric,
-                    "interval_ms": interval_ms,
-                    "duration_s": duration_s
-                },
-                timeout=duration_s + 5
-            )
-            data = response.json()
+    # 2. Run button
+    if st.button("Measure Energy"):
+        try:
+            with st.spinner("Running EcoFloc..."):
+                response = requests.get(
+                    f"{FASTAPI_BASE_URL}/energy",  # Adjust if using another host
+                    params={
+                        "pid": pid,
+                        "metric": metric,
+                        "interval_ms": interval_ms,
+                        "duration_s": duration_s
+                    },
+                    timeout=duration_s + 5
+                )
+                data = response.json()
 
-        if "error" in data:
-            st.error(f"❌ Error: {data['error']}")
-            if "raw" in data:
-                st.text(data["raw"])
-        else:
-            st.success("✅ Energy measurement complete!")
-            st.metric("Average Power (W)", f"{data['avg_power_w']:.3f}")
-            st.metric("Total Energy (J)", f"{data['total_energy_j']:.3f}")
-            st.json(data)
+            if "error" in data:
+                st.error(f"❌ Error: {data['error']}")
+                if "raw" in data:
+                    st.text(data["raw"])
+            else:
+                st.success("✅ Energy measurement complete!")
+                st.metric("Average Power (W)", f"{data['avg_power_w']:.3f}")
+                st.metric("Total Energy (J)", f"{data['total_energy_j']:.3f}")
+                st.json(data)
 
-    except Exception as e:
-        st.error(f"Request failed: {e}")
+        except Exception as e:
+            st.error(f"Request failed: {e}")
+    
+
+    st.divider()
+st.subheader("⚡ Measure Energy for Top 10 CPU Processes")
+
+metric_auto = st.selectbox("Metric to measure", ["cpu", "ram", "gpu", "nic", "sd"], key="metric_auto")
+interval_auto = st.number_input("Sampling Interval (ms)", 100, 5000, 1000, key="interval_auto")
+duration_auto = st.number_input("Duration (s)", 1, 30, 2, key="duration_auto")
+
+if st.button("Measure Top 10 Processes"):
+    with st.spinner("Gathering process list..."):
+        try:
+            # Get top processes
+            top_response = requests.get("http://localhost:8000/processes")  # Adjust if needed
+            top_data = top_response.json()
+            top_10 = top_data[:10]
+        except Exception as e:
+            st.error(f"Failed to fetch processes: {e}")
+            top_10 = []
+
+    results = []
+
+    if top_10:
+        with st.spinner(f"Measuring {metric_auto} energy..."):
+            for proc in top_10:
+                pid = proc["pid"]
+                name = proc["name"]
+                try:
+                    energy_resp = requests.get(
+                        "http://localhost:8000/energy",
+                        params={
+                            "pid": pid,
+                            "metric": metric_auto,
+                            "interval_ms": interval_auto,
+                            "duration_s": duration_auto
+                        },
+                        timeout=duration_auto + 5
+                    )
+                    energy_data = energy_resp.json()
+
+                    if "avg_power_w" in energy_data:
+                        results.append({
+                            "PID": pid,
+                            "Name": name,
+                            "CPU %": proc["cpu_percent"],
+                            "Memory %": proc["memory_percent"],
+                            "Power (W)": energy_data["avg_power_w"],
+                            "Energy (J)": energy_data["total_energy_j"]
+                        })
+                    else:
+                        results.append({
+                            "PID": pid,
+                            "Name": name,
+                            "CPU %": proc["cpu_percent"],
+                            "Memory %": proc["memory_percent"],
+                            "Power (W)": None,
+                            "Energy (J)": None,
+                            "Error": energy_data.get("error", "Unknown")
+                        })
+
+                except Exception as e:
+                    results.append({
+                        "PID": pid,
+                        "Name": name,
+                        "CPU %": proc["cpu_percent"],
+                        "Memory %": proc["memory_percent"],
+                        "Power (W)": None,
+                        "Energy (J)": None,
+                        "Error": str(e)
+                    })
+
+        df_results = pd.DataFrame(results)
+        st.dataframe(df_results, use_container_width=True)
+
+        # Optional: plot
+        st.bar_chart(df_results.set_index("Name")[["Energy (J)"]])
+
