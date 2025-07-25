@@ -2,6 +2,7 @@ import os
 import subprocess
 import platform
 import re
+import psutil
 
 def get_cpu_info():
     try:
@@ -80,6 +81,41 @@ def collect_system_info():
         "gpus": get_gpu_info(),
         "os": platform.platform(),
     }
+
+
+
+def get_top_processes_ps(limit=10):
+    try:
+        result = subprocess.run(
+            ["ps", "axo", "pid,comm,%cpu,%mem", "--sort=-%cpu"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+
+        lines = result.stdout.strip().split("\n")[1:]  # Skip header
+        processes = []
+
+        for line in lines:
+            parts = line.strip().split(None, 3)
+            if len(parts) == 4:
+                pid, name, cpu, mem = parts
+                if name == "ps":
+                    continue  # Skip the 'ps' command itself
+                processes.append({
+                    "pid": int(pid),
+                    "name": name,
+                    "cpu_percent": float(cpu),
+                    "memory_percent": float(mem)
+                })
+            if len(processes) >= limit:
+                break  # Stop after collecting enough entries
+
+        return processes
+
+    except Exception as e:
+        return [{"error": str(e)}]
+
 
 if __name__ == "__main__":
     import json

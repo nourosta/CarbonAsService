@@ -1,12 +1,14 @@
 from fastapi import FastAPI,HTTPException , APIRouter
 from electricitymaps import fetch_power_breakdown
 from carbon_intensity import fetch_carbon_intensity
-from system_info import collect_system_info
+from system_info import collect_system_info, get_top_processes_ps
 import json 
 import requests
 from pydantic import BaseModel
 from crud import store_power_breakdown, store_carbon_intensity, save_ram,save_gpu,save_hdd,save_ssd, save_cpu
-from database import init_db, get_db
+from database import init_db
+from fastapi.middleware.cors import CORSMiddleware
+from system_info import get_top_processes_ps
 
  
 
@@ -38,6 +40,21 @@ class GPUInput(BaseModel):
     model : str
     die_size_mm2: float
     ram_size_gb: float
+
+def ram_impacts(ram_spec: RAMSpec):
+    
+    payload = ram_spec.dict()
+    try:
+        response = requests.post(
+            "http://localhost:5000/v1/component/ram",
+            headers={"accept": "application/json"},
+            json=payload
+        )
+        response.raise_for_status()
+        return response.json()
+    except requests.RequestException as e:
+        raise HTTPException(status_code=500, detail=f"Boavizta RAM API error: {str(e)}")
+
 
 @app.on_event("startup")
 def on_startup():
@@ -83,33 +100,35 @@ async def cpu_calc(cpu_spec: CPURequest):
 
 @app.post("/RAM-Calc")
 async def ram_calc(ram_spec: RAMSpec):
-    try:
-        # Use the inputs provided by the user
-        payload = ram_spec.dict()  # Assuming direct usage, adjust as necessary for API
-        #print(payload)
-        # Modify this request based on how you need to use these inputs in Boavizta API
-        response = requests.post("http://localhost:5000/v1/component/ram", headers={"accept": "application/json"}, json=payload)
-        #print(response.json())
-        response.raise_for_status()  # Handle HTTP errors
-        data = response.json()
-         # Extract required fields
-        impacts = data.get("impacts", {})
-        gwp = impacts.get("gwp", {}).get("manufacture", 0)
-        adp = impacts.get("adp", {}).get("manufacture", 0)
-        pe  = impacts.get("pe", {}).get("manufacture", 0)
 
-        # Save to DB
-        save_ram(
-            manufacturer=ram_spec.manufacturer,
-            capacity=ram_spec.capacity,
-            process=ram_spec.process,
-            gwp=gwp,
-            adp=adp,
-            pe=pe
-        )
-        return data
-    except requests.RequestException as e:
-        raise HTTPException(status_code=500, detail=f"Failed to connect to Boavizta API: {str(e)}")
+    data = ram_impacts(ram_spec)
+    # try:
+    #     # Use the inputs provided by the user
+    #     payload = ram_spec.dict()  # Assuming direct usage, adjust as necessary for API
+    #     #print(payload)
+    #     # Modify this request based on how you need to use these inputs in Boavizta API
+    #     response = requests.post("http://localhost:5000/v1/component/ram", headers={"accept": "application/json"}, json=payload)
+    #     #print(response.json())
+    #     response.raise_for_status()  # Handle HTTP errors
+    #     data = response.json()
+         # Extract required fields
+    impacts = data.get("impacts", {})
+    gwp = impacts.get("gwp", {}).get("manufacture", 0)
+    adp = impacts.get("adp", {}).get("manufacture", 0)
+    pe  = impacts.get("pe", {}).get("manufacture", 0)
+
+    # Save to DB
+    save_ram(
+        manufacturer=ram_spec.manufacturer,
+        capacity=ram_spec.capacity,
+        process=ram_spec.process,
+        gwp=gwp,
+        adp=adp,
+        pe=pe
+    )
+    return data
+    # except requests.RequestException as e:
+    #     raise HTTPException(status_code=500, detail=f"Failed to connect to Boavizta API: {str(e)}")
 
 
 @app.post("/SSD-Calc")
@@ -201,34 +220,30 @@ def calculate_gpu(gpu: GPUInput):
     ram_density = 1.25
     gpu_base = 23.71
 
-     # Call internal RAM-Calc API
-    try:
-        ram_payload = {
-            "capacity": ram_gb,
-            "manufacturer": "Samsung",
-            "process": 30
-        }
-        response = requests.post("http://localhost:8000/RAM-Calc", json=ram_payload)
-        response.raise_for_status()
-        ram_data = response.json()
-    except requests.RequestException as e:
-        raise HTTPException(status_code=500, detail=f"RAM impact fetch failed: {str(e)}")
+    # Calculate RAM impacts via internal function (no saving to DB)
+    ram_spec = RAMSpec(
+        capacity=ram_gb,
+        manufacturer="Samsung",  # Or get from frontend
+        process=30
+    )
+    ram_data = ram_impacts(ram_spec)
 
-
-    # Get RAM impact values
+    # Extract impact values
     impacts = ram_data.get("impacts", {})
-    ram_gwp = impacts.get("gwp", {}).get("embedded", {}).get("value", 0)
-    ram_adp = impacts.get("adp", {}).get("embedded", {}).get("value", 0)
-    ram_pe = impacts.get("pe", {}).get("embedded", {}).get("value", 0)
+    ram_gwp = impacts.get("gwp", {}).get("manufacture", 0)
+    ram_adp = impacts.get("adp", {}).get("manufacture", 0)
+    ram_pe  = impacts.get("pe", {}).get("manufacture", 0)
 
     # Calculate GPU impacts
     gpu_gwp = (die_mm2 * die_gwp) + ram_gwp + gpu_base
     gpu_adp = (die_mm2 * die_adp) + ram_adp + gpu_base
-    gpu_pe = (die_mm2 * die_pe) + (ram_gb / ram_density) * ram_pe + gpu_base
-    
-     # Store in database
+    gpu_pe  = (die_mm2 * die_pe) + (ram_gb / ram_density) * ram_pe + gpu_base
+
+    print("Saving GPU to database:", model, die_mm2, ram_gb, gpu_gwp, gpu_adp, gpu_pe)
+
+    # Save GPU to DB
     save_gpu(
-        model= model,
+        model=model,
         die_size=die_mm2,
         ram_size=ram_gb,
         gwp=gpu_gwp,
@@ -266,3 +281,17 @@ async def get_carbon_intensity(zone: str = 'FR'):
         return data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+
+
+# CORS for frontend access
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
+
+@app.get("/top-processes")
+def top_processes():
+    return get_top_processes_ps()

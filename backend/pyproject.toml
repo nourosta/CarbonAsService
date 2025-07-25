@@ -8,6 +8,7 @@ dependencies = [
     "boaviztapi>=0.2.2",
     "dbgpu[all]>=2025.6",
     "fastapi>=0.116.1",
+    "psutil>=7.0.0",
     "requests>=2.32.4",
     "sqlalchemy>=2.0.41",
     "uvicorn[standard]>=0.35.0",
