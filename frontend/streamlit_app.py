@@ -405,3 +405,40 @@ with tab2 :
     except Exception as e:
         st.error(f"Error loading processes: {e}")
 
+
+    st.subheader("🔋 Measure Energy Usage with EcoFloc")
+
+# 1. Input fields
+pid = st.number_input("Process PID", min_value=1, step=1)
+metric = st.selectbox("Metric", ["cpu", "ram", "gpu", "nic", "sd"])
+interval_ms = st.number_input("Sampling Interval (ms)", 100, 5000, 1000)
+duration_s = st.number_input("Duration (s)", 1, 30, 2)
+
+# 2. Run button
+if st.button("Measure Energy"):
+    try:
+        with st.spinner("Running EcoFloc..."):
+            response = requests.get(
+                "http://localhost:8000/energy",  # Adjust if using another host
+                params={
+                    "pid": pid,
+                    "metric": metric,
+                    "interval_ms": interval_ms,
+                    "duration_s": duration_s
+                },
+                timeout=duration_s + 5
+            )
+            data = response.json()
+
+        if "error" in data:
+            st.error(f"❌ Error: {data['error']}")
+            if "raw" in data:
+                st.text(data["raw"])
+        else:
+            st.success("✅ Energy measurement complete!")
+            st.metric("Average Power (W)", f"{data['avg_power_w']:.3f}")
+            st.metric("Total Energy (J)", f"{data['total_energy_j']:.3f}")
+            st.json(data)
+
+    except Exception as e:
+        st.error(f"Request failed: {e}")

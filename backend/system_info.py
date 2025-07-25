@@ -117,6 +117,51 @@ def get_top_processes_ps(limit=10):
         return [{"error": str(e)}]
 
 
+
+import subprocess
+import re
+
+def measure_energy(pid: int, metric: str = "cpu", interval_ms: int = 1000, duration_s: int = 1) -> dict:
+    """
+    Run ecofloc for a single PID and metric (e.g. cpu, ram).
+    Parses average power and total energy from the output.
+    """
+    cmd = [
+        "ecofloc",
+        f"--{metric}",
+        "-p", str(pid),
+        "-i", str(interval_ms),
+        "-t", str(duration_s)
+    ]
+
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=duration_s + 5)
+        output = result.stdout
+
+        # Regex to extract power and energy
+        avg_match = re.search(r"Average Power.*?:\s*([\d.]+)", output)
+        total_match = re.search(r"Total.*Energy.*?:\s*([\d.]+)", output)
+
+        if not avg_match or not total_match:
+            return {"error": f"Could not parse output", "raw": output}
+
+        return {
+            "pid": pid,
+            "metric": metric,
+            "interval_ms": interval_ms,
+            "duration_s": duration_s,
+            "avg_power_w": float(avg_match.group(1)),
+            "total_energy_j": float(total_match.group(1))
+        }
+
+    except subprocess.TimeoutExpired:
+        return {"error": "Ecofloc timed out"}
+    except Exception as e:
+        return {"error": str(e)}
+
+
 if __name__ == "__main__":
     import json
     print(json.dumps(collect_system_info(), indent=2))
+    print(measure_energy(10847, "cpu", 1000, 2))
+    

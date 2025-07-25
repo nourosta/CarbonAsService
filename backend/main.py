@@ -1,7 +1,7 @@
-from fastapi import FastAPI,HTTPException , APIRouter
+from fastapi import FastAPI,HTTPException , APIRouter, Query
 from electricitymaps import fetch_power_breakdown
 from carbon_intensity import fetch_carbon_intensity
-from system_info import collect_system_info, get_top_processes_ps
+from system_info import collect_system_info, get_top_processes_ps, measure_energy
 import json 
 import requests
 from pydantic import BaseModel
@@ -295,3 +295,16 @@ app.add_middleware(
 @app.get("/top-processes")
 def top_processes():
     return get_top_processes_ps()
+
+@app.get("/energy")
+def energy_measurement(
+    pid: int = Query(..., description="PID of the process to measure"),
+    metric: str = Query("cpu", description="Component to measure (cpu, ram, gpu, nic, sd)"),
+    interval_ms: int = Query(1000, ge=100, le=10000, description="Sampling interval in milliseconds"),
+    duration_s: int = Query(1, ge=1, le=30, description="Total measurement duration in seconds")
+):
+    """
+    Measure energy usage of a process using EcoFloc for one metric.
+    """
+    result = measure_energy(pid, metric, interval_ms, duration_s)
+    return result
