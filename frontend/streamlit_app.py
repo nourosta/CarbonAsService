@@ -445,129 +445,129 @@ with tab2 :
 
 st.title("EcoFloc Monitor")
 
-limit = st.slider("Top Processes", 1, 20, 5)
-interval = st.number_input("Interval (ms)", 100, 5000, 1000)
-duration = st.number_input("Duration (s)", 1, 30, 5)
-resources = st.multiselect("Resources", ["cpu", "ram", "gpu", "sd", "nic"], default=["cpu", "ram"])
+# limit = st.slider("Top Processes", 1, 20, 5)
+# interval = st.number_input("Interval (ms)", 100, 5000, 1000)
+# duration = st.number_input("Duration (s)", 1, 30, 5)
+# resources = st.multiselect("Resources", ["cpu", "ram", "gpu", "sd", "nic"], default=["cpu", "ram"])
 
-if st.button("Run Monitoring"):
-    with st.spinner("Running..."):
-        try:
-            response = requests.get(
-                f"{FASTAPI_BASE_URL}/ecofloc/monitor",
-                params={
-                    "limit": limit,
-                    "interval": interval,
-                    "duration": duration,
-                    "resources": ",".join(resources)
-                }
-            )
-            result = response.json()
+# if st.button("Run Monitoring"):
+#     with st.spinner("Running..."):
+#         try:
+#             response = requests.get(
+#                 f"{FASTAPI_BASE_URL}/ecofloc/monitor",
+#                 params={
+#                     "limit": limit,
+#                     "interval": interval,
+#                     "duration": duration,
+#                     "resources": ",".join(resources)
+#                 }
+#             )
+#             result = response.json()
 
-            if "results" in result:
-                df = pd.DataFrame(result["results"])
-                st.success("Monitoring completed.")
-                st.dataframe(df[["pid", "name", "resource"]])
+#             if "results" in result:
+#                 df = pd.DataFrame(result["results"])
+#                 st.success("Monitoring completed.")
+#                 st.dataframe(df[["pid", "name", "resource"]])
 
-                with st.expander("Raw Output"):
-                    for r in result["results"]:
-                        st.text(f"PID: {r['pid']} ({r['name']}) - {r['resource']}")
-                        st.code(r.get("output", r.get("error", "No data")))
-            else:
-                st.error(result.get("error", "Unknown error."))
+#                 with st.expander("Raw Output"):
+#                     for r in result["results"]:
+#                         st.text(f"PID: {r['pid']} ({r['name']}) - {r['resource']}")
+#                         st.code(r.get("output", r.get("error", "No data")))
+#             else:
+#                 st.error(result.get("error", "Unknown error."))
 
-        except Exception as e:
-            st.error(f"Failed to fetch: {e}")
+#         except Exception as e:
+#             st.error(f"Failed to fetch: {e}")
 
-    try:
-        response = requests.get(f"{FASTAPI_BASE_URL}/ecofloc_results")
-        response.raise_for_status()
-        db_data = response.json()
+try:
+    response = requests.get(f"{FASTAPI_BASE_URL}/ecofloc_results")
+    response.raise_for_status()
+    db_data = response.json()
 
-        if db_data:
-            df_db = pd.DataFrame(db_data)
-            st.dataframe(df_db)
+    if db_data:
+        df_db = pd.DataFrame(db_data)
+        st.dataframe(df_db)
 
-            # Optional: plot some meaningful chart if you want
-            if 'value' in df_db.columns and 'resource' in df_db.columns:
-                fig = px.bar(df_db, x="resource", y="value", color="resource", title="Ecofloc Metrics by Resource")
-                st.plotly_chart(fig)
-        else:
-            st.info("No Ecofloc DB data found.")
-    except Exception as e:
-        st.error(f"Error fetching Ecofloc DB data: {e}")
+        # Optional: plot some meaningful chart if you want
+        if 'value' in df_db.columns and 'resource' in df_db.columns:
+            fig = px.bar(df_db, x="resource", y="value", color="resource", title="Ecofloc Metrics by Resource")
+            st.plotly_chart(fig)
+    else:
+        st.info("No Ecofloc DB data found.")
+except Exception as e:
+    st.error(f"Error fetching Ecofloc DB data: {e}")
 
-    # Display Ecofloc Cpu results :
-    try: 
-        response = requests.get(f"{FASTAPI_BASE_URL}/ecofloc/cpu")
-        cpu_data = response.json()
-        df_cpu = pd.DataFrame(cpu_data)
-        st.dataframe(df_cpu)
-    except Exception as e:
-        st.error(f"Error fetching Ecofloc CPU data: {e}")
+# Display Ecofloc Cpu results :
+try: 
+    response = requests.get(f"{FASTAPI_BASE_URL}/ecofloc/cpu")
+    cpu_data = response.json()
+    df_cpu = pd.DataFrame(cpu_data)
+    st.dataframe(df_cpu)
+except Exception as e:
+    st.error(f"Error fetching Ecofloc CPU data: {e}")
 
-        # Fetch data
-    try:
-        response = requests.get(f"{FASTAPI_BASE_URL}/ecofloc/cpu")
-        response.raise_for_status()
-        cpu_data = response.json()
-        df_cpu = pd.DataFrame(cpu_data)
-    except Exception as e:
-        st.error(f"Error fetching Ecofloc CPU data: {e}")
-        st.stop()
+    # Fetch data
+try:
+    response = requests.get(f"{FASTAPI_BASE_URL}/ecofloc/cpu")
+    response.raise_for_status()
+    cpu_data = response.json()
+    df_cpu = pd.DataFrame(cpu_data)
+except Exception as e:
+    st.error(f"Error fetching Ecofloc CPU data: {e}")
+    st.stop()
 
-    
-    # --- DATA CLEANUP to avoid pyarrow serialization errors ---
 
-    # Ensure metric_value is numeric
-    if 'metric_value' in df_cpu.columns:
-        df_cpu['metric_value'] = pd.to_numeric(df_cpu['metric_value'], errors='coerce')
+# --- DATA CLEANUP to avoid pyarrow serialization errors ---
 
-    # Ensure timestamp is datetime
-    if 'timestamp' in df_cpu.columns:
-        df_cpu['timestamp'] = pd.to_datetime(df_cpu['timestamp'], errors='coerce')
+# Ensure metric_value is numeric
+if 'metric_value' in df_cpu.columns:
+    df_cpu['metric_value'] = pd.to_numeric(df_cpu['metric_value'], errors='coerce')
 
-    # If any other columns are object but should be strings, cast them explicitly
-    for col in df_cpu.select_dtypes(include='object').columns:
-        if col != 'timestamp':  # timestamp already handled
-            df_cpu[col] = df_cpu[col].astype(str)
+# Ensure timestamp is datetime
+if 'timestamp' in df_cpu.columns:
+    df_cpu['timestamp'] = pd.to_datetime(df_cpu['timestamp'], errors='coerce')
 
-    # Filter rows with missing critical data after conversion (optional)
-    df_cpu = df_cpu.dropna(subset=['metric_value', 'timestamp', 'pid'])
+# If any other columns are object but should be strings, cast them explicitly
+for col in df_cpu.select_dtypes(include='object').columns:
+    if col != 'timestamp':  # timestamp already handled
+        df_cpu[col] = df_cpu[col].astype(str)
 
-    # Filter to energy consumption rows (assuming metric_name contains 'energy')
-    energy_df = df_cpu[df_cpu["metric_name"].str.lower().str.contains("energy")].copy()
+# Filter rows with missing critical data after conversion (optional)
+df_cpu = df_cpu.dropna(subset=['metric_value', 'timestamp', 'pid'])
 
-    # Accumulate energy consumption per PID
-    energy_sum_per_pid = energy_df.groupby("pid")["metric_value"].sum().reset_index()
-    energy_sum_per_pid = energy_sum_per_pid.sort_values(by="metric_value", ascending=False)
+# Filter to energy consumption rows (assuming metric_name contains 'energy')
+energy_df = df_cpu[df_cpu["metric_name"].str.lower().str.contains("energy")].copy()
 
-    # Create 3 columns for display
-    col1, col2, col3 = st.columns(3)
+# Accumulate energy consumption per PID
+energy_sum_per_pid = energy_df.groupby("pid")["metric_value"].sum().reset_index()
+energy_sum_per_pid = energy_sum_per_pid.sort_values(by="metric_value", ascending=False)
 
-    with col1:
-        st.subheader("Ecofloc CPU Data")
-        st.dataframe(df_cpu)
+# Create 3 columns for display
+col1, col2, col3 = st.columns(3)
 
-    with col2:
-        st.subheader("Total Energy Consumption per PID")
-        fig_bar = px.bar(
-            energy_sum_per_pid,
-            x="pid",
-            y="metric_value",
-            labels={"pid": "PID", "metric_value": "Total Energy Consumption"},
-            title="Total Energy Consumption per PID"
-        )
-        st.plotly_chart(fig_bar, use_container_width=True)
+with col1:
+    st.subheader("Ecofloc CPU Data")
+    st.dataframe(df_cpu)
 
-    with col3:
-        st.subheader("Energy Consumption Evolution Over Time")
-        fig_line = px.line(
-            energy_df,
-            x='timestamp',
-            y='metric_value',
-            color='pid',
-            labels={"timestamp": "Timestamp", "metric_value": "Energy Consumption", "pid": "PID"},
-            title="PID Energy Consumption Over Time"
-        )
-        st.plotly_chart(fig_line, use_container_width=True)
+with col2:
+    st.subheader("Total Energy Consumption per PID")
+    fig_bar = px.bar(
+        energy_sum_per_pid,
+        x="pid",
+        y="metric_value",
+        labels={"pid": "PID", "metric_value": "Total Energy Consumption"},
+        title="Total Energy Consumption per PID"
+    )
+    st.plotly_chart(fig_bar, use_container_width=True)
+
+with col3:
+    st.subheader("Energy Consumption Evolution Over Time")
+    fig_line = px.line(
+        energy_df,
+        x='timestamp',
+        y='metric_value',
+        color='pid',
+        labels={"timestamp": "Timestamp", "metric_value": "Energy Consumption", "pid": "PID"},
+        title="PID Energy Consumption Over Time"
+    )
+    st.plotly_chart(fig_line, use_container_width=True)
