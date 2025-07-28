@@ -360,7 +360,7 @@ def get_ecofloc_results_endpoint(skip: int = 0, limit: int = 100, db: Session = 
 @app.get("/ecofloc/cpu", response_model=List[EcoflocResultOut])
 def get_ecofloc_cpu(db: Session = Depends(get_db)):
     results = fetch_ecofloc_results(db)
-    cpu_data = [r for r in results if r.resource == "cpu"]
+    cpu_data = [r for r in results if r.resource_type == "cpu"]
     return cpu_data
 
     
