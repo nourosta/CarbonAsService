@@ -10,7 +10,7 @@ from database import SessionLocal, init_db
 from models import EcoflocResult
 
 # --- CONFIG --- #
-RESOURCES = os.getenv("ECO_RESOURCES", "cpu,ram").split(",")
+RESOURCES = os.getenv("ECO_RESOURCES", "cpu,ram,sd,nic,gpu").split(",")
 INTERVAL_MS = int(os.getenv("ECO_INTERVAL_MS", 1000))
 DURATION_S = int(os.getenv("ECO_DURATION_S", 5))
 MAX_PIDS = int(os.getenv("ECO_MAX_PIDS", 10))
