@@ -359,7 +359,7 @@ def fetch_ecofloc_results(db: Session):
     )
 @app.get("/ecofloc_results/", response_model=List[EcoflocResultOut])
 def get_ecofloc_results_endpoint(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    results = fetch_ecofloc_results(db, skip, limit)
+    results = fetch_ecofloc_results(db)
     return results
 
 # @app.get("/ecofloc/cpu", response_model=List[EcoflocResultOut])
