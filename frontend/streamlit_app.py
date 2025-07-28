@@ -542,33 +542,68 @@ energy_df = df_cpu[df_cpu["metric_name"].str.lower().str.contains("energy")].cop
 energy_sum_per_pid = energy_df.groupby("pid")["metric_value"].sum().reset_index()
 energy_sum_per_pid = energy_sum_per_pid.sort_values(by="metric_value", ascending=False)
 
-# Create 3 columns for display
-col1, col2, col3 = st.columns(3)
+# # Create 3 columns for display
+# col1, col2, col3 = st.columns(3)
 
-with col1:
+# with col1:
     
-    st.subheader("Ecofloc CPU Data")
+#     st.subheader("Ecofloc CPU Data")
+#     st.dataframe(df_cpu)
+
+# with col2:
+#     st.subheader("Total Energy Consumption per PID")
+#     fig_bar = px.bar(
+#         energy_sum_per_pid,
+#         x="pid",
+#         y="metric_value",
+#         labels={"pid": "PID", "metric_value": "Total Energy Consumption"},
+#         title="Total Energy Consumption per PID"
+#     )
+#     st.plotly_chart(fig_bar, use_container_width=True)
+
+# with col3:
+#     st.subheader("Energy Consumption Evolution Over Time")
+#     fig_line = px.line(
+#         energy_df,
+#         x='timestamp',
+#         y='metric_value',
+#         color='pid',
+#         labels={"timestamp": "Timestamp", "metric_value": "Energy Consumption", "pid": "PID"},
+#         title="PID Energy Consumption Over Time"
+#     )
+#     st.plotly_chart(fig_line, use_container_width=True)
+
+
+# Layout
+col1, col2 = st.columns([1, 1])
+with col1:
+    st.subheader("Raw Ecofloc CPU Data")
     st.dataframe(df_cpu)
 
 with col2:
-    st.subheader("Total Energy Consumption per PID")
+    st.subheader("Total Energy per Process")
     fig_bar = px.bar(
-        energy_sum_per_pid,
-        x="pid",
+        total_energy,
+        x="process_name",
         y="metric_value",
-        labels={"pid": "PID", "metric_value": "Total Energy Consumption"},
-        title="Total Energy Consumption per PID"
+        labels={"process_name": "Process", "metric_value": "Total Energy"},
+        title="Total Energy Consumption (Last 24h)"
     )
     st.plotly_chart(fig_bar, use_container_width=True)
 
-with col3:
-    st.subheader("Energy Consumption Evolution Over Time")
-    fig_line = px.line(
-        energy_df,
-        x='timestamp',
-        y='metric_value',
-        color='pid',
-        labels={"timestamp": "Timestamp", "metric_value": "Energy Consumption", "pid": "PID"},
-        title="PID Energy Consumption Over Time"
-    )
-    st.plotly_chart(fig_line, use_container_width=True)
+# Full-width time series
+st.subheader("Energy Consumption Evolution Over Time")
+fig_line = px.line(
+    energy_df,
+    x="timestamp",
+    y="metric_value",
+    color="process_name",
+    labels={
+        "timestamp": "Timestamp",
+        "metric_value": "Energy Consumption",
+        "process_name": "Process"
+    },
+    title="Process Energy Consumption Over Time"
+)
+fig_line.update_layout(height=500)
+st.plotly_chart(fig_line, use_container_width=True)

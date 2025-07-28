@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List
 from models import EcoflocResult
 from fastapi import FastAPI,HTTPException , APIRouter, Query, Depends
@@ -349,20 +349,36 @@ def monitor_endpoint(
         return {"error": str(e)}
     
 
-def fetch_ecofloc_results(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(EcoflocResult).order_by(EcoflocResult.timestamp.desc()).offset(skip).limit(limit).all()
-
+def fetch_ecofloc_results(db: Session):
+    time_24h_ago = datetime.utcnow() - timedelta(hours=24)
+    return (
+        db.query(EcoflocResult)
+        .filter(EcoflocResult.timestamp >= time_24h_ago)
+        .order_by(EcoflocResult.timestamp.asc())  # oldest first for evolution plots
+        .all()
+    )
 @app.get("/ecofloc_results/", response_model=List[EcoflocResultOut])
 def get_ecofloc_results_endpoint(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     results = fetch_ecofloc_results(db, skip, limit)
     return results
 
-@app.get("/ecofloc/cpu", response_model=List[EcoflocResultOut])
-def get_ecofloc_cpu(db: Session = Depends(get_db)):
-    results = fetch_ecofloc_results(db)
-    cpu_data = [r for r in results if r.resource_type == "cpu"]
-    return cpu_data
+# @app.get("/ecofloc/cpu", response_model=List[EcoflocResultOut])
+# def get_ecofloc_cpu(db: Session = Depends(get_db)):
+#     results = fetch_ecofloc_results(db)
+#     cpu_data = [r for r in results if r.resource_type == "cpu"]
+#     return cpu_data
 
+@app.get("/ecofloc/cpu", response_model=List[EcoflocResultOut])
+def get_recent_cpu_data(hours: int = 24, db: Session = Depends(get_db)):
+    time_cutoff = datetime.utcnow() - timedelta(hours=hours)
+    results = (
+        db.query(EcoflocResult)
+        .filter(EcoflocResult.resource_type == "cpu")
+        .filter(EcoflocResult.timestamp >= time_cutoff)
+        .order_by(EcoflocResult.timestamp.asc())
+        .all()
+    )
+    return results
     
     return cpu_data
 
