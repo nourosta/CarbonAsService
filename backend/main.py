@@ -384,6 +384,23 @@ def get_today_cpu_data(db: Session = Depends(get_db)):
         .all()
     )
     return results
+
+
+@app.get("/ecofloc/ram", response_model=List[EcoflocResultOut])
+def get_today_cpu_data(db: Session = Depends(get_db)):
+    now = datetime.utcnow()
+    start_of_day = datetime.combine(now.date(), time.min)  # 00:00 UTC
+    end_of_day = datetime.combine(now.date(), time.max)    # 23:59:59.999999 UTC
+
+    results = (
+        db.query(EcoflocResult)
+        .filter(EcoflocResult.resource_type == "ram")
+        .filter(EcoflocResult.timestamp >= start_of_day)
+        .filter(EcoflocResult.timestamp <= end_of_day)
+        .order_by(EcoflocResult.timestamp.asc())
+        .all()
+    )
+    return results
     
     return cpu_data
 
