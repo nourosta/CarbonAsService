@@ -67,3 +67,16 @@ class CarbonIntensity(Base):
     id = Column(Integer, primary_key=True, index=True)
     zone = Column(String, index=True)
     data = Column(Text)
+
+
+class EcoflocResult(Base):
+    __tablename__ = "ecofloc_monitoring"
+
+    id = Column(Integer, primary_key=True, index=True)
+    pid = Column(Integer)
+    process_name = Column(String)
+    resource_type = Column(String)  # e.g., 'cpu' or 'ram'
+    metric_name = Column(String)    # e.g., 'energy' or 'power'
+    metric_value = Column(Float)
+    unit = Column(String)
+    timestamp = Column(DateTime, default=datetime.utcnow)
