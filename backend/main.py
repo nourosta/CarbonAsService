@@ -362,6 +362,7 @@ def get_ecofloc_cpu():
     
     # Filter CPU component only
     cpu_data = [item for item in ecofloc_data if item.get("resource") == "cpu"]
+    print(cpu_data)
     
     return cpu_data
 
