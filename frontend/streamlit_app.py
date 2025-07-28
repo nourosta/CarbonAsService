@@ -544,12 +544,14 @@ energy_sum_per_pid = energy_sum_per_pid.sort_values(by="metric_value", ascending
 
 # Create 3 columns for display
 col1, col2, col3 = st.columns(3)
-st_autorefresh(interval=5000)
+
 with col1:
+    st_autorefresh(interval=5000)
     st.subheader("Ecofloc CPU Data")
     st.dataframe(df_cpu)
 
 with col2:
+    st_autorefresh(interval=5000)
     st.subheader("Total Energy Consumption per PID")
     fig_bar = px.bar(
         energy_sum_per_pid,
@@ -561,6 +563,7 @@ with col2:
     st.plotly_chart(fig_bar, use_container_width=True)
 
 with col3:
+    st_autorefresh(interval=5000)
     st.subheader("Energy Consumption Evolution Over Time")
     fig_line = px.line(
         energy_df,
