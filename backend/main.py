@@ -349,21 +349,20 @@ def monitor_endpoint(
         return {"error": str(e)}
     
 
+def fetch_ecofloc_results(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(EcoflocResult).offset(skip).limit(limit).all()
+
 @app.get("/ecofloc_results/", response_model=List[EcoflocResultOut])
-def get_ecofloc_results(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    results = db.query(EcoflocResult).offset(skip).limit(limit).all()
+def get_ecofloc_results_endpoint(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    results = fetch_ecofloc_results(db, skip, limit)
     return results
 
+@app.get("/ecofloc/cpu", response_model=List[EcoflocResultOut])
+def get_ecofloc_cpu(db: Session = Depends(get_db)):
+    results = fetch_ecofloc_results(db)
+    cpu_data = [r for r in results if r.resource == "cpu"]
+    return cpu_data
 
-
-@app.get("/ecofloc/cpu")
-def get_ecofloc_cpu():
-    # Example: Fetch full ecofloc data from your DB or service
-    ecofloc_data = get_ecofloc_results()
-    
-    # Filter CPU component only
-    cpu_data = [item for item in ecofloc_data if item.get("resource") == "cpu"]
-    return JSONResponse(content=cpu_data)
     
     return cpu_data
 
