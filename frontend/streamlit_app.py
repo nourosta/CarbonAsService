@@ -478,3 +478,4 @@ if st.button("Run Monitoring"):
 
         except Exception as e:
             st.error(f"Failed to fetch: {e}")
+

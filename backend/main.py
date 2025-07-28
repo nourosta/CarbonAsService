@@ -1,4 +1,8 @@
-from fastapi import FastAPI,HTTPException , APIRouter, Query
+from datetime import datetime
+from typing import List
+from models import EcoflocResult
+from fastapi import FastAPI,HTTPException , APIRouter, Query, Depends
+from sqlalchemy.orm import Session
 from electricitymaps import fetch_power_breakdown
 from carbon_intensity import fetch_carbon_intensity
 from system_info import collect_system_info, get_top_processes_ps
@@ -6,7 +10,7 @@ import json
 import requests
 from pydantic import BaseModel
 from crud import store_power_breakdown, store_carbon_intensity, save_ram,save_gpu,save_hdd,save_ssd, save_cpu
-from database import init_db
+from database import get_db, init_db
 from fastapi.middleware.cors import CORSMiddleware
 from system_info import get_top_processes_ps
 from ecofloc_runner import  monitor_top_processes
@@ -41,6 +45,20 @@ class GPUInput(BaseModel):
     model : str
     die_size_mm2: float
     ram_size_gb: float
+
+# Pydantic schema for API output
+class EcoflocResultOut(BaseModel):
+    id: int
+    pid: int
+    process_name: str
+    resource_type: str
+    metric_name: str
+    metric_value: float
+    unit: str
+    timestamp: datetime
+
+    class Config:
+        orm_mode = True
 
 def ram_impacts(ram_spec: RAMSpec):
     
@@ -330,6 +348,10 @@ def monitor_endpoint(
         return {"error": str(e)}
     
 
+@app.get("/ecofloc_results/", response_model=List[EcoflocResultOut])
+def get_ecofloc_results(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    results = db.query(EcoflocResult).offset(skip).limit(limit).all()
+    return results
 
 # @app.get("/api/ecofloc")
 # async def get_ecofloc_data():

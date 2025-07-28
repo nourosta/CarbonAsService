@@ -1,4 +1,5 @@
 from database import SessionLocal
+from sqlalchemy.orm import Session
 from models import CarbonIntensity, EcoflocResult, GPUImpact, PowerBreakdown, RAMImpact, SSDImpact, HDDImpact, CPUImpact
 
 
@@ -94,3 +95,15 @@ def save_ecofloc_results(pid, pname, resource, metrics):
         print(f"[ERROR] DB insert failed: {e}")
     finally:
         db.close()
+
+
+def Ecofloc_results():
+    db = SessionLocal()
+    try:
+        results = db.query(EcoflocResult).all()
+        return results
+    finally:
+        db.close()
+
+def get_all_ecofloc_results(db: Session):
+    return db.query(EcoflocResult).all()
