@@ -11,4 +11,4 @@ wheels/
 
 
 #databases 
-backend/carbon.db
+.backend/carbon.db

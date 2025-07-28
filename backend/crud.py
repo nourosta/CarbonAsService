@@ -1,5 +1,5 @@
 from database import SessionLocal
-from models import CarbonIntensity, GPUImpact, PowerBreakdown, RAMImpact, SSDImpact, HDDImpact, CPUImpact
+from models import CarbonIntensity, EcoflocResult, GPUImpact, PowerBreakdown, RAMImpact, SSDImpact, HDDImpact, CPUImpact
 
 
 def save_cpu(model, gwp, adp, pe):
@@ -73,5 +73,24 @@ def store_carbon_intensity(zone: str, data: dict):
         db.commit()
         db.refresh(intensity_data)
         return intensity_data
+    finally:
+        db.close()
+
+def save_ecofloc_results(pid, pname, resource, metrics):
+    db = SessionLocal()
+    try:
+        for metric_name, value, unit in metrics:
+            record = EcoflocResult(
+                pid=pid,
+                process_name=pname,
+                resource_type=resource,
+                metric_name=metric_name,
+                metric_value=value,
+                unit=unit
+            )
+            db.add(record)
+        db.commit()
+    except Exception as e:
+        print(f"[ERROR] DB insert failed: {e}")
     finally:
         db.close()
