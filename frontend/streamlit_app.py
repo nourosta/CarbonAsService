@@ -620,3 +620,68 @@ fig_line.update_layout(height=500)
 st.plotly_chart(fig_line, use_container_width=True)
 
 
+st.title("Ecofloc CPU Energy Dashboard – Today")
+
+# Get today's data
+try:
+    response = requests.get(f"{FASTAPI_BASE_URL}/ecofloc/cpu")
+    response.raise_for_status()
+    data = response.json()
+    df = pd.DataFrame(data)
+except Exception as e:
+    st.error(f"Error fetching Ecofloc CPU data: {e}")
+    st.stop()
+
+# Clean + filter
+df['timestamp'] = pd.to_datetime(df['timestamp'])
+df['metric_value'] = pd.to_numeric(df['metric_value'], errors='coerce')
+df.dropna(subset=['metric_value', 'timestamp'], inplace=True)
+
+# Filter for "Total Energy" rows only
+energy_df = df[df["metric_name"].str.lower().str.contains("total energy")].copy()
+
+# ✅ Total energy consumed today
+total_energy_today = energy_df["metric_value"].sum()
+
+# ✅ Top 5 producers by process name
+top5 = (
+    energy_df.groupby("process_name")["metric_value"]
+    .sum()
+    .sort_values(ascending=False)
+    .head(5)
+    .reset_index()
+)
+
+# Display total energy and top 5
+col1, col2 = st.columns(2)
+
+with col1:
+    st.metric("🔋 Total Energy Consumed Today", f"{total_energy_today:.2f} J")
+
+with col2:
+    st.subheader("Top 5 Energy Producers Today")
+    fig_top5 = px.bar(
+        top5,
+        x="process_name",
+        y="metric_value",
+        labels={"process_name": "Process", "metric_value": "Total Energy (J)"},
+        title="Top 5 Energy Consumers"
+    )
+    st.plotly_chart(fig_top5, use_container_width=True)
+
+# (Optional) Line plot of energy over time
+st.subheader("Energy Consumption Over Time (Today)")
+fig_line = px.line(
+    energy_df,
+    x="timestamp",
+    y="metric_value",
+    color="process_name",
+    labels={
+        "timestamp": "Timestamp",
+        "metric_value": "Energy (J)",
+        "process_name": "Process"
+    },
+    title="Process Energy Consumption Over Time"
+)
+fig_line.update_layout(height=500)
+st.plotly_chart(fig_line, use_container_width=True)
