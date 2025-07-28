@@ -519,28 +519,28 @@ except Exception as e:
 
 # --- DATA CLEANUP to avoid pyarrow serialization errors ---
 
-# Ensure metric_value is numeric
-if 'metric_value' in df_cpu.columns:
-    df_cpu['metric_value'] = pd.to_numeric(df_cpu['metric_value'], errors='coerce')
+# # Ensure metric_value is numeric
+# if 'metric_value' in df_cpu.columns:
+#     df_cpu['metric_value'] = pd.to_numeric(df_cpu['metric_value'], errors='coerce')
 
-# Ensure timestamp is datetime
-if 'timestamp' in df_cpu.columns:
-    df_cpu['timestamp'] = pd.to_datetime(df_cpu['timestamp'], errors='coerce')
+# # Ensure timestamp is datetime
+# if 'timestamp' in df_cpu.columns:
+#     df_cpu['timestamp'] = pd.to_datetime(df_cpu['timestamp'], errors='coerce')
 
-# If any other columns are object but should be strings, cast them explicitly
-for col in df_cpu.select_dtypes(include='object').columns:
-    if col != 'timestamp':  # timestamp already handled
-        df_cpu[col] = df_cpu[col].astype(str)
+# # If any other columns are object but should be strings, cast them explicitly
+# for col in df_cpu.select_dtypes(include='object').columns:
+#     if col != 'timestamp':  # timestamp already handled
+#         df_cpu[col] = df_cpu[col].astype(str)
 
-# Filter rows with missing critical data after conversion (optional)
-df_cpu = df_cpu.dropna(subset=['metric_value', 'timestamp', 'pid'])
+# # Filter rows with missing critical data after conversion (optional)
+# df_cpu = df_cpu.dropna(subset=['metric_value', 'timestamp', 'pid'])
 
-# Filter to energy consumption rows (assuming metric_name contains 'energy')
-energy_df = df_cpu[df_cpu["metric_name"].str.lower().str.contains("energy")].copy()
+# # Filter to energy consumption rows (assuming metric_name contains 'energy')
+# energy_df = df_cpu[df_cpu["metric_name"].str.lower().str.contains("energy")].copy()
 
-# Accumulate energy consumption per PID
-energy_sum_per_pid = energy_df.groupby("pid")["metric_value"].sum().reset_index()
-energy_sum_per_pid = energy_sum_per_pid.sort_values(by="metric_value", ascending=False)
+# # Accumulate energy consumption per PID
+# energy_sum_per_pid = energy_df.groupby("pid")["metric_value"].sum().reset_index()
+# energy_sum_per_pid = energy_sum_per_pid.sort_values(by="metric_value", ascending=False)
 
 # # Create 3 columns for display
 # col1, col2, col3 = st.columns(3)
@@ -573,6 +573,17 @@ energy_sum_per_pid = energy_sum_per_pid.sort_values(by="metric_value", ascending
 #     )
 #     st.plotly_chart(fig_line, use_container_width=True)
 
+# Ensure types
+df_cpu['timestamp'] = pd.to_datetime(df_cpu['timestamp'])
+df_cpu['metric_value'] = pd.to_numeric(df_cpu['metric_value'], errors='coerce')
+df_cpu.dropna(subset=['timestamp', 'metric_value'], inplace=True)
+
+# Filter for 'Total Energy' metric only
+energy_df = df_cpu[df_cpu["metric_name"].str.lower().str.contains("total energy")]
+
+# Group by process_name to sum total energy
+total_energy = energy_df.groupby("process_name")["metric_value"].sum().reset_index()
+total_energy = total_energy.sort_values(by="metric_value", ascending=False)
 
 # Layout
 col1, col2 = st.columns([1, 1])
