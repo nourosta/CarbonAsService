@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import List
 from models import EcoflocResult
 from fastapi import FastAPI,HTTPException , APIRouter, Query, Depends
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from electricitymaps import fetch_power_breakdown
 from carbon_intensity import fetch_carbon_intensity
@@ -362,7 +363,7 @@ def get_ecofloc_cpu():
     
     # Filter CPU component only
     cpu_data = [item for item in ecofloc_data if item.get("resource") == "cpu"]
-    print(cpu_data)
+    return JSONResponse(content=cpu_data)
     
     return cpu_data
 
