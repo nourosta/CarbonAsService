@@ -496,3 +496,12 @@ try:
         st.info("No Ecofloc DB data found.")
 except Exception as e:
     st.error(f"Error fetching Ecofloc DB data: {e}")
+
+# Display Ecofloc Cpu results :
+try: 
+    response = requests.get(f"{FASTAPI_BASE_URL}/ecofloc/cpu")
+    cpu_data = response.json()
+    df_cpu = pd.DataFrame(cpu_data)
+    st.dataframe(df_cpu)
+except Exception as e:
+    st.error(f"Error fetching Ecofloc CPU data: {e}")

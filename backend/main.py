@@ -353,6 +353,18 @@ def get_ecofloc_results(skip: int = 0, limit: int = 100, db: Session = Depends(g
     results = db.query(EcoflocResult).offset(skip).limit(limit).all()
     return results
 
+
+
+@app.get("/ecofloc/cpu")
+def get_ecofloc_cpu():
+    # Example: Fetch full ecofloc data from your DB or service
+    ecofloc_data = get_ecofloc_results()
+    
+    # Filter CPU component only
+    cpu_data = [item for item in ecofloc_data if item.get("resource") == "cpu"]
+    
+    return cpu_data
+
 # @app.get("/api/ecofloc")
 # async def get_ecofloc_data():
 #     try:
