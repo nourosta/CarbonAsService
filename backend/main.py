@@ -350,7 +350,7 @@ def monitor_endpoint(
     
 
 def fetch_ecofloc_results(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(EcoflocResult).offset(skip).limit(limit).all()
+    return db.query(EcoflocResult).order_by(EcoflocResult.timestamp.desc()).offset(skip).limit(limit).all()
 
 @app.get("/ecofloc_results/", response_model=List[EcoflocResultOut])
 def get_ecofloc_results_endpoint(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
