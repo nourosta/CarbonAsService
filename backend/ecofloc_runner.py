@@ -83,7 +83,7 @@ def run_ecofloc_for_pid(pid, resource, interval_ms=1000, duration_s=5, timeout_b
         }
 def monitor_top_processes(resources=None, limit=5, interval=1000, duration=5):
     if resources is None:
-        resources = ['cpu', 'ram']
+        resources = ['cpu', 'ram','sd', 'nic', 'gpu']
 
     pids = get_active_pids(limit)
     all_results = []
