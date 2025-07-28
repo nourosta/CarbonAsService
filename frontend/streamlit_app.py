@@ -544,7 +544,7 @@ energy_sum_per_pid = energy_sum_per_pid.sort_values(by="metric_value", ascending
 
 # Create 3 columns for display
 col1, col2, col3 = st.columns(3)
-
+st_autorefresh(interval=5000)
 with col1:
     st.subheader("Ecofloc CPU Data")
     st.dataframe(df_cpu)
