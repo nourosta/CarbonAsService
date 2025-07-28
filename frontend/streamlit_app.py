@@ -657,8 +657,6 @@ col1, col2 = st.columns(2)
 
 with col1:
     st.metric("🔋 Total Energy Consumed Today", f"{total_energy_today:.2f} J")
-
-with col2:
     st.subheader("Top 5 Energy Producers Today")
     fig_top5 = px.bar(
         top5,
