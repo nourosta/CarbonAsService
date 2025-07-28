@@ -719,19 +719,19 @@ with col1:
 
 with col2:
     st.subheader("Total Energy per Process")
-    fig_bar = px.bar(
-        total_energy,
+    fig_bar_ram = px.bar(
+        total_energy_ram,
         x="process_name",
         y="metric_value",
         labels={"process_name": "Process", "metric_value": "Total Energy"},
         title="Total Energy Consumption (Last 24h)"
     )
-    st.plotly_chart(fig_bar, use_container_width=True)
+    st.plotly_chart(fig_bar_ram, use_container_width=True)
 
 # Full-width time series
 st.subheader("Energy Consumption Evolution Over Time")
-fig_line = px.line(
-    energy_df,
+fig_line_ram = px.line(
+    energy_ram_df,
     x="timestamp",
     y="metric_value",
     color="process_name",
@@ -743,6 +743,6 @@ fig_line = px.line(
     title="Process Energy Consumption Over Time"
 )
 fig_line.update_layout(height=500)
-st.plotly_chart(fig_line, use_container_width=True)
+st.plotly_chart(fig_line_ram, use_container_width=True)
 
 
