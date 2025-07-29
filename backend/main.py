@@ -402,7 +402,7 @@ def get_today_cpu_data(db: Session = Depends(get_db)):
     )
     return results
     
-    
+
 
 # @app.get("/api/ecofloc")
 # async def get_ecofloc_data():

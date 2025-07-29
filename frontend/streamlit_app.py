@@ -670,79 +670,79 @@ with col2:
     )
     st.plotly_chart(fig_bar, use_container_width=True)
 
-# Full-width time series
-st.subheader("Energy Consumption Evolution Over Time")
-fig_line = px.line(
-    energy_df,
-    x="timestamp",
-    y="metric_value",
-    color="process_name",
-    labels={
-        "timestamp": "Timestamp",
-        "metric_value": "Energy Consumption",
-        "process_name": "Process"
-    },
-    title="Process Energy Consumption Over Time"
-)
-fig_line.update_layout(height=500)
-st.plotly_chart(fig_line, use_container_width=True)
+# # Full-width time series
+# st.subheader("Energy Consumption Evolution Over Time")
+# fig_line = px.line(
+#     energy_df,
+#     x="timestamp",
+#     y="metric_value",
+#     color="process_name",
+#     labels={
+#         "timestamp": "Timestamp",
+#         "metric_value": "Energy Consumption",
+#         "process_name": "Process"
+#     },
+#     title="Process Energy Consumption Over Time"
+# )
+# fig_line.update_layout(height=500)
+# st.plotly_chart(fig_line, use_container_width=True)
 
 
 
-    # Fetch data
-try:
-    response = requests.get(f"{FASTAPI_BASE_URL}/ecofloc/ram")
-    response.raise_for_status()
-    ram_data = response.json()
-    df_ram = pd.DataFrame(ram_data)
-except Exception as e:
-    st.error(f"Error fetching Ecofloc CPU data: {e}")
-    st.stop()
+#     # Fetch data
+# try:
+#     response = requests.get(f"{FASTAPI_BASE_URL}/ecofloc/ram")
+#     response.raise_for_status()
+#     ram_data = response.json()
+#     df_ram = pd.DataFrame(ram_data)
+# except Exception as e:
+#     st.error(f"Error fetching Ecofloc CPU data: {e}")
+#     st.stop()
 
-# Ensure types
-df_ram['timestamp'] = pd.to_datetime(df_ram['timestamp'])
-df_ram['metric_value'] = pd.to_numeric(df_ram['metric_value'], errors='coerce')
-df_ram.dropna(subset=['timestamp', 'metric_value'], inplace=True)
+# # Ensure types
+# df_ram['timestamp'] = pd.to_datetime(df_ram['timestamp'])
+# df_ram['metric_value'] = pd.to_numeric(df_ram['metric_value'], errors='coerce')
+# df_ram.dropna(subset=['timestamp', 'metric_value'], inplace=True)
 
-# Filter for 'Total Energy' metric only
-energy_ram_df = df_ram[df_ram["metric_name"].str.lower().str.contains("total energy")]
+# # Filter for 'Total Energy' metric only
+# energy_ram_df = df_ram[df_ram["metric_name"].str.lower().str.contains("total energy")]
 
-# Group by process_name to sum total energy
-total_energy_ram = energy_ram_df.groupby("process_name")["metric_value"].sum().reset_index()
-total_energy_ram = total_energy_ram.sort_values(by="metric_value", ascending=False)
+# # Group by process_name to sum total energy
+# total_energy_ram = energy_ram_df.groupby("process_name")["metric_value"].sum().reset_index()
+# total_energy_ram = total_energy_ram.sort_values(by="metric_value", ascending=False)
 
-# Layout
-col1, col2 = st.columns([1, 1])
-with col1:
-    st.subheader("Raw Ecofloc CPU Data")
-    st.dataframe(df_ram)
+# # Layout
+# col1, col2 = st.columns([1, 1])
+# with col1:
+#     st.subheader("Raw Ecofloc CPU Data")
+#     st.dataframe(df_ram)
 
-with col2:
-    st.subheader("Total Energy per Process")
-    fig_bar_ram = px.bar(
-        total_energy_ram,
-        x="process_name",
-        y="metric_value",
-        labels={"process_name": "Process", "metric_value": "Total Energy"},
-        title="Total Energy Consumption (Last 24h)"
-    )
-    st.plotly_chart(fig_bar_ram, use_container_width=True)
+# with col2:
+#     st.subheader("Total Energy per Process")
+#     fig_bar_ram = px.bar(
+#         total_energy_ram,
+#         x="process_name",
+#         y="metric_value",
+#         labels={"process_name": "Process", "metric_value": "Total Energy"},
+#         title="Total Energy Consumption (Last 24h)"
+#     )
+#     st.plotly_chart(fig_bar_ram, use_container_width=True)
 
-# Full-width time series
-st.subheader("Energy Consumption Evolution Over Time")
-fig_line_ram = px.line(
-    energy_ram_df,
-    x="timestamp",
-    y="metric_value",
-    color="process_name",
-    labels={
-        "timestamp": "Timestamp",
-        "metric_value": "Energy Consumption",
-        "process_name": "Process"
-    },
-    title="Process Energy Consumption Over Time"
-)
-fig_line.update_layout(height=500)
-st.plotly_chart(fig_line_ram, use_container_width=True)
+# # Full-width time series
+# st.subheader("Energy Consumption Evolution Over Time")
+# fig_line_ram = px.line(
+#     energy_ram_df,
+#     x="timestamp",
+#     y="metric_value",
+#     color="process_name",
+#     labels={
+#         "timestamp": "Timestamp",
+#         "metric_value": "Energy Consumption",
+#         "process_name": "Process"
+#     },
+#     title="Process Energy Consumption Over Time"
+# )
+# fig_line.update_layout(height=500)
+# st.plotly_chart(fig_line_ram, use_container_width=True)
 
 
