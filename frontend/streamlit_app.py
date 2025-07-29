@@ -641,6 +641,14 @@ except Exception as e:
 #     )
 #     st.plotly_chart(fig_line, use_container_width=True)
 
+
+expected_columns = ['timestamp', 'metric_value']
+missing_cols = [col for col in expected_columns if col not in df_cpu.columns]
+if missing_cols:
+    st.error(f"⚠️ Missing expected columns in API response: {missing_cols}")
+    st.write("Columns received:", df_cpu.columns.tolist())
+    st.stop()
+
 # Ensure types
 df_cpu['timestamp'] = pd.to_datetime(df_cpu['timestamp'])
 df_cpu['metric_value'] = pd.to_numeric(df_cpu['metric_value'], errors='coerce')
@@ -670,22 +678,22 @@ with col2:
     )
     st.plotly_chart(fig_bar, use_container_width=True)
 
-# # Full-width time series
-# st.subheader("Energy Consumption Evolution Over Time")
-# fig_line = px.line(
-#     energy_df,
-#     x="timestamp",
-#     y="metric_value",
-#     color="process_name",
-#     labels={
-#         "timestamp": "Timestamp",
-#         "metric_value": "Energy Consumption",
-#         "process_name": "Process"
-#     },
-#     title="Process Energy Consumption Over Time"
-# )
-# fig_line.update_layout(height=500)
-# st.plotly_chart(fig_line, use_container_width=True)
+# Full-width time series
+st.subheader("Energy Consumption Evolution Over Time")
+fig_line = px.line(
+    energy_df,
+    x="timestamp",
+    y="metric_value",
+    color="process_name",
+    labels={
+        "timestamp": "Timestamp",
+        "metric_value": "Energy Consumption",
+        "process_name": "Process"
+    },
+    title="Process Energy Consumption Over Time"
+)
+fig_line.update_layout(height=500)
+st.plotly_chart(fig_line, use_container_width=True)
 
 
 
