@@ -364,17 +364,27 @@ def get_ecofloc_results_endpoint(skip: int = 0, limit: int = 100, db: Session = 
     return results
 
 @app.get("/ecofloc/cpu", response_model=List[EcoflocResultOut])
-def get_today_cpu_data(db: Session = Depends(get_db)):
-    now = datetime.utcnow()
-    start_of_day = datetime(now.year, now.month, now.day)  # 00:00 UTC
+def get_all_cpu_data(db: Session = Depends(get_db)):
     results = (
         db.query(EcoflocResult)
         .filter(EcoflocResult.resource_type == "cpu")
-        .filter(EcoflocResult.timestamp.isnot(None))  # ✅ safeguard
-        .filter(EcoflocResult.timestamp >= start_of_day)
+        .filter(EcoflocResult.timestamp.isnot(None))  # just to be safe
         .all()
     )
     return results
+
+# @app.get("/ecofloc/cpu", response_model=List[EcoflocResultOut])
+# def get_today_cpu_data(db: Session = Depends(get_db)):
+#     now = datetime.utcnow()
+#     start_of_day = datetime(now.year, now.month, now.day)  # 00:00 UTC
+#     results = (
+#         db.query(EcoflocResult)
+#         .filter(EcoflocResult.resource_type == "cpu")
+#         .filter(EcoflocResult.timestamp.isnot(None))  # ✅ safeguard
+#         .filter(EcoflocResult.timestamp >= start_of_day)
+#         .all()
+#     )
+#     return results
 
 
 # @app.get("/ecofloc/cpu", response_model=List[EcoflocResultOut])
