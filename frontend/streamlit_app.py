@@ -827,70 +827,70 @@ with tab2 :
     # st.table(top5)
 
 
-        # --- Clean & filter data ---
-    df_cpu['timestamp'] = pd.to_datetime(df_cpu['timestamp'], errors='coerce')
-    df_cpu['metric_value'] = pd.to_numeric(df_cpu['metric_value'], errors='coerce')
-    df_cpu.dropna(subset=["timestamp", "metric_value"], inplace=True)
+    #     # --- Clean & filter data ---
+    # df_cpu['timestamp'] = pd.to_datetime(df_cpu['timestamp'], errors='coerce')
+    # df_cpu['metric_value'] = pd.to_numeric(df_cpu['metric_value'], errors='coerce')
+    # df_cpu.dropna(subset=["timestamp", "metric_value"], inplace=True)
 
-    # Avoid Arrow error with mixed types
-    for col in df_cpu.select_dtypes(include="object").columns:
-        df_cpu[col] = df_cpu[col].astype(str)
+    # # Avoid Arrow error with mixed types
+    # for col in df_cpu.select_dtypes(include="object").columns:
+    #     df_cpu[col] = df_cpu[col].astype(str)
 
-    # ✅ Filter for today's data (00:00 to now)
-    now = datetime.now()
-    start_of_day = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    df_cpu = df_cpu[df_cpu['timestamp'] >= start_of_day]
+    # # ✅ Filter for today's data (00:00 to now)
+    # now = datetime.now()
+    # start_of_day = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    # df_cpu = df_cpu[df_cpu['timestamp'] >= start_of_day]
 
-    # --- Show raw table ---
-    st.subheader("🔍 Raw Ecofloc CPU Data (Today)")
-    st.dataframe(df_cpu)
+    # # --- Show raw table ---
+    # st.subheader("🔍 Raw Ecofloc CPU Data (Today)")
+    # st.dataframe(df_cpu)
 
-    # --- Filter to only energy-related metrics ---
-    energy_df = df_cpu[df_cpu["metric_name"].str.lower().str.contains("total energy")]
+    # # --- Filter to only energy-related metrics ---
+    # energy_df = df_cpu[df_cpu["metric_name"].str.lower().str.contains("total energy")]
 
-    # --- Total energy per process ---
-    st.subheader("⚡ Total Energy per Process (Today)")
-    total_energy = (
-        energy_df.groupby("process_name")["metric_value"]
-        .sum()
-        .reset_index()
-        .sort_values(by="metric_value", ascending=False)
-    )
+    # # --- Total energy per process ---
+    # st.subheader("⚡ Total Energy per Process (Today)")
+    # total_energy = (
+    #     energy_df.groupby("process_name")["metric_value"]
+    #     .sum()
+    #     .reset_index()
+    #     .sort_values(by="metric_value", ascending=False)
+    # )
 
-    fig_bar = px.bar(
-        total_energy,
-        x="process_name",
-        y="metric_value",
-        labels={"process_name": "Process", "metric_value": "Total Energy (Joules)"},
-        title="Total Energy by Process (00:00 → Now)",
-    )
-    st.plotly_chart(fig_bar, use_container_width=True)
+    # fig_bar = px.bar(
+    #     total_energy,
+    #     x="process_name",
+    #     y="metric_value",
+    #     labels={"process_name": "Process", "metric_value": "Total Energy (Joules)"},
+    #     title="Total Energy by Process (00:00 → Now)",
+    # )
+    # st.plotly_chart(fig_bar, use_container_width=True)
 
-    # --- Energy over time ---
-    st.subheader("📈 Energy Consumption Over Time (Today)")
+    # # --- Energy over time ---
+    # st.subheader("📈 Energy Consumption Over Time (Today)")
 
-    fig_line = px.line(
-        energy_df,
-        x="timestamp",
-        y="metric_value",
-        color="process_name",
-        labels={
-            "timestamp": "Time",
-            "metric_value": "Energy (Joules)",
-            "process_name": "Process"
-        },
-        title="Energy Consumption per Process Over Time"
-    )
-    fig_line.update_layout(height=500)
-    st.plotly_chart(fig_line, use_container_width=True)
+    # fig_line = px.line(
+    #     energy_df,
+    #     x="timestamp",
+    #     y="metric_value",
+    #     color="process_name",
+    #     labels={
+    #         "timestamp": "Time",
+    #         "metric_value": "Energy (Joules)",
+    #         "process_name": "Process"
+    #     },
+    #     title="Energy Consumption per Process Over Time"
+    # )
+    # fig_line.update_layout(height=500)
+    # st.plotly_chart(fig_line, use_container_width=True)
 
-    # --- Metrics ---
-    st.metric("🔋 Total Energy (All Processes)", f"{total_energy['metric_value'].sum():.2f} J")
+    # # --- Metrics ---
+    # st.metric("🔋 Total Energy (All Processes)", f"{total_energy['metric_value'].sum():.2f} J")
 
-    # --- Top 5 Consumers ---
-    top5 = total_energy.head(5)
-    st.subheader("🏭 Top 5 Energy Consumers Today")
-    st.table(top5)
+    # # --- Top 5 Consumers ---
+    # top5 = total_energy.head(5)
+    # st.subheader("🏭 Top 5 Energy Consumers Today")
+    # st.table(top5)
 
         # Auto-refresh every 10 seconds
     st_autorefresh(interval=10000, key="auto_refresh")
