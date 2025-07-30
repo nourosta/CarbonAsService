@@ -891,3 +891,63 @@ with tab2 :
     top5 = total_energy.head(5)
     st.subheader("🏭 Top 5 Energy Consumers Today")
     st.table(top5)
+
+        # --- Tabbed layout ---
+    tabs = st.tabs(["CPU", "RAM", "GPU", "NIC", "SD", "All Raw Data"])
+
+    for resource, tab in zip(["cpu", "ram", "gpu", "nic", "sd"], tabs[:-1]):
+        with tab:
+            st.header(f"🔧 {resource.upper()} Metrics (Today)")
+
+            resource_df = df[df["resource_type"] == resource]
+            energy_df = resource_df[resource_df["metric_name"].str.lower().str.contains("total energy")]
+
+            # Raw
+            with st.expander("🔍 Raw Data Table"):
+                st.dataframe(resource_df)
+
+            # Total energy by process
+            total_energy = (
+                energy_df.groupby("process_name")["metric_value"]
+                .sum()
+                .reset_index()
+                .sort_values(by="metric_value", ascending=False)
+            )
+
+            # Total energy metric
+            st.metric("🔋 Total Energy", f"{total_energy['metric_value'].sum():.2f} J")
+
+            # Bar chart
+            st.subheader("⚡ Total Energy by Process")
+            fig_bar = px.bar(
+                total_energy,
+                x="process_name",
+                y="metric_value",
+                labels={"process_name": "Process", "metric_value": "Energy (J)"},
+            )
+            st.plotly_chart(fig_bar, use_container_width=True)
+
+            # Line chart
+            st.subheader("📈 Energy Over Time")
+            fig_line = px.line(
+                energy_df,
+                x="timestamp",
+                y="metric_value",
+                color="process_name",
+                labels={
+                    "timestamp": "Time",
+                    "metric_value": "Energy (J)",
+                    "process_name": "Process"
+                },
+            )
+            fig_line.update_layout(height=500)
+            st.plotly_chart(fig_line, use_container_width=True)
+
+            # Top 5
+            st.subheader("🏭 Top 5 Consumers")
+            st.table(total_energy.head(5))
+
+    # --- All raw data ---
+    with tabs[-1]:
+        st.subheader("📄 Full Raw Data")
+        st.dataframe(df)
