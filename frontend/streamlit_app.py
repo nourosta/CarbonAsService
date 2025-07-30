@@ -965,3 +965,85 @@ with tab2 :
     top5 = total_energy.head(5)
     st.subheader("🏭 Top 5 Energy Consumers")
     st.table(top5)
+
+
+    resource_types = ["cpu", "ram", "gpu", "sd", "nic"]
+
+    for resource_type in resource_types:
+        st.markdown(f"## 🔍 Resource: {resource_type.upper()}")
+
+        # Fetch data
+        try:
+            response = requests.get(f"{FASTAPI_BASE_URL}/ecofloc/{resource_type}")
+            response.raise_for_status()
+            data = response.json()
+            df = pd.DataFrame(data)
+        except Exception as e:
+            st.error(f"Error fetching data for {resource_type}: {e}")
+            continue  # Skip to next resource_type
+
+        # Validate and clean data
+        required = ['timestamp', 'metric_value', 'metric_name', 'process_name']
+        missing = [col for col in required if col not in df.columns]
+        if missing:
+            st.error(f"Missing expected columns in {resource_type}: {missing}")
+            st.write("Available columns:", df.columns.tolist())
+            continue
+
+        df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
+        df['metric_value'] = pd.to_numeric(df['metric_value'], errors='coerce')
+        df.dropna(subset=['timestamp', 'metric_value'], inplace=True)
+
+        for col in df.select_dtypes(include="object").columns:
+            df[col] = df[col].astype(str)
+
+        # Filter to total energy only
+        energy_df = df[df['metric_name'].str.lower().str.contains("total energy")]
+
+        if energy_df.empty:
+            st.info(f"No energy data available for {resource_type}.")
+            continue
+
+        # Total energy consumed today
+        total_energy = (
+            energy_df.groupby("process_name")["metric_value"]
+            .sum()
+            .reset_index()
+            .sort_values(by="metric_value", ascending=False)
+        )
+
+        # Layout: bar + line plots
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.subheader(f"⚡ Total Energy per Process ({resource_type.upper()})")
+            fig_bar = px.bar(
+                total_energy,
+                x="process_name",
+                y="metric_value",
+                labels={"process_name": "Process", "metric_value": "Energy (J)"},
+                title=f"{resource_type.upper()} - Energy by Process"
+            )
+            st.plotly_chart(fig_bar, use_container_width=True, key=f"{resource_type}_bar")
+
+        with col2:
+            st.subheader("📈 Energy Over Time")
+            fig_line = px.line(
+                energy_df,
+                x="timestamp",
+                y="metric_value",
+                color="process_name",
+                labels={"timestamp": "Time", "metric_value": "Energy (J)", "process_name": "Process"},
+                title=f"{resource_type.upper()} - Energy Over Time"
+            )
+            fig_line.update_layout(height=500)
+            st.plotly_chart(fig_line, use_container_width=True, key=f"{resource_type}_line")
+
+        # Metrics summary
+        st.metric(f"🔋 Total Energy Today ({resource_type.upper()})", f"{total_energy['metric_value'].sum():.2f} J")
+
+        top5 = total_energy.head(5)
+        st.subheader(f"🏭 Top 5 Energy Consumers ({resource_type.upper()})")
+        st.table(top5)
+
+        st.markdown("---")
