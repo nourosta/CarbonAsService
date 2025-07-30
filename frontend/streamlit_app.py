@@ -552,23 +552,23 @@ with tab2 :
 #         except Exception as e:
 #             st.error(f"Failed to fetch: {e}")
 
-try:
-    response = requests.get(f"{FASTAPI_BASE_URL}/ecofloc_results")
-    response.raise_for_status()
-    db_data = response.json()
+# try:
+#     response = requests.get(f"{FASTAPI_BASE_URL}/ecofloc_results")
+#     response.raise_for_status()
+#     db_data = response.json()
 
-    if db_data:
-        df_db = pd.DataFrame(db_data)
-        st.dataframe(df_db)
+#     if db_data:
+#         df_db = pd.DataFrame(db_data)
+#         st.dataframe(df_db)
 
-        # Optional: plot some meaningful chart if you want
-        if 'value' in df_db.columns and 'resource' in df_db.columns:
-            fig = px.bar(df_db, x="resource", y="value", color="resource", title="Ecofloc Metrics by Resource")
-            st.plotly_chart(fig)
-    else:
-        st.info("No Ecofloc DB data found.")
-except Exception as e:
-    st.error(f"Error fetching Ecofloc DB data: {e}")
+#         # Optional: plot some meaningful chart if you want
+#         if 'value' in df_db.columns and 'resource' in df_db.columns:
+#             fig = px.bar(df_db, x="resource", y="value", color="resource", title="Ecofloc Metrics by Resource")
+#             st.plotly_chart(fig)
+#     else:
+#         st.info("No Ecofloc DB data found.")
+# except Exception as e:
+#     st.error(f"Error fetching Ecofloc DB data: {e}")
 
 # # Display Ecofloc Cpu results :
 # try: 
