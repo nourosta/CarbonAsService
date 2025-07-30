@@ -945,7 +945,7 @@ with tab2 :
             labels={"process_name": "Process", "metric_value": "Energy (J)"},
             title="Energy Consumption by Process"
         )
-        st.plotly_chart(fig_bar, use_container_width=True, key=f"{resource_type}_bar")
+        #st.plotly_chart(fig_bar, use_container_width=True, key=f"{resource_type}_bar")
 
     with col2:
         st.subheader("📈 Energy Over Time")
@@ -958,7 +958,7 @@ with tab2 :
             title="Energy Usage Over Time"
         )
         fig_line.update_layout(height=500)
-        st.plotly_chart(fig_line, use_container_width=True, key=f"{resource_type}_line")
+      #  st.plotly_chart(fig_line, use_container_width=True, key=f"{resource_type}_line")
 
     # Metrics summary
     st.metric("🔋 Total Energy Today", f"{total_energy['metric_value'].sum():.2f} J")
