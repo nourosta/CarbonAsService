@@ -372,17 +372,17 @@ def get_ecofloc_results_endpoint(skip: int = 0, limit: int = 100, db: Session = 
 #     cpu_data = [r for r in results if r.resource_type == "cpu"]
 #     return cpu_data
 
-@app.get("/ecofloc/cpu", response_model=List[EcoflocResultOut])
-def get_recent_cpu_data(hours: int = 24, db: Session = Depends(get_db)):
-    time_cutoff = datetime.utcnow() - timedelta(hours=hours)
-    results = (
-        db.query(EcoflocResult)
-        .filter(EcoflocResult.resource_type == "cpu")
-        .filter(EcoflocResult.timestamp >= time_cutoff)
-        .order_by(EcoflocResult.timestamp.asc())
-        .all()
-    )
-    return results
+# @app.get("/ecofloc/cpu", response_model=List[EcoflocResultOut])
+# def get_recent_cpu_data(hours: int = 24, db: Session = Depends(get_db)):
+#     time_cutoff = datetime.utcnow() - timedelta(hours=hours)
+#     results = (
+#         db.query(EcoflocResult)
+#         .filter(EcoflocResult.resource_type == "cpu")
+#         .filter(EcoflocResult.timestamp >= time_cutoff)
+#         .order_by(EcoflocResult.timestamp.asc())
+#         .all()
+#     )
+#     return results
 
 # @app.get("/ecofloc/cpu", response_model=List[EcoflocResultOut])
 # def get_recent_cpu_data(hours: int = 24, db: Session = Depends(get_db)):
