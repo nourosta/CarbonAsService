@@ -363,6 +363,17 @@ def get_ecofloc_results_endpoint(skip: int = 0, limit: int = 100, db: Session = 
     results = fetch_ecofloc_results(db)
     return results
 
+@app.get("/ecofloc/cpu", response_model=List[EcoflocResultOut])
+def get_today_cpu_data(db: Session = Depends(get_db)):
+    now = datetime.utcnow()
+    start_of_day = datetime(now.year, now.month, now.day)  # Midnight UTC
+    results = (
+        db.query(EcoflocResult)
+        .filter(EcoflocResult.resource_type == "cpu")
+        .filter(EcoflocResult.timestamp >= start_of_day)
+        .all()
+    )
+    return results
 
 
 

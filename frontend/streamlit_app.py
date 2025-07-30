@@ -748,3 +748,75 @@ except Exception as e:
 
 
 
+    try:
+        response = requests.get(f"{FASTAPI_BASE_URL}/ecofloc/cpu")
+        response.raise_for_status()
+        data = response.json()
+        df_cpu = pd.DataFrame(data)
+    except Exception as e:
+        st.error(f"Error fetching CPU data: {e}")
+        st.stop()
+
+    # Check if necessary columns exist
+    required = ['timestamp', 'metric_value', 'metric_name', 'process_name']
+    missing = [col for col in required if col not in df_cpu.columns]
+    if missing:
+        st.error(f"Missing expected columns: {missing}")
+        st.write("Available columns:", df_cpu.columns.tolist())
+        st.stop()
+
+    # Type conversion
+    df_cpu['timestamp'] = pd.to_datetime(df_cpu['timestamp'], errors='coerce')
+    df_cpu['metric_value'] = pd.to_numeric(df_cpu['metric_value'], errors='coerce')
+    df_cpu.dropna(subset=["timestamp", "metric_value"], inplace=True)
+
+    # Fix Arrow error (optional)
+    for col in df_cpu.select_dtypes(include="object").columns:
+        df_cpu[col] = df_cpu[col].astype(str)
+
+    st.subheader("🔍 Raw Ecofloc CPU Data")
+    st.dataframe(df_cpu)
+    energy_df = df_cpu[df_cpu["metric_name"].str.lower().str.contains("total energy")]
+    st.subheader("⚡ Total Energy per Process (Today)")
+
+    total_energy = (
+        energy_df.groupby("process_name")["metric_value"]
+        .sum()
+        .reset_index()
+        .sort_values(by="metric_value", ascending=False)
+    )
+
+    fig_bar = px.bar(
+        total_energy,
+        x="process_name",
+        y="metric_value",
+        labels={"process_name": "Process", "metric_value": "Total Energy (Joules)"},
+        title="Total Energy by Process (Midnight to Now)",
+    )
+    st.plotly_chart(fig_bar, use_container_width=True)
+
+    st.subheader("📈 Energy Consumption Over Time")
+
+    fig_line = px.line(
+        energy_df,
+        x="timestamp",
+        y="metric_value",
+        color="process_name",
+        labels={
+            "timestamp": "Time",
+            "metric_value": "Energy (Joules)",
+            "process_name": "Process"
+        },
+        title="Energy Consumption per Process Over Time"
+    )
+
+    fig_line.update_layout(height=500)
+    st.plotly_chart(fig_line, use_container_width=True)
+
+    top5 = total_energy.head(5)
+    st.metric("Total Energy (All Processes)", f"{total_energy['metric_value'].sum():.2f} J")
+
+    st.subheader("🏭 Top 5 Energy Consumers")
+    st.table(top5)
+
+
