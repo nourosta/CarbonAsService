@@ -5,6 +5,7 @@ import pandas as pd
 import plotly.express as px
 from dbgpu import GPUDatabase
 from streamlit_autorefresh import st_autorefresh
+from datetime import datetime
 
 
 tab1, tab2 = st.tabs(["🏠 System Overview", "📈 Live Monitoring"])
