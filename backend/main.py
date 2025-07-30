@@ -363,29 +363,31 @@ def get_ecofloc_results_endpoint(db: Session = Depends(get_db)):
     results = fetch_ecofloc_results(db)
     return results
 
-# @app.get("/ecofloc/cpu", response_model=List[EcoflocResultOut])
-# def get_all_cpu_data(db: Session = Depends(get_db)):
-#     results = (
-#         db.query(EcoflocResult)
-#         .filter(EcoflocResult.resource_type == "cpu")
-#         .filter(EcoflocResult.timestamp.isnot(None))  # just to be safe
-#         .all()
-#     )
-#     return results
-
-@app.get("/ecofloc/{resource}", response_model=List[EcoflocResultOut])
-def get_resource_data(resource: str, db: Session = Depends(get_db)):
-    valid_resources = {"cpu", "ram", "gpu", "sd", "nic"}
-    if resource not in valid_resources:
-        raise HTTPException(status_code=400, detail="Invalid resource type")
-
-    start_of_day = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
-    return (
+@app.get("/ecofloc/cpu", response_model=List[EcoflocResultOut])
+def get_all_cpu_data(db: Session = Depends(get_db)):
+    results = (
         db.query(EcoflocResult)
-        .filter(EcoflocResult.resource_type == resource)
-        .filter(EcoflocResult.timestamp >= start_of_day)
+        .filter(EcoflocResult.resource_type == "cpu")
+        .filter(EcoflocResult.timestamp.isnot(None))  # just to be safe
         .all()
     )
+    return results
+
+
+
+# @app.get("/ecofloc/{resource}", response_model=List[EcoflocResultOut])
+# def get_resource_data(resource: str, db: Session = Depends(get_db)):
+#     valid_resources = {"cpu", "ram", "gpu", "sd", "nic"}
+#     if resource not in valid_resources:
+#         raise HTTPException(status_code=400, detail="Invalid resource type")
+
+#     start_of_day = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+#     return (
+#         db.query(EcoflocResult)
+#         .filter(EcoflocResult.resource_type == resource)
+#         .filter(EcoflocResult.timestamp >= start_of_day)
+#         .all()
+#     )
 
 
 # @app.get("/ecofloc/cpu", response_model=List[EcoflocResultOut])
