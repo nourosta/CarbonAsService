@@ -751,6 +751,7 @@ with tab2 :
 # fig_line.update_layout(height=500)
 # st.plotly_chart(fig_line_ram, use_container_width=True)
 
+    st_autorefresh(interval=10000, key="refresh")
 
 
 
