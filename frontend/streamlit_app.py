@@ -402,9 +402,14 @@ with tab2 :
         st.stop()
 
     # Clean + filter
-    df['timestamp'] = pd.to_datetime(df['timestamp'])
-    df['metric_value'] = pd.to_numeric(df['metric_value'], errors='coerce')
-    df.dropna(subset=['metric_value', 'timestamp'], inplace=True)
+    if "timestamp" in df.columns:
+
+        df['timestamp'] = pd.to_datetime(df['timestamp'])
+        df['metric_value'] = pd.to_numeric(df['metric_value'], errors='coerce')
+        df.dropna(subset=['metric_value', 'timestamp'], inplace=True)
+    else:
+        st.error("Missing 'timestamp' in data")
+        st.stop()
 
     # Filter for "Total Energy" rows only
     energy_df = df[df["metric_name"].str.lower().str.contains("total energy")].copy()
