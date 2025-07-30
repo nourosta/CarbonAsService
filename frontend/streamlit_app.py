@@ -386,137 +386,137 @@ with tab1:
 
 
 with tab2 : 
-    st.header("🔄 Real-Time System Monitoring")
+#     st.header("🔄 Real-Time System Monitoring")
 
 
-    st.title("Ecofloc CPU Energy Dashboard – Today")
+#     st.title("Ecofloc CPU Energy Dashboard – Today")
 
-    # Get today's data
-    try:
-        response = requests.get(f"{FASTAPI_BASE_URL}/ecofloc/cpu")
-        response.raise_for_status()
-        data = response.json()
-        df = pd.DataFrame(data)
-    except Exception as e:
-        st.error(f"Error fetching Ecofloc CPU data: {e}")
-        st.stop()
+#     # Get today's data
+#     try:
+#         response = requests.get(f"{FASTAPI_BASE_URL}/ecofloc/cpu")
+#         response.raise_for_status()
+#         data = response.json()
+#         df = pd.DataFrame(data)
+#     except Exception as e:
+#         st.error(f"Error fetching Ecofloc CPU data: {e}")
+#         st.stop()
 
-    # Clean + filter
-    if "timestamp" in df.columns:
+#     # Clean + filter
+#     if "timestamp" in df.columns:
 
-        df['timestamp'] = pd.to_datetime(df['timestamp'])
-        df['metric_value'] = pd.to_numeric(df['metric_value'], errors='coerce')
-        df.dropna(subset=['metric_value', 'timestamp'], inplace=True)
-    else:
-        st.error("Missing 'timestamp' in data")
-        st.stop()
+#         df['timestamp'] = pd.to_datetime(df['timestamp'])
+#         df['metric_value'] = pd.to_numeric(df['metric_value'], errors='coerce')
+#         df.dropna(subset=['metric_value', 'timestamp'], inplace=True)
+#     else:
+#         st.error("Missing 'timestamp' in data")
+#         st.stop()
 
-    # Filter for "Total Energy" rows only
-    energy_df = df[df["metric_name"].str.lower().str.contains("total energy")].copy()
+#     # Filter for "Total Energy" rows only
+#     energy_df = df[df["metric_name"].str.lower().str.contains("total energy")].copy()
 
-    # ✅ Total energy consumed today
-    total_energy_today = energy_df["metric_value"].sum()
+#     # ✅ Total energy consumed today
+#     total_energy_today = energy_df["metric_value"].sum()
 
-    # ✅ Top 5 producers by process name
-    top5 = (
-        energy_df.groupby("process_name")["metric_value"]
-        .sum()
-        .sort_values(ascending=False)
-        .head(5)
-        .reset_index()
-    )
+#     # ✅ Top 5 producers by process name
+#     top5 = (
+#         energy_df.groupby("process_name")["metric_value"]
+#         .sum()
+#         .sort_values(ascending=False)
+#         .head(5)
+#         .reset_index()
+#     )
 
-    # Display total energy and top 5
-    col1, col2 = st.columns(2)
+#     # Display total energy and top 5
+#     col1, col2 = st.columns(2)
 
-    with col1:
-        st.metric("🔋 Total Energy Consumed Today", f"{total_energy_today:.2f} J")
-        st.subheader("Top 5 Energy Producers Today")
-        fig_top5 = px.bar(
-            top5,
-            x="process_name",
-            y="metric_value",
-            labels={"process_name": "Process", "metric_value": "Total Energy (J)"},
-            title="Top 5 Energy Consumers"
-        )
-        st.plotly_chart(fig_top5, use_container_width=True)
+#     with col1:
+#         st.metric("🔋 Total Energy Consumed Today", f"{total_energy_today:.2f} J")
+#         st.subheader("Top 5 Energy Producers Today")
+#         fig_top5 = px.bar(
+#             top5,
+#             x="process_name",
+#             y="metric_value",
+#             labels={"process_name": "Process", "metric_value": "Total Energy (J)"},
+#             title="Top 5 Energy Consumers"
+#         )
+#         st.plotly_chart(fig_top5, use_container_width=True)
 
-    # (Optional) Line plot of energy over time
-    st.subheader("Energy Consumption Over Time (Today)")
-    fig_line = px.line(
-        energy_df,
-        x="timestamp",
-        y="metric_value",
-        color="process_name",
-        labels={
-            "timestamp": "Timestamp",
-            "metric_value": "Energy (J)",
-            "process_name": "Process"
-        },
-        title="Process Energy Consumption Over Time"
-    )
-    fig_line.update_layout(height=500)
-    st.plotly_chart(fig_line, use_container_width=True)
-    st.markdown("---")
+#     # (Optional) Line plot of energy over time
+#     st.subheader("Energy Consumption Over Time (Today)")
+#     fig_line = px.line(
+#         energy_df,
+#         x="timestamp",
+#         y="metric_value",
+#         color="process_name",
+#         labels={
+#             "timestamp": "Timestamp",
+#             "metric_value": "Energy (J)",
+#             "process_name": "Process"
+#         },
+#         title="Process Energy Consumption Over Time"
+#     )
+#     fig_line.update_layout(height=500)
+#     st.plotly_chart(fig_line, use_container_width=True)
+#     st.markdown("---")
 
 
 
-    st.header("🧾 Top Running Processes")
-    st_autorefresh(interval=5000)
-    try:
+#     st.header("🧾 Top Running Processes")
+#     st_autorefresh(interval=5000)
+#     try:
        
-        response = requests.get(f"{FASTAPI_BASE_URL}/top-processes")
-        processes = response.json()
-        df = pd.DataFrame(processes)
-        df = df.rename(columns={
-            'pid': 'PID',
-            'name': 'Name',
-            'cpu_percent': 'CPU (%)',
-            'memory_percent': 'RAM (%)'
-        })
-        st.dataframe(df)
-    except Exception as e:
-        st.error(f"Error loading processes: {e}")
+#         response = requests.get(f"{FASTAPI_BASE_URL}/top-processes")
+#         processes = response.json()
+#         df = pd.DataFrame(processes)
+#         df = df.rename(columns={
+#             'pid': 'PID',
+#             'name': 'Name',
+#             'cpu_percent': 'CPU (%)',
+#             'memory_percent': 'RAM (%)'
+#         })
+#         st.dataframe(df)
+#     except Exception as e:
+#         st.error(f"Error loading processes: {e}")
 
-    st.subheader("EcoFloc Monitoring for Top Processes")
+#     st.subheader("EcoFloc Monitoring for Top Processes")
 
-    # User inputs
-    limit = st.slider("Number of Top Processes", 1, 20, 5)
-    interval = st.number_input("Sampling Interval (ms)", min_value=100, value=1000, step=100)
-    duration = st.number_input("Duration (s)", min_value=1, value=5, step=1)
-    resources = st.multiselect("Resources to Monitor", ["cpu", "ram", "gpu", "sd", "nic"], default=["cpu", "ram"])
+#     # User inputs
+#     limit = st.slider("Number of Top Processes", 1, 20, 5)
+#     interval = st.number_input("Sampling Interval (ms)", min_value=100, value=1000, step=100)
+#     duration = st.number_input("Duration (s)", min_value=1, value=5, step=1)
+#     resources = st.multiselect("Resources to Monitor", ["cpu", "ram", "gpu", "sd", "nic"], default=["cpu", "ram"])
 
-    if st.button("Run EcoFloc Monitor"):
-        with st.spinner("Running EcoFloc..."):
-            try:
-                query_params = {
-                    "limit": limit,
-                    "interval": interval,
-                    "duration": duration,
-                    "resources": ",".join(resources)
-                }
+#     if st.button("Run EcoFloc Monitor"):
+#         with st.spinner("Running EcoFloc..."):
+#             try:
+#                 query_params = {
+#                     "limit": limit,
+#                     "interval": interval,
+#                     "duration": duration,
+#                     "resources": ",".join(resources)
+#                 }
 
-                response = requests.get(f"{FASTAPI_BASE_URL}/ecofloc/monitor", params=query_params)
-                data = response.json().get("results", [])
+#                 response = requests.get(f"{FASTAPI_BASE_URL}/ecofloc/monitor", params=query_params)
+#                 data = response.json().get("results", [])
 
-                if data:
-                    df = pd.DataFrame(data)
-                    st.success("Monitoring complete.")
-                    st.dataframe(df[["pid", "name", "cpu_percent", "memory_percent", "resource"]])
+#                 if data:
+#                     df = pd.DataFrame(data)
+#                     st.success("Monitoring complete.")
+#                     st.dataframe(df[["pid", "name", "cpu_percent", "memory_percent", "resource"]])
 
-                    with st.expander("Raw Output Logs"):
-                        for row in data:
-                            st.text(f"PID {row['pid']} ({row['name']}) - {row['resource']}")
-                            st.code(row.get("ecofloc_output", "No output"))
+#                     with st.expander("Raw Output Logs"):
+#                         for row in data:
+#                             st.text(f"PID {row['pid']} ({row['name']}) - {row['resource']}")
+#                             st.code(row.get("ecofloc_output", "No output"))
 
-                else:
-                    st.warning("No results returned.")
+#                 else:
+#                     st.warning("No results returned.")
 
-            except Exception as e:
-                st.error(f"Failed to fetch data: {e}")
+#             except Exception as e:
+#                 st.error(f"Failed to fetch data: {e}")
 
 
-st.title("EcoFloc Monitor")
+# st.title("EcoFloc Monitor")
 
 # limit = st.slider("Top Processes", 1, 20, 5)
 # interval = st.number_input("Interval (ms)", 100, 5000, 1000)
