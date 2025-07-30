@@ -358,7 +358,7 @@ def fetch_ecofloc_results(db: Session):
         .all()
     )
 @app.get("/ecofloc_results/", response_model=List[EcoflocResultOut])
-def get_ecofloc_results_endpoint(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+def get_ecofloc_results_endpoint(db: Session = Depends(get_db)):
     # results = fetch_ecofloc_results(db, skip, limit)
     results = fetch_ecofloc_results(db)
     return results
