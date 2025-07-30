@@ -384,6 +384,49 @@ def get_cpu_data(db: Session = Depends(get_db)):
         .all()
     )
 
+@app.get("/ecofloc/ram", response_model=List[EcoflocResultOut])
+def get_cpu_data(db: Session = Depends(get_db)):
+
+    start_of_day = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    return (
+        db.query(EcoflocResult)
+        .filter(EcoflocResult.resource_type == "ram")
+        .filter(EcoflocResult.timestamp >= start_of_day)
+        .all()
+    )
+
+@app.get("/ecofloc/sd", response_model=List[EcoflocResultOut])
+def get_cpu_data(db: Session = Depends(get_db)):
+
+    start_of_day = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    return (
+        db.query(EcoflocResult)
+        .filter(EcoflocResult.resource_type == "sd")
+        .filter(EcoflocResult.timestamp >= start_of_day)
+        .all()
+    )
+
+@app.get("/ecofloc/nic", response_model=List[EcoflocResultOut])
+def get_cpu_data(db: Session = Depends(get_db)):
+
+    start_of_day = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    return (
+        db.query(EcoflocResult)
+        .filter(EcoflocResult.resource_type == "nic")
+        .filter(EcoflocResult.timestamp >= start_of_day)
+        .all()
+    )
+
+@app.get("/ecofloc/gpu", response_model=List[EcoflocResultOut])
+def get_cpu_data(db: Session = Depends(get_db)):
+
+    start_of_day = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    return (
+        db.query(EcoflocResult)
+        .filter(EcoflocResult.resource_type == "gpu")
+        .filter(EcoflocResult.timestamp >= start_of_day)
+        .all()
+    )
 
 # @app.get("/ecofloc/{resource}", response_model=List[EcoflocResultOut])
 # def get_resource_data(resource: str, db: Session = Depends(get_db)):
