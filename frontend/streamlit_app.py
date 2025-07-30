@@ -753,6 +753,7 @@ try:
     response = requests.get(f"{FASTAPI_BASE_URL}/ecofloc/cpu?hours={hours}")
     response.raise_for_status()
     cpu_data = response.json()
+    st.write("API response:", cpu_data)
     df_cpu = pd.DataFrame(cpu_data)
 except Exception as e:
     st.error(f"Error fetching Ecofloc CPU data: {e}")
