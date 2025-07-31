@@ -1051,56 +1051,55 @@ with tab2 :
 with tab3:
     
     st.write("HEllo from tab3")
-
-    # Carbon intensity factors in kg CO2eq/kWh
-    CO2_FACTORS = {
-        "coal": 1.0,
-        "gas": 0.5,
-        "wind": 0.01,
-        "solar": 0.05,
-        "hydro": 0.01,
-        "nuclear": 0.01,
-        "biomass": 0.1,
-        "geothermal": 0.02,
-        "unknown": 0.3
+    # Conversion table (gCO₂e per kWh)
+    CARBON_INTENSITY_G_PER_KWH = {
+        "nuclear": 12,
+        "wind": 11,
+        "solar": 48,
+        "hydro": 24,
+        "biomass": 230,
+        "geothermal": 45,
+        "coal": 820,
+        "gas": 490,
+        "oil": 650,
+        "unknown": 500,
+        "hydro discharge": 24,
+        "battery discharge": 300  # rough estimate
     }
 
-    def fetch_latest_power_mix(zone="FR"):
-        try:
-            response = requests.get(f"{FASTAPI_BASE_URL}/power-breakdown/latest?zone={zone}")
-            response.raise_for_status()
-            return response.json()
-        except Exception as e:
-            st.error(f"Failed to fetch latest power mix: {e}")
-            return {}
+    # Energy resources to loop through (same as Tab 2)
+    resource_types = ["cpu", "ram", "gpu", "sd", "nic"]
 
-        
-        # -----------------------------
-    # Calculate weighted CO₂ intensity
-    # -----------------------------
-    def calculate_carbon_intensity(mix, factors):
-        total_intensity = 0.0
-        for source, share in mix.items():
-            source = source.lower()
-            factor = factors.get(source, 0.0)
-            total_intensity += (share / 100.0) * factor
-        return total_intensity  # kg CO₂eq per kWh
+    st.header("🌍 Carbon Emissions by Resource")
 
-    # -----------------------------
-    # Convert energy (J) to kg CO₂eq
-    # -----------------------------
-    def convert_energy_to_co2eq(df, carbon_intensity):
-        df = df.copy()
-        df["kWh"] = df["metric_value"] / 3.6e6
-        df["kg_co2eq"] = df["kWh"] * carbon_intensity
-        return df
-    
+    # Fetch latest power mix
+    try:
+        mix_response = requests.get(f"{FASTAPI_BASE_URL}/power-breakdown/latest")
+        mix_response.raise_for_status()
+        mix_data = mix_response.json()
+        power_mix = mix_data.get("powerConsumptionBreakdown", {})
+        total_mix_mw = sum(v for v in power_mix.values() if isinstance(v, (int, float)))
+    except Exception as e:
+        st.error(f"Failed to fetch power mix: {e}")
+        st.stop()
 
-    # -----------------------------
-    # Display emissions for each resource
-    # -----------------------------
-    def display_carbon_emissions(resource_type, carbon_intensity):
-        st.markdown(f"## 🌿 Resource: {resource_type.upper()}")
+    # Compute weighted average carbon intensity (gCO₂e/kWh)
+    total_carbon = 0
+    for source, amount_mw in power_mix.items():
+        intensity = CARBON_INTENSITY_G_PER_KWH.get(source.lower(), 500)  # default to 500 if unknown
+        total_carbon += amount_mw * intensity
+
+    carbon_intensity = total_carbon / total_mix_mw  # gCO₂e/kWh
+
+    st.markdown(f"🧮 **Grid Carbon Intensity:** `{carbon_intensity:.2f} gCO₂e/kWh`")
+
+    # Conversion factor: J to kWh = 1 / 3.6e6
+    JOULE_TO_KWH = 1 / 3.6e6
+    JOULE_TO_CO2 = carbon_intensity * JOULE_TO_KWH  # gCO₂e per J
+
+    # Loop over monitored system resources
+    for resource_type in resource_types:
+        st.markdown(f"## 💻 Resource: {resource_type.upper()}")
 
         try:
             response = requests.get(f"{FASTAPI_BASE_URL}/ecofloc/{resource_type}")
@@ -1109,90 +1108,63 @@ with tab3:
             df = pd.DataFrame(data)
         except Exception as e:
             st.error(f"Error fetching data for {resource_type}: {e}")
-            return
+            continue
 
-        required_cols = ['timestamp', 'metric_value', 'metric_name', 'process_name']
-        if not set(required_cols).issubset(df.columns):
-            st.warning(f"Missing columns for {resource_type.upper()}")
-            return
+        required = ['timestamp', 'metric_value', 'metric_name', 'process_name']
+        missing = [col for col in required if col not in df.columns]
+        if missing:
+            st.error(f"Missing expected columns in {resource_type}: {missing}")
+            continue
 
-        # Clean and filter
         df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
         df['metric_value'] = pd.to_numeric(df['metric_value'], errors='coerce')
         df.dropna(subset=['timestamp', 'metric_value'], inplace=True)
 
-        df = df[df['metric_name'].str.lower().str.contains("total energy")]
-        if df.empty:
-            st.info(f"No energy data found for {resource_type.upper()}")
-            return
+        df['metric_value'] = df['metric_value'].astype(float)
+        df['co2e'] = df['metric_value'] * JOULE_TO_CO2
 
-        # Convert to CO2eq
-        df = convert_energy_to_co2eq(df, carbon_intensity)
+        energy_df = df[df['metric_name'].str.lower().str.contains("total energy")]
 
-        # Grouped emissions by process
-        total_co2 = (
-            df.groupby("process_name")["kg_co2eq"]
+        if energy_df.empty:
+            st.info(f"No energy data available for {resource_type}.")
+            continue
+
+        total_co2e = (
+            energy_df.groupby("process_name")["co2e"]
             .sum()
             .reset_index()
-            .sort_values(by="kg_co2eq", ascending=False)
+            .sort_values(by="co2e", ascending=False)
         )
 
         col1, col2 = st.columns(2)
+
         with col1:
-            st.subheader("📊 Total CO₂ by Process")
+            st.subheader(f"🌫️ CO₂e per Process ({resource_type.upper()})")
             fig_bar = px.bar(
-                total_co2,
+                total_co2e,
                 x="process_name",
-                y="kg_co2eq",
-                labels={"process_name": "Process", "kg_co2eq": "CO₂eq (kg)"},
-                title=f"{resource_type.upper()} Emissions"
+                y="co2e",
+                labels={"process_name": "Process", "co2e": "CO₂e (g)"},
+                title=f"{resource_type.upper()} - Emissions by Process"
             )
-            st.plotly_chart(fig_bar, use_container_width=True, key=f"{resource_type}_co2_bar")
+            st.plotly_chart(fig_bar, use_container_width=True, key=f"{resource_type}_carbon_bar")
 
         with col2:
-            st.subheader("📈 CO₂ Over Time")
+            st.subheader("📈 CO₂e Over Time")
             fig_line = px.line(
-                df,
+                energy_df,
                 x="timestamp",
-                y="kg_co2eq",
+                y="co2e",
                 color="process_name",
-                labels={"timestamp": "Time", "kg_co2eq": "CO₂eq (kg)"},
-                title=f"{resource_type.upper()} Time Series"
+                labels={"timestamp": "Time", "co2e": "CO₂e (g)"},
+                title=f"{resource_type.upper()} - CO₂e Over Time"
             )
             fig_line.update_layout(height=500)
-            st.plotly_chart(fig_line, use_container_width=True, key=f"{resource_type}_co2_line")
+            st.plotly_chart(fig_line, use_container_width=True, key=f"{resource_type}_carbon_line")
 
-        st.metric(
-            label=f"🌍 Total CO₂ Today ({resource_type.upper()})",
-            value=f"{total_co2['kg_co2eq'].sum():.4f} kg"
-        )
+        st.metric(f"🧾 Total CO₂e Today ({resource_type.upper()})", f"{total_co2e['co2e'].sum():.2f} gCO₂e")
 
-        st.subheader("🏭 Top 5 Emitting Processes")
-        st.table(total_co2.head(5))
-
-        csv = df.to_csv(index=False).encode('utf-8')
-        st.download_button(
-            label=f"📥 Download CO₂ Data ({resource_type.upper()})",
-            data=csv,
-            file_name=f"{resource_type}_co2_data.csv",
-            mime="text/csv"
-        )
+        st.subheader(f"🏭 Top 5 Emitters ({resource_type.upper()})")
+        st.table(total_co2e.head(5))
 
         st.markdown("---")
-
-    # -----------------------------
-    # TAB 3 ENTRY POINT
-    # -----------------------------
-    st.title("🌍 Tab 3: Carbon Emissions Analysis")
-
-    latest_mix = fetch_latest_power_mix()
-
-    if latest_mix:
-        carbon_intensity = calculate_carbon_intensity(latest_mix, CO2_FACTORS)
-        st.success(f"💡 Latest carbon intensity: **{carbon_intensity:.4f} kg CO₂eq/kWh**")
-        st.caption(f"Based on most recent stored mix for zone: FR")
-
-        for resource in resource_types:
-            display_carbon_emissions(resource, carbon_intensity)
-    else:
-        st.error("Could not load the latest power mix. Please check the backend.")
