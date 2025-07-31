@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, Text
+from sqlalchemy import Column, Integer, String, Float, DateTime, Text, JSON
 from datetime import datetime
 from database import Base
 
@@ -56,11 +56,14 @@ class HDDImpact(Base):
     timestamp = Column(DateTime, default=datetime.utcnow)
 
 
+
 class PowerBreakdown(Base):
     __tablename__ = "power_breakdown"
+
     id = Column(Integer, primary_key=True, index=True)
     zone = Column(String, index=True)
-    data = Column(Text)
+    powerConsumptionBreakdown = Column(JSON)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
 class CarbonIntensity(Base):
     __tablename__ = "carbon_intensity"

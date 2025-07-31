@@ -553,21 +553,21 @@ def get_cpu_data(db: Session = Depends(get_db)):
 
 def get_latest_power_breakdown_from_db(zone: str):
     session = SessionLocal()
-    result = (
+    latest = (
         session.query(PowerBreakdown)
         .filter(PowerBreakdown.zone == zone)
-        .order_by(PowerBreakdown.timestamp.desc())
+        .order_by(PowerBreakdown.created_at.desc())  # Use 'created_at' not 'timestamp'
         .first()
     )
-    return result.to_dict() if result else {}
+    return latest.to_dict() if latest else {}
 
 @app.get("/power-breakdown/latest")
 async def get_latest_power_breakdown(zone: str = 'FR'):
     try:
-        # Query DB for most recent power mix entry
         data = get_latest_power_breakdown_from_db(zone)
         return data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
     
     
