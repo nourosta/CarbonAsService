@@ -70,7 +70,7 @@ def store_power_breakdown(zone: str, data: dict):
 def store_carbon_intensity(zone: str, data: dict):
     db = SessionLocal()
     try:
-        intensity_data = CarbonIntensity(zone=zone, data=json.dumps(data))  #
+        intensity_data = CarbonIntensity(zone=zone, data=json.dumps(data)) 
         db.add(intensity_data)
         db.commit()
         db.refresh(intensity_data)
@@ -109,19 +109,3 @@ def Ecofloc_results():
 def get_all_ecofloc_results(db: Session):
     return db.query(EcoflocResult).all()
 
-
-def get_latest_power_breakdown_from_db(zone: str = "FR"):
-    session = SessionLocal()
-    try:
-        latest = (
-            session.query(PowerBreakdown)
-            .filter(PowerBreakdown.zone == zone)
-            .order_by(PowerBreakdown.id.desc())  # or created_at if available
-            .first()
-        )
-        if latest:
-            parsed = json.loads(latest.data)
-            return parsed  # returns the full power mix object
-        return None
-    finally:
-        session.close()
