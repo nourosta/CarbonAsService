@@ -1094,7 +1094,3 @@ with tab3:
 #         st.metric(f"🔋 Total Energy Today ({resource_type.upper()})", f"{total_energy['metric_value'].sum():.2f} J")
 #         st.table(total_energy.head(5))
 #         st.markdown("---")
-
-
-# for resource in resource_types:
-#     display_resource_metrics(resource)
