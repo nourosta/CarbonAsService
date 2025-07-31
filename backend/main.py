@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from typing import List
-from models import EcoflocResult, PowerBreakdown
+from models import EcoflocResult
 from fastapi import FastAPI,HTTPException , APIRouter, Query, Depends
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
@@ -11,7 +11,7 @@ import json
 import requests
 from pydantic import BaseModel
 from crud import store_power_breakdown, store_carbon_intensity, save_ram,save_gpu,save_hdd,save_ssd, save_cpu
-from database import SessionLocal, get_db, init_db
+from database import get_db, init_db
 from fastapi.middleware.cors import CORSMiddleware
 from system_info import get_top_processes_ps
 from ecofloc_runner import  monitor_top_processes
@@ -551,23 +551,3 @@ def get_cpu_data(db: Session = Depends(get_db)):
 #         return {"error": str(e)}
 
 
-def get_latest_power_breakdown_from_db(zone: str):
-    session = SessionLocal()
-    latest = (
-        session.query(PowerBreakdown)
-        .filter(PowerBreakdown.zone == zone)
-        .order_by(PowerBreakdown.created_at.desc())  # Use 'created_at' not 'timestamp'
-        .first()
-    )
-    return latest.to_dict() if latest else {}
-
-@app.get("/power-breakdown/latest")
-async def get_latest_power_breakdown(zone: str = 'FR'):
-    try:
-        data = get_latest_power_breakdown_from_db(zone)
-        return data
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-    
-    
