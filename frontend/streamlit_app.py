@@ -8,7 +8,7 @@ from streamlit_autorefresh import st_autorefresh
 from datetime import datetime
 
 
-tab1, tab2 = st.tabs(["🏠 System Overview", "📈 Live Monitoring"])
+tab1, tab2 , tab3 = st.tabs(["🏠 System Overview", "📈 Live Monitoring","🚗💨 Carbon Emissions"])
 st.set_page_config(page_title="System Info Dashboard", layout="wide") 
 
 
@@ -1047,3 +1047,54 @@ with tab2 :
         st.table(top5)
 
         st.markdown("---")
+
+with tab3:
+    st_autorefresh(interval=10000, key="auto_refresh_metrics")
+    def display_resource_metrics(resource_type: str):
+        st.markdown(f"## 🔍 Resource: {resource_type.upper()}")
+        
+        try:
+            response = requests.get(f"{FASTAPI_BASE_URL}/ecofloc/{resource_type}")
+            response.raise_for_status()
+            df = pd.DataFrame(response.json())
+        except Exception as e:
+            st.error(f"Error fetching data for {resource_type}: {e}")
+            return
+
+        expected_cols = {'timestamp', 'metric_value', 'metric_name', 'process_name'}
+        if not expected_cols.issubset(df.columns):
+            st.warning(f"Missing expected data columns for {resource_type.upper()}")
+            return
+
+        df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
+        df['metric_value'] = pd.to_numeric(df['metric_value'], errors='coerce')
+        df.dropna(subset=['timestamp', 'metric_value'], inplace=True)
+
+        energy_df = df[df['metric_name'].str.lower().str.contains("total energy")]
+        if energy_df.empty:
+            st.info(f"No total energy data available for {resource_type.upper()}")
+            return
+
+        total_energy = (
+            energy_df.groupby("process_name")["metric_value"]
+            .sum()
+            .reset_index()
+            .sort_values(by="metric_value", ascending=False)
+        )
+
+        col1, col2 = st.columns(2)
+        with col1:
+            fig_bar = px.bar(total_energy, x="process_name", y="metric_value", title="Total Energy per Process")
+            st.plotly_chart(fig_bar, use_container_width=True, key=f"{resource_type}_bar")
+
+        with col2:
+            fig_line = px.line(energy_df, x="timestamp", y="metric_value", color="process_name", title="Energy Over Time")
+            st.plotly_chart(fig_line, use_container_width=True, key=f"{resource_type}_line")
+
+        st.metric(f"🔋 Total Energy Today ({resource_type.upper()})", f"{total_energy['metric_value'].sum():.2f} J")
+        st.table(total_energy.head(5))
+        st.markdown("---")
+
+
+for resource in resource_types:
+    display_resource_metrics(resource)
