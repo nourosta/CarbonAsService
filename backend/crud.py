@@ -2,7 +2,6 @@ import json
 from database import SessionLocal
 from sqlalchemy.orm import Session
 from models import CarbonIntensity, EcoflocResult, GPUImpact, PowerBreakdown, RAMImpact, SSDImpact, HDDImpact, CPUImpact
-from dateutil import parser
 
 
 def save_cpu(model, gwp, adp, pe):
@@ -55,30 +54,23 @@ def save_hdd(capacity, units, gwp, adp, pe):
     finally:
         db.close()
 
-# def store_power_breakdown(zone: str, data: dict):
-#     db = SessionLocal()
-#     try:
-#         timestamp_str = data.get("datetime")
-#         if not timestamp_str:
-#             raise ValueError("No datetime field in power breakdown data")
-#         dt = parser.isoparse(timestamp_str)
+# Store power breakdown
+def store_power_breakdown(zone: str, data: dict):
+    db = SessionLocal()
+    try:
+        power_data = PowerBreakdown(zone=zone, data=json.dumps(data))  #
+        db.add(power_data)
+        db.commit()
+        db.refresh(power_data)
+        return power_data
+    finally:
+        db.close()
 
-#         power_data = PowerBreakdown(
-#             zone=zone,
-#             data=json.dumps(data),
-#             datetime=dt
-#         )
-#         db.add(power_data)
-#         db.commit()
-#         db.refresh(power_data)
-#         return power_data
-#     finally:
-#         db.close()
 # Store carbon intensity
 def store_carbon_intensity(zone: str, data: dict):
     db = SessionLocal()
     try:
-        intensity_data = CarbonIntensity(zone=zone, data=json.dumps(data))  
+        intensity_data = CarbonIntensity(zone=zone, data=json.dumps(data))  #
         db.add(intensity_data)
         db.commit()
         db.refresh(intensity_data)
@@ -133,57 +125,3 @@ def get_latest_power_breakdown_from_db(zone: str = "FR"):
         return None
     finally:
         session.close()
-
-        # Save power breakdown with datetime
-def store_power_breakdown(zone: str, data: dict):
-    db = SessionLocal()
-    try:
-        timestamp_str = data.get("datetime")
-        if not timestamp_str:
-            raise ValueError("No datetime field in power breakdown data")
-        dt = parser.isoparse(timestamp_str)
-
-        power_data = PowerBreakdown(
-            zone=zone,
-            data=json.dumps(data),
-            datetime=dt
-        )
-        db.add(power_data)
-        db.commit()
-        db.refresh(power_data)
-        return power_data
-    finally:
-        db.close()
-
-# Lookup power mix closest to a given time
-def get_power_mix_at_time(db: Session, zone: str, ts):
-    return (
-        db.query(PowerBreakdown)
-        .filter(PowerBreakdown.zone == zone)
-        .filter(PowerBreakdown.datetime <= ts)
-        .order_by(PowerBreakdown.datetime.desc())
-        .first()
-    )
-
-# Carbon intensity calculation
-CARBON_INTENSITY_G_PER_KWH = {
-    "nuclear": 12, "wind": 11, "solar": 48, "hydro": 24, "biomass": 230,
-    "geothermal": 45, "coal": 820, "gas": 490, "oil": 650, "unknown": 500,
-    "hydro discharge": 24, "battery discharge": 300
-}
-
-def calculate_intensity_from_mix(power_data: dict):
-    breakdown = power_data.get("powerConsumptionBreakdown", {})
-    total_mw = sum(v for v in breakdown.values() if isinstance(v, (int, float)))
-
-    if total_mw == 0:
-        return 500  # fallback intensity
-
-    total_co2 = 0
-    for source, value in breakdown.items():
-        if not isinstance(value, (int, float)):
-            continue
-        intensity = CARBON_INTENSITY_G_PER_KWH.get(source.lower(), 500)
-        total_co2 += value * intensity
-
-    return total_co2 / total_mw  # gCO₂e/kWh

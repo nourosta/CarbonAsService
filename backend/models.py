@@ -59,10 +59,9 @@ class HDDImpact(Base):
 class PowerBreakdown(Base):
     __tablename__ = "power_breakdown"
     id = Column(Integer, primary_key=True, index=True)
-    zone = Column(String)
+    zone = Column(String, index=True)
     data = Column(Text)
-    datetime = Column(DateTime, index=True) 
-    
+
 class CarbonIntensity(Base):
     __tablename__ = "carbon_intensity"
     id = Column(Integer, primary_key=True, index=True)

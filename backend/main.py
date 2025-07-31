@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from typing import List
-from models import EcoflocResult, PowerBreakdown
+from models import EcoflocResult
 from fastapi import FastAPI,HTTPException , APIRouter, Query, Depends
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
@@ -10,7 +10,7 @@ from system_info import collect_system_info, get_top_processes_ps
 import json 
 import requests
 from pydantic import BaseModel
-from crud import calculate_intensity_from_mix, get_power_mix_at_time, store_power_breakdown, store_carbon_intensity, save_ram,save_gpu,save_hdd,save_ssd, save_cpu
+from crud import store_power_breakdown, store_carbon_intensity, save_ram,save_gpu,save_hdd,save_ssd, save_cpu
 from database import get_db, init_db
 from fastapi.middleware.cors import CORSMiddleware
 from system_info import get_top_processes_ps
@@ -551,49 +551,3 @@ def get_cpu_data(db: Session = Depends(get_db)):
 #         return {"error": str(e)}
 
 
-@app.get("/power-breakdown/latest")
-def get_latest_power_breakdown(zone: str = 'FR', db: Session = Depends(get_db)):
-    try:
-        latest = (
-            db.query(PowerBreakdown)
-            .filter(PowerBreakdown.zone == zone)
-            .order_by(PowerBreakdown.id.desc())
-            .first()
-        )
-        if not latest:
-            raise HTTPException(status_code=404, detail="No power breakdown data found.")
-
-        # Convert JSON string to dict
-        return json.loads(latest.data)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    
-    
-
-@app.get("/ecofloc/{resource}/emissions")
-def get_emissions(resource: str, db: Session = Depends(get_db), zone: str = "FR"):
-    results = (
-        db.query(EcoflocResult)
-        .filter(EcoflocResult.resource_type == resource)
-        .all()
-    )
-
-    output = []
-    for r in results:
-        power_mix = get_power_mix_at_time(db, zone, r.timestamp)
-        if not power_mix:
-            continue
-
-        mix_data = json.loads(power_mix.data)
-        intensity_g_per_kwh = calculate_intensity_from_mix(mix_data)
-        co2e = r.metric_value * (intensity_g_per_kwh / 3.6e6)
-
-        output.append({
-            "timestamp": r.timestamp,
-            "process_name": r.process_name,
-            "metric_value": r.metric_value,
-            "metric_name": r.metric_name,
-            "co2e": round(co2e, 4)
-        })
-
-    return output
