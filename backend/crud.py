@@ -2,6 +2,7 @@ import json
 from database import SessionLocal
 from sqlalchemy.orm import Session
 from models import CarbonIntensity, EcoflocResult, GPUImpact, PowerBreakdown, RAMImpact, SSDImpact, HDDImpact, CPUImpact
+from dateutil import parser
 
 
 def save_cpu(model, gwp, adp, pe):
@@ -132,7 +133,7 @@ def get_latest_power_breakdown_from_db(zone: str = "FR"):
         return None
     finally:
         session.close()
-        
+
         # Save power breakdown with datetime
 def store_power_breakdown(zone: str, data: dict):
     db = SessionLocal()
