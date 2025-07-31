@@ -1185,12 +1185,12 @@ with tab3:
     # -----------------------------
     st.title("🌍 Tab 3: Carbon Emissions Analysis")
 
-    latest_mix = fetch_latest_power_mix(zone=ZONE)
+    latest_mix = fetch_latest_power_mix()
 
     if latest_mix:
         carbon_intensity = calculate_carbon_intensity(latest_mix, CO2_FACTORS)
         st.success(f"💡 Latest carbon intensity: **{carbon_intensity:.4f} kg CO₂eq/kWh**")
-        st.caption(f"Based on most recent stored mix for zone: {ZONE}")
+        st.caption(f"Based on most recent stored mix for zone: FR")
 
         for resource in resource_types:
             display_carbon_emissions(resource, carbon_intensity)
