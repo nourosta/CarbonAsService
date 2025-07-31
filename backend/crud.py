@@ -1,3 +1,4 @@
+import json
 from database import SessionLocal
 from sqlalchemy.orm import Session
 from models import CarbonIntensity, EcoflocResult, GPUImpact, PowerBreakdown, RAMImpact, SSDImpact, HDDImpact, CPUImpact
@@ -107,3 +108,20 @@ def Ecofloc_results():
 
 def get_all_ecofloc_results(db: Session):
     return db.query(EcoflocResult).all()
+
+
+def get_latest_power_breakdown_from_db(zone: str = "FR"):
+    session = SessionLocal()
+    try:
+        latest = (
+            session.query(PowerBreakdown)
+            .filter(PowerBreakdown.zone == zone)
+            .order_by(PowerBreakdown.id.desc())  # or created_at if available
+            .first()
+        )
+        if latest:
+            parsed = json.loads(latest.data)
+            return parsed  # returns the full power mix object
+        return None
+    finally:
+        session.close()

@@ -551,3 +551,15 @@ def get_cpu_data(db: Session = Depends(get_db)):
 #         return {"error": str(e)}
 
 
+router = APIRouter()
+
+@router.get("/power-breakdown/latest")
+async def get_latest_power_breakdown(zone: str = 'FR'):
+    from .ecofloc_database import get_latest_power_breakdown_from_db
+    try:
+        data = get_latest_power_breakdown_from_db(zone)
+        if not data:
+            raise HTTPException(status_code=404, detail="No power breakdown data found")
+        return data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
