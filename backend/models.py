@@ -79,4 +79,7 @@ class EcoflocResult(Base):
     metric_name = Column(String)    # e.g., 'energy' or 'power'
     metric_value = Column(Float)
     unit = Column(String)
+    cpu_usage = Column(Float, nullable=True)
+    ram_usage = Column(Float, nullable=True)
     timestamp = Column(DateTime, default=datetime.utcnow)
+    

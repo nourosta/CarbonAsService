@@ -42,6 +42,21 @@ def get_process_name(pid):
             return f.read().strip()
     except Exception:
         return "unknown"
+    
+
+def get_cpu_mem_usage(pid):
+    try:
+        output = subprocess.check_output(
+            ['ps', '-p', str(pid), '-o', '%cpu,%mem', '--no-headers'],
+            text=True
+        ).strip()
+        if output:
+            cpu_str, mem_str = output.split()
+            return float(cpu_str), float(mem_str)
+    except Exception as e:
+        print(f"[WARN] Failed to get CPU/RAM for PID {pid}: {e}")
+    return None, None
+
 
 def parse_ecofloc_output(output: str):
     results = []
@@ -58,6 +73,8 @@ def parse_ecofloc_output(output: str):
 def monitor_resource_for_pid(args):
     pid, resource = args
     pname = get_process_name(pid)
+    cpu_pct, ram_pct = get_cpu_mem_usage(pid)
+
     command = ['ecofloc', f'--{resource}', '-p', pid, '-i', str(INTERVAL_MS), '-t', str(DURATION_S)]
     print(f"[INFO] Monitoring {resource} for PID {pid} ({pname})")
 
@@ -74,6 +91,8 @@ def monitor_resource_for_pid(args):
                 metric_name=metric_name,
                 metric_value=metric_value,
                 unit=unit
+                cpu_usage=cpu_pct,
+                ram_usage=ram_pct
             )
             db.add(entry)
         db.commit()
@@ -82,6 +101,7 @@ def monitor_resource_for_pid(args):
         # Log to file
         with open(LOG_FILE, 'a') as log_file:
             log_file.write(f"[RES={resource}] [PID={pid}] ({pname})\n")
+            log_file.write(f"[CPU%={cpu_pct}] [RAM%={ram_pct}]\n")
             log_file.write(ecofloc_output)
             log_file.write("\n*****************************\n")
 
