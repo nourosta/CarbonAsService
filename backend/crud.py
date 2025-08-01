@@ -78,7 +78,7 @@ def store_carbon_intensity(zone: str, data: dict):
     finally:
         db.close()
 
-def save_ecofloc_results(pid, pname, resource, metrics):
+def save_ecofloc_results(pid, pname, resource, metrics, cpu_usage=None, ram_usage=None):
     db = SessionLocal()
     try:
         for metric_name, value, unit in metrics:
@@ -88,7 +88,9 @@ def save_ecofloc_results(pid, pname, resource, metrics):
                 resource_type=resource,
                 metric_name=metric_name,
                 metric_value=value,
-                unit=unit
+                unit=unit,
+                cpu_usage=cpu_usage,
+                ram_usage=ram_usage
             )
             db.add(record)
         db.commit()
