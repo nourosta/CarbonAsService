@@ -1003,6 +1003,9 @@ with tab2 :
         if energy_df.empty:
             st.info(f"No energy data available for {resource_type}.")
             continue
+        
+        st.write("Sample process names:", energy_df['process_name'].unique())
+
 
         # Total energy consumed today
         total_energy = (
