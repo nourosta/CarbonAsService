@@ -90,7 +90,7 @@ def monitor_resource_for_pid(args):
                 resource_type=resource,
                 metric_name=metric_name,
                 metric_value=metric_value,
-                unit=unit
+                unit=unit,
                 cpu_usage=cpu_pct,
                 ram_usage=ram_pct
             )
