@@ -75,6 +75,8 @@ def monitor_resource_for_pid(args):
     pid, resource = args
     pname = get_process_name(pid)
     cpu_pct, ram_pct = get_cpu_mem_usage(pid)
+    print(f"[DEBUG] CPU%={cpu_pct}, RAM%={ram_pct} for PID={pid}")
+
 
     command = ['ecofloc', f'--{resource}', '-p', pid, '-i', str(INTERVAL_MS), '-t', str(DURATION_S)]
     print(f"[INFO] Monitoring {resource} for PID {pid} ({pname})")
