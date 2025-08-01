@@ -46,6 +46,7 @@ def get_process_name(pid):
 
 def get_cpu_mem_usage(pid):
     try:
+        pid = str(pid).strip()
         output = subprocess.check_output(
             ['ps', '-p', str(pid), '-o', '%cpu,%mem', '--no-headers'],
             text=True
