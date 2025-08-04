@@ -1053,3 +1053,25 @@ with tab3:
     
     st.write("HEllo from tab3")
     st.write("This is a placeholder for future content.")
+
+try:
+    # Fetch data from FastAPI backend
+    response_carbon = requests.get(f"{FASTAPI_BASE_URL}/carbon-intensity?zone=FR")
+    response_carbon.raise_for_status()
+    data_carbon = response_carbon.json()
+
+    st.subheader('ElectricityMaps Live Carbon Intensity')
+    st.subheader(f"Zone: {data_carbon.get('zone', 'N/A')}")
+
+    # Display JSON data
+    #st.json(data_carbon)
+
+    # Optional: Visualize carbon intensity data if applicable
+    df_carbon = pd.DataFrame(data_carbon.items(), columns=['Metric', 'Value'])
+    st.write(df_carbon)
+    st.write(df_carbon.columns)
+except Exception as e:
+    st.error(f"Failed to fetch carbon intensity data: {e}")
+
+
+    
