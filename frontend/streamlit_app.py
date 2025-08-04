@@ -1064,19 +1064,7 @@ with tab2 :
         st.markdown("---")
 
 with tab3:
-    
-    try:
-        response = requests.get(f"{FASTAPI_BASE_URL}/carbon-intensity/last?zone=FR")
-        response.raise_for_status()
-        data = response.json()
-
-        st.subheader("Latest Stored Carbon Intensity")
-        st.metric("Carbon Intensity", f"{data.get('carbonIntensity', 'N/A')} gCO₂eq/kWh")
-        st.caption(f"Updated at: {data.get('updatedAt', 'N/A')}")
-
-    except Exception as e:
-        st.error(f"Failed to fetch latest carbon intensity: {e}")
-
+    st.title("Carbon Footprint Dashboard")
 
     try:
         # Fetch latest carbon intensity
