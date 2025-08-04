@@ -10,7 +10,7 @@ from system_info import collect_system_info, get_top_processes_ps
 import json 
 import requests
 from pydantic import BaseModel
-from crud import get_carbon_intensity_by_zone, store_power_breakdown, store_carbon_intensity, save_ram,save_gpu,save_hdd,save_ssd, save_cpu
+from crud import store_power_breakdown, store_carbon_intensity, save_ram,save_gpu,save_hdd,save_ssd, save_cpu
 from database import get_db, init_db
 from fastapi.middleware.cors import CORSMiddleware
 from system_info import get_top_processes_ps
@@ -551,11 +551,3 @@ def get_cpu_data(db: Session = Depends(get_db)):
 #         return {"error": str(e)}
 
 
-# Define the endpoint
-@app.get("/carbon-intensity/")
-def read_carbon_intensity(zone: str, db: Session = Depends(get_db)):
-    carbon_intensity_value = get_carbon_intensity_by_zone(db, zone)
-    if carbon_intensity_value is not None:
-        return {"zone": zone, "carbonIntensity": carbon_intensity_value}
-    else:
-        raise HTTPException(status_code=404, detail="Carbon intensity data not found for the specified zone.")
