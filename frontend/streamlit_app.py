@@ -1013,6 +1013,8 @@ with tab2 :
             .sort_values(by="metric_value", ascending=False)
         )
 
+        total_energy_Kwh = total_energy["metric_value"] / (3.6 * 10**6)  # Convert Joules to kWh
+
         # Layout: bar + line plots
         col1, col2 = st.columns(2)
 
@@ -1041,7 +1043,7 @@ with tab2 :
             st.plotly_chart(fig_line, use_container_width=True, key=f"{resource_type}_line")
 
         # Metrics summary
-        st.metric(f"🔋 Total Energy Today ({resource_type.upper()})", f"{total_energy['metric_value'].sum():.2f} J")
+        st.metric(f"🔋 Total Energy Today ({resource_type.upper()})", f"{total_energy['metric_value'].sum():.2f} J", f"{total_energy_Kwh.sum():.2f} Kwh")
 
         top5 = total_energy.head(5)
         st.subheader(f"🏭 Top 5 Energy Consumers ({resource_type.upper()})")
