@@ -1013,7 +1013,8 @@ with tab2 :
             .sort_values(by="metric_value", ascending=False)
         )
 
-        total_energy_Kwh = total_energy["metric_value"] / (3.6 * 10**6)  # Convert Joules to kWh
+          # Calculate total energy in kWh
+        total_energy['metric_value_kwh'] = total_energy['metric_value'] / (3.6 / 10**6)  # Convert J to kWh
 
         # Layout: bar + line plots
         col1, col2 = st.columns(2)
@@ -1042,12 +1043,23 @@ with tab2 :
             fig_line.update_layout(height=500)
             st.plotly_chart(fig_line, use_container_width=True, key=f"{resource_type}_line")
 
-        # Metrics summary
-        st.metric(f"🔋 Total Energy Today ({resource_type.upper()})", f"{total_energy['metric_value'].sum():.2f} J", f"{total_energy_Kwh.sum():.2f} Kwh")
+        # # Metrics summary
+        # st.metric(f"🔋 Total Energy Today ({resource_type.upper()})", f"{total_energy['metric_value'].sum():.2f} J")
 
-        top5 = total_energy.head(5)
+        # top5 = total_energy.head(5)
+        # st.subheader(f"🏭 Top 5 Energy Consumers ({resource_type.upper()})")
+        # st.table(top5)
+
+          # Metrics summary
+        total_energy_sum_j = total_energy['metric_value'].sum()
+        total_energy_sum_kwh = total_energy_sum_j / 3_600_000
+        st.metric(f"🔋 Total Energy Today ({resource_type.upper()})", f"{total_energy_sum_j:.2f} J / {total_energy_sum_kwh:.2f} kWh")
+
+        top5 = total_energy.head(5).copy()
+        top5['metric_value_kwh'] = top5['metric_value'] / 3_600_000
         st.subheader(f"🏭 Top 5 Energy Consumers ({resource_type.upper()})")
-        st.table(top5)
+        st.table(top5[['process_name', 'metric_value', 'metric_value_kwh']])
+
 
         st.markdown("---")
 
