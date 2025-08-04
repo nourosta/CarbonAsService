@@ -111,3 +111,8 @@ def Ecofloc_results():
 def get_all_ecofloc_results(db: Session):
     return db.query(EcoflocResult).all()
 
+def get_carbon_intensity_by_zone(db: Session, zone: str):
+    result =  db.query(CarbonIntensity).filter(CarbonIntensity.zone == zone).first()
+    if result:
+        return result.carbonIntensity
+    return None

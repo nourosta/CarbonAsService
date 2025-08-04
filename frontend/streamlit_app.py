@@ -1074,4 +1074,24 @@ except Exception as e:
     st.error(f"Failed to fetch carbon intensity data: {e}")
 
 
+try:
+    # Make a request to your FastAPI endpoint
+    response = requests.get(f"{FASTAPI_BASE_URL}/carbon-intensity/")
+
+    # Check the HTTP response status
+    if response.status_code == 200:
+        # We got a successful response
+        data = response.json()
+        st.success(f"Carbon Intensity for zone '{data['zone']}': {data['carbonIntensity']}")
+    elif response.status_code == 404:
+        st.error("Carbon intensity data not found for the specified zone.")
+    else:
+        st.error("An error occurred while fetching data. Please try again later.")
+    
+except requests.exceptions.RequestException as e:
+    # Handle networking errors
+    st.error(f"An error occurred: {e}")
+
+
+
     
