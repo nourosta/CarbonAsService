@@ -1090,8 +1090,9 @@ with tab3:
         if carbon_intensity is None:
             st.error("Carbon intensity data is not available.")
         else:
-            st.subheader("🌍 Carbon Footprint Summary")
-            st.markdown(f"**Carbon Intensity:** {carbon_intensity} gCO₂/kWh  \n**Last Updated:** {updated_at}")
+            st.subheader("Latest Stored Carbon Intensity")
+            st.metric("Carbon Intensity", f"{carbon_intensity} gCO₂eq/kWh")
+            st.caption(f"Updated at: {updated_at}")
 
             for resource_type in resource_types:
                 st.markdown(f"### 🔎 Resource: {resource_type.upper()}")
