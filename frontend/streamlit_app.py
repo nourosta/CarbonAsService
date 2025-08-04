@@ -1101,4 +1101,72 @@ try:
 except Exception as e:
     st.error(f"Failed to fetch latest carbon intensity: {e}")
 
-    
+
+try:
+    # Fetch latest carbon intensity from FastAPI
+    response = requests.get(f"{FASTAPI_BASE_URL}/carbon-intensity/last?zone=FR")
+    response.raise_for_status()
+    carbon_data = response.json()
+
+    carbon_intensity = carbon_data.get("carbonIntensity", None)  # gCO2/kWh
+    updated_at = carbon_data.get("updatedAt", "N/A")
+
+    if carbon_intensity is None:
+        st.error("Carbon intensity data is not available.")
+    else:
+        st.subheader("🌍 Carbon Footprint Summary")
+        st.markdown(f"**Carbon Intensity:** {carbon_intensity} gCO₂/kWh  \n**Last Updated:** {updated_at}")
+
+        for resource_type in resource_types:
+            st.markdown(f"### 🔎 Resource: {resource_type.upper()}")
+
+            # Fetch energy data
+            try:
+                response = requests.get(f"{FASTAPI_BASE_URL}/ecofloc/{resource_type}")
+                response.raise_for_status()
+                df = pd.DataFrame(response.json())
+            except Exception as e:
+                st.error(f"Error fetching data for {resource_type}: {e}")
+                continue
+
+            # Ensure required columns exist
+            required = ['timestamp', 'metric_value', 'metric_name', 'process_name']
+            if not all(col in df.columns for col in required):
+                st.warning(f"Skipping {resource_type} due to missing columns.")
+                continue
+
+            df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
+            df['metric_value'] = pd.to_numeric(df['metric_value'], errors='coerce')
+            df.dropna(subset=['timestamp', 'metric_value'], inplace=True)
+            df['process_name'] = df['process_name'].astype(str)
+
+            # Filter for total energy
+            energy_df = df[df['metric_name'].str.lower().str.contains("total energy")]
+            if energy_df.empty:
+                st.info(f"No total energy data for {resource_type}.")
+                continue
+
+            # Convert J to kWh
+            energy_df['energy_kwh'] = energy_df['metric_value'] / 3_600_000
+
+            # Calculate CO₂ emissions
+            energy_df['co2_g'] = energy_df['energy_kwh'] * carbon_intensity
+            energy_df['co2_kg'] = energy_df['co2_g'] / 1000
+
+            # Aggregate per process
+            carbon_summary = (
+                energy_df.groupby("process_name")[["co2_kg", "energy_kwh"]]
+                .sum()
+                .reset_index()
+                .sort_values(by="co2_kg", ascending=False)
+            )
+
+            total_co2_kg = carbon_summary['co2_kg'].sum()
+
+            st.metric(f"🌫️ Total CO₂ Emissions Today ({resource_type.upper()})", f"{total_co2_kg:.2f} kg")
+
+            st.subheader(f"🏭 CO₂ per Process ({resource_type.upper()})")
+            st.table(carbon_summary.head(5))
+
+except Exception as e:
+    st.error(f"Failed to load carbon intensity data: {e}")
