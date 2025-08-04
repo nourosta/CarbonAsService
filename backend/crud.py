@@ -111,3 +111,17 @@ def Ecofloc_results():
 def get_all_ecofloc_results(db: Session):
     return db.query(EcoflocResult).all()
 
+def get_latest_carbon_intensity_by_zone(db: Session, zone: str):
+    record = (
+        db.query(CarbonIntensity)
+        .filter(CarbonIntensity.zone == zone)
+        .order_by(CarbonIntensity.id.desc())
+        .first()
+    )
+    if record:
+        data = json.loads(record.data)
+        return {
+            "carbonIntensity": data.get("carbonIntensity"),
+            "updatedAt": data.get("updatedAt")
+        }
+    return None
