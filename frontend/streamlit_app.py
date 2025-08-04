@@ -1161,7 +1161,7 @@ try:
 
             # Total CO₂ today
             total_co2_kg = carbon_summary['co2_kg'].sum()
-            st.metric(f"🌫️ Total CO₂ Emissions Today ({resource_type.upper()})", f"{total_co2_kg:.2f} kg")
+            st.metric(f"🌫️ Total CO₂ Emissions Today ({resource_type.upper()})", f"{total_co2_kg:.8f} kg")
 
             # 📊 Bar Plot: CO₂ by process
             fig_bar = px.bar(
