@@ -1288,21 +1288,34 @@ with tab4:
     cols1 , col2 , cols3 = st.columns(3)
     with cols1:
         st.subheader("Scope 3 Value")
+
         def sum_impacts(*args):
+
+            def safe_float(val):
+                try:
+                    return float(val)
+                except (TypeError, ValueError):
+                    return 0.0
+
             total_impacts = {}
+
             for data in args:
                 if not data:
                     continue
                 impacts = data.get("impacts", {})
                 for impact_type, impact_vals in impacts.items():
                     if impact_type not in total_impacts:
-                        total_impacts[impact_type] = {"manufacture": 0, "use": 0, "unit": impact_vals.get("unit", "")}
-                    total_impacts[impact_type]["manufacture"] += impact_vals.get("manufacture", 0)
-                    total_impacts[impact_type]["use"] += impact_vals.get("use", 0)
+                        total_impacts[impact_type] = {"manufacture": 0.0, "use": 0.0, "unit": impact_vals.get("unit", "")}
+                    
+                    manufacture_val = safe_float(impact_vals.get("manufacture", 0))
+                    use_val = safe_float(impact_vals.get("use", 0))
+                    
+                    total_impacts[impact_type]["manufacture"] += manufacture_val
+                    total_impacts[impact_type]["use"] += use_val
             return total_impacts
-        
+            
             # --- Sum all impacts ---
-        total_impacts = sum_impacts(cpu_data, ram_data, case_data, motherboard_impacts )  # Add SSD, HDD, Case, etc.
+        total_impacts = sum_impacts(cpu_data, ram_data, case_data, ssd_data, motherboard_impacts )  # Add SSD, HDD, Case, etc.
 
         st.subheader("Summary of Total Impacts")
         for impact_type, vals in total_impacts.items():
