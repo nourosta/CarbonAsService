@@ -201,7 +201,7 @@ with tab1:
             )
         selected_hdd = hdds[selected_hdd_index]
 
-        hdd_capacity = st.number_input("Enter HDD Capacity (GB):", min_value=1, value=int(parse_disk_size(selected_hdd["size"])))
+        hdd_capacity = st.number_input("Enter HDD Capacity (GB):", min_value=1, value=int(math.ceil(parse_disk_size(selected_hdd["size"]))))
         hdd_units = st.number_input("Enter HDD Units:", min_value=1, value=1)
 
         
