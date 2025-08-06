@@ -1374,6 +1374,15 @@ with tab4:
 
             # Build DataFrame
             df_history = pd.DataFrame(history)
+
+            if 'updatedAt' in df_history.columns:
+                df_history['updatedAt'] = pd.to_datetime(df_history['updatedAt'], errors='coerce')
+            elif 'datetime' in df_history.columns:
+                df_history['updatedAt'] = pd.to_datetime(df_history['datetime'], errors='coerce')
+            else:
+                st.error("No timestamp column ('updatedAt' or 'datetime') found in the carbon intensity history data.")
+                st.stop()
+
             df_history['updatedAt'] = pd.to_datetime(df_history.get('updatedAt') or df_history.get('datetime'), errors='coerce')
             df_history['carbonIntensity'] = pd.to_numeric(df_history['carbonIntensity'], errors='coerce')
             df_history.dropna(subset=['updatedAt', 'carbonIntensity'], inplace=True)
