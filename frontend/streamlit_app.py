@@ -80,26 +80,25 @@ with tab1:
     st.subheader("CPU Scope3 Calculations", divider=True)
 
     cpu_name = st.text_input(" CPU :", value=data.get("cpu"))
+   
+    try:
+        payload = {"name": cpu_name}
+        response = requests.post(f"{FASTAPI_BASE_URL}/CPU_Calc", json=payload)
+        response.raise_for_status()
 
-    if st.button("Fetch CPU Data"):
-        try:
-            payload = {"name": cpu_name}
-            response = requests.post(f"{FASTAPI_BASE_URL}/CPU_Calc", json=payload)
-            response.raise_for_status()
+        cpu_data = response.json()
 
-            cpu_data = response.json()
+        st.subheader("Impact Information:")
 
-            st.subheader("Impact Information:")
-
-            impacts = cpu_data.get("impacts", {})
-            for key, impact_info in impacts.items():
-                st.text(f"{key.upper()}")
-                st.text(f"Unit: {impact_info['unit']}")
-                st.text(f"Manufacture Impact: {impact_info['manufacture']} {impact_info['unit']}")
-                st.text(f"Use Impact: {impact_info['use']} {impact_info['unit']}")
-                st.text("")
-        except requests.RequestException as e:
-            st.error(f"Failed to retrieve CPU data: {str(e)}")
+        impacts = cpu_data.get("impacts", {})
+        for key, impact_info in impacts.items():
+            st.text(f"{key.upper()}")
+            st.text(f"Unit: {impact_info['unit']}")
+            st.text(f"Manufacture Impact: {impact_info['manufacture']} {impact_info['unit']}")
+            st.text(f"Use Impact: {impact_info['use']} {impact_info['unit']}")
+            st.text("")
+    except requests.RequestException as e:
+        st.error(f"Failed to retrieve CPU data: {str(e)}")
 
 
     st.subheader("RAM Scope3 Calculations", divider=True)
@@ -116,31 +115,30 @@ with tab1:
     left, middle, right = st.columns(3)
 
     # --- Fetch RAM Data ---
-    if right.button("Fetch RAM Data"):
-        try:
-            payload = {
-                "capacity": ram_capacity,
-                "manufacturer": ram_manufacturer,
-                "process": ram_process
-            }
-            #st.info(f"Fetching RAM impact data with payload: {payload}...")
-            
-            response = requests.post(f"{FASTAPI_BASE_URL}/RAM-Calc", json=payload)
-            response.raise_for_status()
-            ram_data = response.json()
+    try:
+        payload = {
+            "capacity": ram_capacity,
+            "manufacturer": ram_manufacturer,
+            "process": ram_process
+        }
+        #st.info(f"Fetching RAM impact data with payload: {payload}...")
+        
+        response = requests.post(f"{FASTAPI_BASE_URL}/RAM-Calc", json=payload)
+        response.raise_for_status()
+        ram_data = response.json()
 
-            # --- Display Results ---
-            st.subheader("Impact Information:")
+        # --- Display Results ---
+        st.subheader("Impact Information:")
 
-            impacts = ram_data.get("impacts", {})
-            for key, impact_info in impacts.items():
-                st.text(f"{key.upper()}")
-                st.text(f"Unit: {impact_info['unit']}")
-                st.text(f"Manufacture Impact: {impact_info['manufacture']} {impact_info['unit']}")
-                st.text(f"Use Impact: {impact_info['use']} {impact_info['unit']}")
-                st.text("")
-        except requests.RequestException as e:
-            st.error(f"Failed to retrieve CPU data: {str(e)}")
+        impacts = ram_data.get("impacts", {})
+        for key, impact_info in impacts.items():
+            st.text(f"{key.upper()}")
+            st.text(f"Unit: {impact_info['unit']}")
+            st.text(f"Manufacture Impact: {impact_info['manufacture']} {impact_info['unit']}")
+            st.text(f"Use Impact: {impact_info['use']} {impact_info['unit']}")
+            st.text("")
+    except requests.RequestException as e:
+        st.error(f"Failed to retrieve CPU data: {str(e)}")
 
 
     # Separate disks into SSD and HDD
@@ -174,26 +172,25 @@ with tab1:
         ssd_capacity = st.number_input("Enter SSD Capacity (GB):", min_value=1.0, value=parse_disk_size(selected_ssd["size"]))
         ssd_manufacturer = st.text_input("Enter SSD Manufacturer:", value=selected_ssd["model"] or "Unknown")
 
-        if st.button("Fetch SSD Data"):
-            try:
-                ssd_payload = {"capacity": ssd_capacity, "manufacturer": ssd_manufacturer}
-                response = requests.post(f"{FASTAPI_BASE_URL}/SSD-Calc", json=ssd_payload)
-                response.raise_for_status()
-                ssd_data = response.json()
+        try:
+            ssd_payload = {"capacity": ssd_capacity, "manufacturer": ssd_manufacturer}
+            response = requests.post(f"{FASTAPI_BASE_URL}/SSD-Calc", json=ssd_payload)
+            response.raise_for_status()
+            ssd_data = response.json()
 
-                # --- Display Results ---
-                st.subheader("Impact Information:")
+            # --- Display Results ---
+            st.subheader("Impact Information:")
 
-                impacts = ssd_data.get("impacts", {})
-                for key, impact_info in impacts.items():
-                    st.text(f"{key.upper()}")
-                    st.text(f"Unit: {impact_info['unit']}")
-                    st.text(f"Manufacture Impact: {impact_info['manufacture']} {impact_info['unit']}")
-                    st.text(f"Use Impact: {impact_info['use']} {impact_info['unit']}")
-                    st.text("")
+            impacts = ssd_data.get("impacts", {})
+            for key, impact_info in impacts.items():
+                st.text(f"{key.upper()}")
+                st.text(f"Unit: {impact_info['unit']}")
+                st.text(f"Manufacture Impact: {impact_info['manufacture']} {impact_info['unit']}")
+                st.text(f"Use Impact: {impact_info['use']} {impact_info['unit']}")
+                st.text("")
 
-            except requests.RequestException as e:
-                st.error(f"Failed to retrieve CPU data: {str(e)}")
+        except requests.RequestException as e:
+            st.error(f"Failed to retrieve CPU data: {str(e)}")
 
     # HDD Section
     if hdds:
@@ -206,25 +203,25 @@ with tab1:
         hdd_capacity = st.number_input("Enter HDD Capacity (GB):", min_value=1, value=int(parse_disk_size(selected_hdd["size"])))
         hdd_units = st.number_input("Enter HDD Units:", min_value=1, value=1)
 
-        if st.button("Fetch HDD Data"):
-            try:
-                hdd_payload = {"units": hdd_units, "type": "HDD", "capacity": hdd_capacity}
-                response = requests.post(f"{FASTAPI_BASE_URL}//HDD-Calc", json=hdd_payload)
-                response.raise_for_status()
-                hdd_data = response.json()
+        
+        try:
+            hdd_payload = {"units": hdd_units, "type": "HDD", "capacity": hdd_capacity}
+            response = requests.post(f"{FASTAPI_BASE_URL}//HDD-Calc", json=hdd_payload)
+            response.raise_for_status()
+            hdd_data = response.json()
 
-                st.subheader("HDD Impact Information:")
+            st.subheader("HDD Impact Information:")
 
-                impacts = hdd_data.get("impacts", {})
-                for key, impact_info in impacts.items():
-                    st.text(f"{key.upper()}")
-                    st.text(f"Unit: {impact_info['unit']}")
-                    st.text(f"Manufacture Impact: {impact_info['manufacture']} {impact_info['unit']}")
-                    st.text(f"Use Impact: {impact_info['use']} {impact_info['unit']}")
-                    st.text("")
+            impacts = hdd_data.get("impacts", {})
+            for key, impact_info in impacts.items():
+                st.text(f"{key.upper()}")
+                st.text(f"Unit: {impact_info['unit']}")
+                st.text(f"Manufacture Impact: {impact_info['manufacture']} {impact_info['unit']}")
+                st.text(f"Use Impact: {impact_info['use']} {impact_info['unit']}")
+                st.text("")
 
-            except requests.RequestException as e:
-                st.error(f"Failed to retrieve CPU data: {str(e)}")
+        except requests.RequestException as e:
+            st.error(f"Failed to retrieve CPU data: {str(e)}")
 
     else:
         st.info("No HDDs detected.")
@@ -237,29 +234,28 @@ with tab1:
     case_type = st.selectbox("Case Type :", ("blade", "rack"),)
     left, middle, right = st.columns(3)
 
-    if right.button("Fetch Case Data"):
-        # HTTP POST request with inputs to FastAPI endpoint
-        try:
-            payload = {
-                "case_type": case_type,
-            }
-            response = requests.post(f"{FASTAPI_BASE_URL}/Case-Calc", json=payload)
-            response.raise_for_status()  # Raise error for bad responses
-            case_data = response.json()
+    # HTTP POST request with inputs to FastAPI endpoint
+    try:
+        payload = {
+            "case_type": case_type,
+        }
+        response = requests.post(f"{FASTAPI_BASE_URL}/Case-Calc", json=payload)
+        response.raise_for_status()  # Raise error for bad responses
+        case_data = response.json()
 
-            # Display the first 6 impact entries
-            st.subheader("Impact Information:")
+        # Display the first 6 impact entries
+        st.subheader("Impact Information:")
 
-            impacts = case_data.get("impacts", {})
-            for key, impact_info in impacts.items():
-                st.text(f"{key.upper()}")
-                st.text(f"Unit: {impact_info['unit']}")
-                st.text(f"Manufacture Impact: {impact_info['manufacture']} {impact_info['unit']}")
-                st.text(f"Use Impact: {impact_info['use']} {impact_info['unit']}")
-                st.text("")
+        impacts = case_data.get("impacts", {})
+        for key, impact_info in impacts.items():
+            st.text(f"{key.upper()}")
+            st.text(f"Unit: {impact_info['unit']}")
+            st.text(f"Manufacture Impact: {impact_info['manufacture']} {impact_info['unit']}")
+            st.text(f"Use Impact: {impact_info['use']} {impact_info['unit']}")
+            st.text("")
 
-        except requests.RequestException as e:
-            st.error(f"Failed to retrieve Case data: {str(e)}")
+    except requests.RequestException as e:
+        st.error(f"Failed to retrieve Case data: {str(e)}")
         
     st.title("Motherboard Scope3 Calculation (API non functional)")
 
@@ -272,11 +268,9 @@ with tab1:
 
     left, middle, right = st.columns(3)
 
-    if right.button("Calculate Motherboard Impact"):
-
-        st.text(f"Motherboard GWP : {motherboard_units * motherboard_gwp} kgCO2eq")
-        st.text(f"Motherboard ADP :  {motherboard_units * motherboard_adp} kgSbeq")
-        st.text(f"Motherboard PE :  {motherboard_units * motherboard_pe} MJ")
+    st.text(f"Motherboard GWP : {motherboard_units * motherboard_gwp} kgCO2eq")
+    st.text(f"Motherboard ADP :  {motherboard_units * motherboard_adp} kgSbeq")
+    st.text(f"Motherboard PE :  {motherboard_units * motherboard_pe} MJ")
 
     detected_GPU = data.get("gpus")
 
@@ -303,24 +297,24 @@ with tab1:
         die_size_input = st.number_input("Die Size (mm²)", value=die_size, format="%.2f")
         ram_size_input = st.number_input("RAM Size (GB)", value=ram_size)
 
-        if st.button("Calculate GPU Impact"):
-            payload = {
-                "model" : selected_gpu,
-                "die_size_mm2": die_size_input,
-                "ram_size_gb": ram_size_input
-            }
-            try:
-                response = requests.post(f"{FASTAPI_BASE_URL}/GPU-Calc", json=payload)
-                response.raise_for_status()
-                data = response.json()
+        
+        payload = {
+            "model" : selected_gpu,
+            "die_size_mm2": die_size_input,
+            "ram_size_gb": ram_size_input
+        }
+        try:
+            response = requests.post(f"{FASTAPI_BASE_URL}/GPU-Calc", json=payload)
+            response.raise_for_status()
+            data = response.json()
 
-            
-                st.markdown(f"**GWP:** {data['gwp']} kgCO₂eq")
-                st.markdown(f"**ADP:** {data['adp']} kgSbeq")
-                st.markdown(f"**PE:** {data['pe']} MJ")
+        
+            st.markdown(f"**GWP:** {data['gwp']} kgCO₂eq")
+            st.markdown(f"**ADP:** {data['adp']} kgSbeq")
+            st.markdown(f"**PE:** {data['pe']} MJ")
 
-            except requests.RequestException as e:
-                st.error(f"Failed to calculate GPU impact: {str(e)}")
+        except requests.RequestException as e:
+            st.error(f"Failed to calculate GPU impact: {str(e)}")
     else:
         st.info("No GPUs detected in the system information.")
 
