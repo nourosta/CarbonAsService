@@ -1357,37 +1357,21 @@ with tab4:
         response = requests.get(f"{FASTAPI_BASE_URL}/carbon-intensity-history")
         response.raise_for_status()
         data = response.json()
-        st.write(data)
+        data = response.json()
+        history = data.get("history", [])
 
-        entries = data.get("data", [])
-        if not entries:
-            st.warning("No data returned.")
+        if not history:
+            st.warning("No history data available.")
         else:
-            df = pd.DataFrame(entries)
+            dates = [entry["datetime"] for entry in history]
+            intensity = [entry["carbonIntensity"] for entry in history]
 
-            # Convert datetime column
-            if 'datetime' in df.columns:
-                df['datetime'] = pd.to_datetime(df['datetime'])
-            elif 'timestamp' in df.columns:
-                df['datetime'] = pd.to_datetime(df['timestamp'])
-            else:
-                st.error("No datetime field found in data.")
-                st.stop()
+            df = pd.DataFrame({
+                "datetime": pd.to_datetime(dates),
+                "carbonIntensity": intensity
+            }).set_index("datetime")
 
-            # Find carbon intensity column
-            intensity_col = None
-            for col in ['carbonIntensity', 'carbonIntensityAvg', 'carbonIntensityValue']:
-                if col in df.columns:
-                    intensity_col = col
-                    break
+            st.line_chart(df["carbonIntensity"])
 
-            if not intensity_col:
-                st.error("No carbon intensity field found in data.")
-                st.stop()
-
-            df = df[['datetime', intensity_col]].set_index('datetime').sort_index()
-
-            st.line_chart(df)
-
-    except Exception as e:
+    except requests.exceptions.RequestException as e:
         st.error(f"Failed to fetch or plot data: {e}")
