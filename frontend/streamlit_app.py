@@ -81,25 +81,32 @@ with tab1:
     st.subheader("CPU Scope3 Calculations", divider=True)
 
     cpu_name = st.text_input(" CPU :", value=data.get("cpu"))
-   
-    try:
-        payload = {"name": cpu_name}
-        response = requests.post(f"{FASTAPI_BASE_URL}/CPU_Calc", json=payload)
-        response.raise_for_status()
+    if "cpu_data" not in st.session_state or st.session_state.get("cached_cpu_name") != cpu_name:
+        try:
+            payload = {"name": cpu_name}
+            response = requests.post(f"{FASTAPI_BASE_URL}/CPU_Calc", json=payload)
+            response.raise_for_status()
+            cpu_data = response.json()
 
-        cpu_data = response.json()
+            # Store result and CPU name in session_state
+            st.session_state.cpu_data = cpu_data
+            st.session_state.cached_cpu_name = cpu_name
 
-        st.subheader("Impact Information:")
+        except requests.RequestException as e:
+            st.error(f"Failed to retrieve CPU data: {str(e)}")
+            cpu_data = {}
+    else:
+        cpu_data = st.session_state.cpu_data
 
-        impacts = cpu_data.get("impacts", {})
-        for key, impact_info in impacts.items():
-            st.text(f"{key.upper()}")
-            st.text(f"Unit: {impact_info['unit']}")
-            st.text(f"Manufacture Impact: {impact_info['manufacture']} {impact_info['unit']}")
-            st.text(f"Use Impact: {impact_info['use']} {impact_info['unit']}")
-            st.text("")
-    except requests.RequestException as e:
-        st.error(f"Failed to retrieve CPU data: {str(e)}")
+    st.subheader("Impact Information:")
+
+    impacts = cpu_data.get("impacts", {})
+    for key, impact_info in impacts.items():
+        st.text(f"{key.upper()}")
+        st.text(f"Unit: {impact_info['unit']}")
+        st.text(f"Manufacture Impact: {impact_info['manufacture']} {impact_info['unit']}")
+        st.text(f"Use Impact: {impact_info['use']} {impact_info['unit']}")
+        st.text("")
 
 
     st.subheader("RAM Scope3 Calculations", divider=True)
@@ -114,32 +121,40 @@ with tab1:
     ram_process = st.number_input("Enter Process (nm):", min_value=1, max_value=100, value=30)
 
     left, middle, right = st.columns(3)
+    # --- Create a cache key for the current RAM config ---
+    ram_cache_key = f"{ram_capacity}_{ram_manufacturer}_{ram_process}"
 
     # --- Fetch RAM Data ---
-    try:
-        payload = {
-            "capacity": ram_capacity,
-            "manufacturer": ram_manufacturer,
-            "process": ram_process
-        }
-        #st.info(f"Fetching RAM impact data with payload: {payload}...")
-        
-        response = requests.post(f"{FASTAPI_BASE_URL}/RAM-Calc", json=payload)
-        response.raise_for_status()
-        ram_data = response.json()
+    if "ram_data" not in st.session_state or st.session_state.get("cached_ram_key") != ram_cache_key:
+        try:
+            payload = {
+                "capacity": ram_capacity,
+                "manufacturer": ram_manufacturer,
+                "process": ram_process
+            }
+            response = requests.post(f"{FASTAPI_BASE_URL}/RAM-Calc", json=payload)
+            response.raise_for_status()
+            ram_data = response.json()
 
-        # --- Display Results ---
-        st.subheader("Impact Information:")
+            # Cache the data
+            st.session_state.ram_data = ram_data
+            st.session_state.cached_ram_key = ram_cache_key
+        except requests.RequestException as e:
+            st.error(f"Failed to retrieve RAM data: {str(e)}")
+            ram_data = {}
+    else:
+        ram_data = st.session_state.ram_data
 
-        impacts = ram_data.get("impacts", {})
-        for key, impact_info in impacts.items():
-            st.text(f"{key.upper()}")
-            st.text(f"Unit: {impact_info['unit']}")
-            st.text(f"Manufacture Impact: {impact_info['manufacture']} {impact_info['unit']}")
-            st.text(f"Use Impact: {impact_info['use']} {impact_info['unit']}")
-            st.text("")
-    except requests.RequestException as e:
-        st.error(f"Failed to retrieve CPU data: {str(e)}")
+    # --- Display Results ---
+    st.subheader("Impact Information:")
+
+    impacts = ram_data.get("impacts", {})
+    for key, impact_info in impacts.items():
+        st.text(f"{key.upper()}")
+        st.text(f"Unit: {impact_info['unit']}")
+        st.text(f"Manufacture Impact: {impact_info['manufacture']} {impact_info['unit']}")
+        st.text(f"Use Impact: {impact_info['use']} {impact_info['unit']}")
+        st.text("")
 
 
     # Separate disks into SSD and HDD
@@ -172,26 +187,36 @@ with tab1:
 
         ssd_capacity = st.number_input("Enter SSD Capacity (GB):", min_value=1, value=int(math.ceil(parse_disk_size(selected_ssd["size"]))))
         ssd_manufacturer = st.text_input("Enter SSD Manufacturer:", value=selected_ssd["model"] or "Unknown")
+    # Create cache key for this SSD config
+        ssd_cache_key = f"{ssd_capacity}_{ssd_manufacturer}"
 
-        try:
-            ssd_payload = {"capacity": ssd_capacity, "manufacturer": ssd_manufacturer}
-            response = requests.post(f"{FASTAPI_BASE_URL}/SSD-Calc", json=ssd_payload)
-            response.raise_for_status()
-            ssd_data = response.json()
+        # Fetch SSD data only if needed
+        if "ssd_data" not in st.session_state or st.session_state.get("cached_ssd_key") != ssd_cache_key:
+            try:
+                ssd_payload = {"capacity": ssd_capacity, "manufacturer": ssd_manufacturer}
+                response = requests.post(f"{FASTAPI_BASE_URL}/SSD-Calc", json=ssd_payload)
+                response.raise_for_status()
+                ssd_data = response.json()
 
-            # --- Display Results ---
-            st.subheader("Impact Information:")
+                # Cache it
+                st.session_state.ssd_data = ssd_data
+                st.session_state.cached_ssd_key = ssd_cache_key
+            except requests.RequestException as e:
+                st.error(f"Failed to retrieve SSD data: {str(e)}")
+                ssd_data = {}
+        else:
+            ssd_data = st.session_state.ssd_data
 
-            impacts = ssd_data.get("impacts", {})
-            for key, impact_info in impacts.items():
-                st.text(f"{key.upper()}")
-                st.text(f"Unit: {impact_info['unit']}")
-                st.text(f"Manufacture Impact: {impact_info['manufacture']} {impact_info['unit']}")
-                st.text(f"Use Impact: {impact_info['use']} {impact_info['unit']}")
-                st.text("")
+        # --- Display Results ---
+        st.subheader("Impact Information:")
 
-        except requests.RequestException as e:
-            st.error(f"Failed to retrieve CPU data: {str(e)}")
+        impacts = ssd_data.get("impacts", {})
+        for key, impact_info in impacts.items():
+            st.text(f"{key.upper()}")
+            st.text(f"Unit: {impact_info['unit']}")
+            st.text(f"Manufacture Impact: {impact_info['manufacture']} {impact_info['unit']}")
+            st.text(f"Use Impact: {impact_info['use']} {impact_info['unit']}")
+            st.text("")
 
     # HDD Section
     if hdds:
@@ -203,27 +228,33 @@ with tab1:
 
         hdd_capacity = st.number_input("Enter HDD Capacity (GB):", min_value=1, value=int(math.ceil(parse_disk_size(selected_hdd["size"]))))
         hdd_units = st.number_input("Enter HDD Units:", min_value=1, value=1)
+        #Create cache key for this SSD config
+        hdd_cache_key = f"{hdd_capacity}_{hdd_units}"
+        if "cached_hdd_key" not in st.session_state or st.session_state.get("cached_hdd_key") != hdd_cache_key:
+            try:
+                hdd_payload = {"capacity": hdd_capacity, "units": hdd_units}
+                response = requests.post(f"{FASTAPI_BASE_URL}/HDD-Calc", json=hdd_payload)
+                response.raise_for_status()
+                hdd_data = response.json()
 
-        
-        try:
-            hdd_payload = {"units": hdd_units, "type": "HDD", "capacity": hdd_capacity}
-            response = requests.post(f"{FASTAPI_BASE_URL}//HDD-Calc", json=hdd_payload)
-            response.raise_for_status()
-            hdd_data = response.json()
+                # Cache it
+                st.session_state.hdd_data = hdd_data
+                st.session_state.cached_hdd_key = hdd_cache_key
+            except requests.RequestException as e:
+                st.error(f"Failed to retrieve HDD data: {str(e)}")
+                hdd_data = {}
+        else:
+            hdd_data = st.session_state.hdd_data
 
-            st.subheader("HDD Impact Information:")
+        st.subheader("HDD Impact Information:")
 
-            impacts = hdd_data.get("impacts", {})
-            for key, impact_info in impacts.items():
-                st.text(f"{key.upper()}")
-                st.text(f"Unit: {impact_info['unit']}")
-                st.text(f"Manufacture Impact: {impact_info['manufacture']} {impact_info['unit']}")
-                st.text(f"Use Impact: {impact_info['use']} {impact_info['unit']}")
-                st.text("")
-
-        except requests.RequestException as e:
-            st.error(f"Failed to retrieve CPU data: {str(e)}")
-
+        impacts = hdd_data.get("impacts", {})
+        for key, impact_info in impacts.items():
+            st.text(f"{key.upper()}")
+            st.text(f"Unit: {impact_info['unit']}")
+            st.text(f"Manufacture Impact: {impact_info['manufacture']} {impact_info['unit']}")
+            st.text(f"Use Impact: {impact_info['use']} {impact_info['unit']}")
+            st.text("")
     else:
         st.info("No HDDs detected.")
 
@@ -235,43 +266,81 @@ with tab1:
     case_type = st.selectbox("Case Type :", ("blade", "rack"),)
     left, middle, right = st.columns(3)
 
+        # --- Input ---
+    case_type = st.selectbox("Case Type :", ("blade", "rack"), key="case_type_selectbox")
+
+    # --- Unique Cache Key ---
+    case_cache_key = f"case_{case_type}"
+
     # HTTP POST request with inputs to FastAPI endpoint
-    try:
-        payload = {
-            "case_type": case_type,
-        }
-        response = requests.post(f"{FASTAPI_BASE_URL}/Case-Calc", json=payload)
-        response.raise_for_status()  # Raise error for bad responses
-        case_data = response.json()
+    if "case_data" not in st.session_state or st.session_state.get("cached_case_key") != case_cache_key:
+        try:
+            payload = {"case_type": case_type}
+            response = requests.post(f"{FASTAPI_BASE_URL}/Case-Calc", json=payload)
+            response.raise_for_status()
+            case_data = response.json()
 
-        # Display the first 6 impact entries
-        st.subheader("Impact Information:")
+            # Store result in session_state
+            st.session_state.case_data = case_data
+            st.session_state.cached_case_key = case_cache_key
+        except requests.RequestException as e:
+            st.error(f"Failed to retrieve Case data: {str(e)}")
+            case_data = {}
+    else:
+        case_data = st.session_state.case_data
 
-        impacts = case_data.get("impacts", {})
-        for key, impact_info in impacts.items():
-            st.text(f"{key.upper()}")
-            st.text(f"Unit: {impact_info['unit']}")
-            st.text(f"Manufacture Impact: {impact_info['manufacture']} {impact_info['unit']}")
-            st.text(f"Use Impact: {impact_info['use']} {impact_info['unit']}")
-            st.text("")
+    # Display the first 6 impact entries
+    st.subheader("Impact Information:")
 
-    except requests.RequestException as e:
-        st.error(f"Failed to retrieve Case data: {str(e)}")
+    impacts = case_data.get("impacts", {})
+    for key, impact_info in impacts.items():
+        st.text(f"{key.upper()}")
+        st.text(f"Unit: {impact_info['unit']}")
+        st.text(f"Manufacture Impact: {impact_info['manufacture']} {impact_info['unit']}")
+        st.text(f"Use Impact: {impact_info['use']} {impact_info['unit']}")
+        st.text("")
+
+
         
     st.title("Motherboard Scope3 Calculation (API non functional)")
 
     st.subheader("Boavizta Motherboard Calculations", divider = True)
 
-    motherboard_units = st.number_input("Enter Motherboaerd units:", min_value = 1, value = 1)
-    motherboard_gwp = 66.10
-    motherboard_adp = 3.69E-03
-    motherboard_pe  = 836.00
+        # --- Constants ---
+    MOTHERBOARD_GWP = 66.10   # kgCO2eq per unit
+    MOTHERBOARD_ADP = 3.69E-03  # kgSbeq per unit
+    MOTHERBOARD_PE  = 836.00   # MJ per unit
 
+    # --- Initialize session state ---
+    if "motherboard_units" not in st.session_state:
+        st.session_state["motherboard_units"] = 1
+
+    # --- Input ---
+    motherboard_units = st.number_input(
+        "Enter Motherboard Units:",
+        min_value=1,
+        value=st.session_state["motherboard_units"],
+        key="motherboard_units"
+    )
+
+    # --- Calculations ---
+    total_gwp = motherboard_units * MOTHERBOARD_GWP
+    total_adp = motherboard_units * MOTHERBOARD_ADP
+    total_pe  = motherboard_units * MOTHERBOARD_PE
+
+    # --- Store in session_state (optional if used elsewhere) ---
+    st.session_state["motherboard_gwp"] = total_gwp
+    st.session_state["motherboard_adp"] = total_adp
+    st.session_state["motherboard_pe"]  = total_pe
+
+    # --- Display in Columns ---
     left, middle, right = st.columns(3)
-
-    st.text(f"Motherboard GWP : {motherboard_units * motherboard_gwp} kgCO2eq")
-    st.text(f"Motherboard ADP :  {motherboard_units * motherboard_adp} kgSbeq")
-    st.text(f"Motherboard PE :  {motherboard_units * motherboard_pe} MJ")
+    with left:
+        st.metric("GWP", f"{total_gwp:.2f} kgCO₂eq")
+    with middle:
+        st.metric("ADP", f"{total_adp:.5f} kgSbeq")
+    with right:
+        st.metric("PE", f"{total_pe:.2f} MJ")
 
     detected_GPU = data.get("gpus")
 
@@ -280,7 +349,7 @@ with tab1:
     gpus = [gpu for gpu in detected_GPU]  # Populate from /system-info
 
     if gpus:
-        selected_gpu_index = st.selectbox("Select GPU:", range(len(gpus)), format_func=lambda x: f"GPU {x + 1}")
+        selected_gpu_index = st.selectbox("Select GPU:", range(len(gpus)), format_func=lambda x: f"GPU {x + 1}",  key="gpu_selectbox")
         selected_gpu = gpus[selected_gpu_index]
         gpu_brand = st.text_input("GPU Model", value=selected_gpu)
 
@@ -1213,4 +1282,25 @@ with tab4:
     with cols3:
         st.write("Carbon Emissions Total")
 
+    def sum_impacts(*args):
+        total_impacts = {}
+        for data in args:
+            if not data:
+                continue
+            impacts = data.get("impacts", {})
+            for impact_type, impact_vals in impacts.items():
+                if impact_type not in total_impacts:
+                    total_impacts[impact_type] = {"manufacture": 0, "use": 0, "unit": impact_vals.get("unit", "")}
+                total_impacts[impact_type]["manufacture"] += impact_vals.get("manufacture", 0)
+                total_impacts[impact_type]["use"] += impact_vals.get("use", 0)
+        return total_impacts
     
+        # --- Sum all impacts ---
+    total_impacts = sum_impacts(cpu_data, ram_data)  # Add SSD, HDD, Case, etc.
+
+    st.subheader("Summary of Total Impacts")
+    for impact_type, vals in total_impacts.items():
+        manufacture = vals["manufacture"]
+        use = vals["use"]
+        unit = vals["unit"]
+        st.write(f"**{impact_type.upper()}**: Manufacture = {manufacture} {unit}, Use = {use} {unit}, Total = {manufacture + use} {unit}")
