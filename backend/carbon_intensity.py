@@ -16,7 +16,7 @@ def fetch_carbon_intensity(zone='FR', token='yqOVPpk1lZnhtkq1M4SK',temporal_gran
 
 
 def fetch_history_carbon_intensity(zone='FR', token='yqOVPpk1lZnhtkq1M4SK', temporal_granularity='hourly'):
-    url = f"https://api.electricitymap.org/v3/carbon-intensity/latest?zone={zone}&temporalGranularity={temporal_granularity}"
+    url = f"https://api.electricitymap.org/v3/carbon-intensity/history?zone={zone}&temporalGranularity={temporal_granularity}"
     headers = {
         "auth-token": token
     }
