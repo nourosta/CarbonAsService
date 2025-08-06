@@ -10,4 +10,4 @@ wheels/
 # Virtual environments
 .venv/
 
-backend/ecofloc_results
+backend/ecofloc_results/*.log
