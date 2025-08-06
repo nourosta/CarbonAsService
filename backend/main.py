@@ -582,7 +582,7 @@ class CarbonRequest(BaseModel):
     temporal_granularity: str = '15_minutes'
     
 @app.get("/carbon-intensity-history")
-async def get_carbon_intensity_history(
+async def get_carbon_intensity_evolution(
     zone: str = Query('FR', description="Zone code, e.g. 'FR'")
 ):
     try:
