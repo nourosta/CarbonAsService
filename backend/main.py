@@ -251,7 +251,7 @@ def calculate_gpu(gpu: GPUInput):
 
     # Calculate RAM impacts via internal function (no saving to DB)
     ram_spec = RAMSpec(
-        capacity=ram_gb,
+        capacity=int(ram_gb),
         manufacturer="Samsung",  # Or get from frontend
         process=30
     )
