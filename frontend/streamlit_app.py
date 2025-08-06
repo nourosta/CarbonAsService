@@ -1368,7 +1368,7 @@ with tab4:
             response_history = requests.get(f"{FASTAPI_BASE_URL}/carbon-intensity-history?zone=FR")
             response_history.raise_for_status()
             # Assuming 'history_response' is your JSON object
-            history_list = history_response.get("history", [])
+            history_list = response_history.get("history", [])
 
             if not history_list:
                 st.warning("No carbon intensity history data available.")
