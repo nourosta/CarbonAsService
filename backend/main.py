@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from typing import List
+from scheduler import start_scheduler
 from models import EcoflocResult
 from fastapi import FastAPI,HTTPException , APIRouter, Query, Depends
 from fastapi.responses import JSONResponse
@@ -20,6 +21,9 @@ from ecofloc_runner import  monitor_top_processes
 
 app = FastAPI()
 router = APIRouter()
+
+# Start the scheduler
+scheduler = start_scheduler()
 
 # Define a Pydantic model for input validation
 class RAMSpec(BaseModel):
@@ -79,6 +83,11 @@ def ram_impacts(ram_spec: RAMSpec):
 @app.on_event("startup")
 def on_startup():
     init_db()
+
+@app.on_event("shutdown")
+def shutdown_event():
+    scheduler.shutdown()
+
 
 @app.get("/system-info")
 async def system_info():
