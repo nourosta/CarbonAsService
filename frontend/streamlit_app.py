@@ -335,8 +335,13 @@ with tab1:
     "pe": total_pe
 }
 
-    # Save in session state
-    st.session_state["motherboard_data"] = motherboard_data
+    # Convert to impacts structure
+    motherboard_impacts = {
+        "GWP": {"manufacture": float(motherboard_data.get("gwp", 0)), "use": 0.0, "unit": "kgCO2eq"},
+        "ADP": {"manufacture": float(motherboard_data.get("adp", 0)), "use": 0.0, "unit": "kgSbeq"},
+        "PE":  {"manufacture": float(motherboard_data.get("pe", 0)),  "use": 0.0, "unit": "MJ"},
+    }
+
 
     # --- Display in Columns ---
     left, middle, right = st.columns(3)
@@ -1297,7 +1302,7 @@ with tab4:
             return total_impacts
         
             # --- Sum all impacts ---
-        total_impacts = sum_impacts(cpu_data, ram_data, case_data, motherboard_data)  # Add SSD, HDD, Case, etc.
+        total_impacts = sum_impacts(cpu_data, ram_data, case_data, _data)  # Add SSD, HDD, Case, etc.
 
         st.subheader("Summary of Total Impacts")
         for impact_type, vals in total_impacts.items():
