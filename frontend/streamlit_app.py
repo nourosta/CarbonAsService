@@ -1292,7 +1292,7 @@ with tab4:
             return total_impacts
         
             # --- Sum all impacts ---
-        total_impacts = sum_impacts(cpu_data, ram_data, ssd_data, hdd_data)  # Add SSD, HDD, Case, etc.
+        total_impacts = sum_impacts(cpu_data, ram_data, ssd_data)  # Add SSD, HDD, Case, etc.
 
         st.subheader("Summary of Total Impacts")
         for impact_type, vals in total_impacts.items():
