@@ -6,7 +6,7 @@ from fastapi import FastAPI,HTTPException , APIRouter, Query, Depends
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from electricitymaps import fetch_power_breakdown
-from carbon_intensity import fetch_carbon_intensity
+from carbon_intensity import fetch_carbon_intensity, fetch_history_carbon_intensity
 from system_info import collect_system_info, get_top_processes_ps
 import json 
 import requests
@@ -574,3 +574,21 @@ def get_carbon_intensity_history(zone: str = "FR", db: Session = Depends(get_db)
     if not data:
         raise HTTPException(status_code=404, detail="No historical data found.")
     return data
+
+
+class CarbonRequest(BaseModel):
+    zone: str = 'FR'
+    token: str
+    temporal_granularity: str = '15_minutes'
+
+@app.post("/carbon-intensity-history")
+def get_carbon_intensity(data: CarbonRequest):
+    try:
+        result = fetch_history_carbon_intensity(
+            zone=data.zone,
+            token=data.token,
+            temporal_granularity=data.temporal_granularity
+        )
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))

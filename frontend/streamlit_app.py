@@ -1348,3 +1348,30 @@ with tab4:
         st.subheader("🌍 Combined Carbon Footprint Summary")
         st.metric(f"💯 **Total Estimated CO₂ Footprint:**",f"{combined_total_co2:.8f} kg CO₂eq")
 
+
+
+    st.title("Carbon Intensity Viewer")
+
+    token = st.text_input("Enter your API token", type="password")
+    zone = st.text_input("Zone", value="FR")
+    temporal_granularity = st.selectbox("Temporal Granularity", ["5_minutes", "15_minutes", "hourly"])
+
+    if st.button("Get Carbon Intensity"):
+        if not token:
+            st.error("API token is required")
+        else:
+            url = "http://127.0.0.1:8000/carbon-intensity"
+            payload = {
+                "zone": zone,
+                "token": token,
+                "temporal_granularity": temporal_granularity
+            }
+            try:
+                response = requests.post(url, json=payload)
+                response.raise_for_status()
+                data = response.json()
+                st.json(data)
+            except requests.exceptions.HTTPError as e:
+                st.error(f"Error: {e.response.text}")
+            except Exception as e:
+                st.error(f"Unexpected error: {str(e)}")
