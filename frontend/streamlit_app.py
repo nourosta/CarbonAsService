@@ -1310,7 +1310,7 @@ with tab4:
 
     with cols3:
         st.subheader("Carbon Emissions Total")
-        gwp_manufacture = total_impacts.get("GWP", {}).get("manufacture")
+        gwp_manufacture = total_impacts.get("GWP", {}).get("manufacture", 0.0)
         combined_total_co2 = gwp_manufacture + global_total_co2_kg
         st.subheader("🌍 Combined Carbon Footprint Summary")
         st.metric(f"💯 **Total Estimated CO₂ Footprint:**",f"{combined_total_co2:.8f} kg CO₂eq")
