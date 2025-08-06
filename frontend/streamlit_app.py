@@ -1313,5 +1313,5 @@ with tab4:
         total_manufacture_emissions = sum(vals["manufacture"] for vals in total_impacts.values() if "manufacture" in vals)
         combined_total_co2 = total_manufacture_emissions + global_total_co2_kg
         st.subheader("🌍 Combined Carbon Footprint Summary")
-        st.metric(f"**Total Estimated CO₂ Footprint:** {combined_total_co2:.8f} kg CO₂eq")
+        st.metric(f"💯 **Total Estimated CO₂ Footprint:**","{combined_total_co2:.8f} kg CO₂eq")
 
