@@ -1182,7 +1182,8 @@ with tab3:
 
             except Exception as e:
                 st.warning(f"Could not load carbon intensity history: {e}")
-
+        
+            global_total_co2_kg = 0  # Accumulator for all resources
 
             for resource_type in resource_types:
                 st.markdown(f"### 🔎 Resource: {resource_type.upper()}")
@@ -1228,6 +1229,8 @@ with tab3:
 
                 # Total CO₂ today
                 total_co2_kg = carbon_summary['co2_kg'].sum()
+                global_total_co2_kg += total_co2_kg
+
                 st.metric(f"🌫️ Total CO₂ Emissions Today ({resource_type.upper()})", f"{total_co2_kg:.8f} kg")
 
                 # 📊 Bar Plot: CO₂ by process
@@ -1274,33 +1277,36 @@ with tab4:
     st.title("Carbon Footprint Summary")
     cols1 , col2 , cols3 = st.columns(3)
     with cols1:
-        st.write("Scope 3 Value")
+        st.subheader("Scope 3 Value")
+        def sum_impacts(*args):
+            total_impacts = {}
+            for data in args:
+                if not data:
+                    continue
+                impacts = data.get("impacts", {})
+                for impact_type, impact_vals in impacts.items():
+                    if impact_type not in total_impacts:
+                        total_impacts[impact_type] = {"manufacture": 0, "use": 0, "unit": impact_vals.get("unit", "")}
+                    total_impacts[impact_type]["manufacture"] += impact_vals.get("manufacture", 0)
+                    total_impacts[impact_type]["use"] += impact_vals.get("use", 0)
+            return total_impacts
+        
+            # --- Sum all impacts ---
+        total_impacts = sum_impacts(cpu_data, ram_data)  # Add SSD, HDD, Case, etc.
+
+        st.subheader("Summary of Total Impacts")
+        for impact_type, vals in total_impacts.items():
+            manufacture = vals["manufacture"]
+            use = vals["use"]
+            unit = vals["unit"]
+            st.write(f"**{impact_type.upper()}**: Manufacture = {manufacture} {unit}")
+
 
     with col2:
         st.write("Scope 2 Value")
+        st.subheader("🌍 Total CO₂ (Live Sum)")
+        st.metric("All Resources", f"{global_total_co2_kg:.4f} kg")
+
 
     with cols3:
         st.write("Carbon Emissions Total")
-
-    def sum_impacts(*args):
-        total_impacts = {}
-        for data in args:
-            if not data:
-                continue
-            impacts = data.get("impacts", {})
-            for impact_type, impact_vals in impacts.items():
-                if impact_type not in total_impacts:
-                    total_impacts[impact_type] = {"manufacture": 0, "use": 0, "unit": impact_vals.get("unit", "")}
-                total_impacts[impact_type]["manufacture"] += impact_vals.get("manufacture", 0)
-                total_impacts[impact_type]["use"] += impact_vals.get("use", 0)
-        return total_impacts
-    
-        # --- Sum all impacts ---
-    total_impacts = sum_impacts(cpu_data, ram_data)  # Add SSD, HDD, Case, etc.
-
-    st.subheader("Summary of Total Impacts")
-    for impact_type, vals in total_impacts.items():
-        manufacture = vals["manufacture"]
-        use = vals["use"]
-        unit = vals["unit"]
-        st.write(f"**{impact_type.upper()}**: Manufacture = {manufacture} {unit}, Use = {use} {unit}, Total = {manufacture + use} {unit}")

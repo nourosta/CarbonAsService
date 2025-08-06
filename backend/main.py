@@ -288,13 +288,13 @@ def calculate_gpu(gpu: GPUInput):
 
 
 @app.get("/power-breakdown")
-async def get_power_breakdown(zone: str = 'FR'):
+async def get_power_breakdown(zone: str = 'FR',db: Session = Depends(get_db)):
     try:
         #fetch data from elecricitymaps
         data = fetch_power_breakdown(zone)
 
         #Store data in database
-        store_power_breakdown(zone,data)
+        store_power_breakdown(db,zone,data)
         #store_power_breakdown(zone,data)
         return data
     except Exception as e:
@@ -302,11 +302,11 @@ async def get_power_breakdown(zone: str = 'FR'):
     
     # New endpoint for carbon intensity
 @app.get("/carbon-intensity")
-async def get_carbon_intensity(zone: str = 'FR'):
+async def get_carbon_intensity(zone: str = 'FR',db: Session = Depends(get_db)):
     try:
         data = fetch_carbon_intensity(zone)
         #store_carbon_intensity(zone, data)
-        store_carbon_intensity(zone,data)
+        store_carbon_intensity(db,zone,data)
         return data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
