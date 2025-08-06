@@ -1352,26 +1352,41 @@ with tab4:
 
     st.title("Carbon Intensity Viewer")
 
-    token = st.text_input("Enter your API token", type="password")
-    zone = st.text_input("Zone", value="FR")
-    temporal_granularity = st.selectbox("Temporal Granularity", ["5_minutes", "15_minutes", "hourly"])
+    try:
+        # No payload needed if your FastAPI uses fixed token & params
+        response = requests.post(f"{FASTAPI_BASE_URL}/carbon-intensity-history", json={})
+        response.raise_for_status()
+        data = response.json()
 
-    if st.button("Get Carbon Intensity"):
-        if not token:
-            st.error("API token is required")
+        entries = data.get("data", [])
+        if not entries:
+            st.warning("No data returned.")
         else:
-            url = "http://127.0.0.1:8000/carbon-intensity"
-            payload = {
-                "zone": zone,
-                "token": token,
-                "temporal_granularity": temporal_granularity
-            }
-            try:
-                response = requests.post(url, json=payload)
-                response.raise_for_status()
-                data = response.json()
-                st.json(data)
-            except requests.exceptions.HTTPError as e:
-                st.error(f"Error: {e.response.text}")
-            except Exception as e:
-                st.error(f"Unexpected error: {str(e)}")
+            df = pd.DataFrame(entries)
+
+            # Convert datetime column
+            if 'datetime' in df.columns:
+                df['datetime'] = pd.to_datetime(df['datetime'])
+            elif 'timestamp' in df.columns:
+                df['datetime'] = pd.to_datetime(df['timestamp'])
+            else:
+                st.error("No datetime field found in data.")
+                st.stop()
+
+            # Find carbon intensity column
+            intensity_col = None
+            for col in ['carbonIntensity', 'carbonIntensityAvg', 'carbonIntensityValue']:
+                if col in df.columns:
+                    intensity_col = col
+                    break
+
+            if not intensity_col:
+                st.error("No carbon intensity field found in data.")
+                st.stop()
+
+            df = df[['datetime', intensity_col]].set_index('datetime').sort_index()
+
+            st.line_chart(df)
+
+    except Exception as e:
+        st.error(f"Failed to fetch or plot data: {e}")
