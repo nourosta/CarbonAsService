@@ -1357,6 +1357,7 @@ with tab4:
         response = requests.get(f"{FASTAPI_BASE_URL}/carbon-intensity-history")
         response.raise_for_status()
         data = response.json()
+        st.write(data)
 
         entries = data.get("data", [])
         if not entries:
