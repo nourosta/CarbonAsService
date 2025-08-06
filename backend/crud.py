@@ -55,7 +55,7 @@ def save_hdd(capacity, units, gwp, adp, pe):
         db.close()
 
 # Store power breakdown
-def store_power_breakdown(zone: str, data: dict):
+def store_power_breakdown(db, zone: str, data: dict):
     db = SessionLocal()
     try:
         power_data = PowerBreakdown(zone=zone, data=json.dumps(data))  #
@@ -67,7 +67,7 @@ def store_power_breakdown(zone: str, data: dict):
         db.close()
 
 # Store carbon intensity
-def store_carbon_intensity(zone: str, data: dict):
+def store_carbon_intensity(db, zone: str, data: dict):
     db = SessionLocal()
     try:
         intensity_data = CarbonIntensity(zone=zone, data=json.dumps(data)) 
