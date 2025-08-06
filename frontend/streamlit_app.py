@@ -1385,14 +1385,15 @@ with tab4:
             # Convert to DataFrame
             df_history = pd.DataFrame(history_list)
             df_history['datetime'] = pd.to_datetime(df_history['datetime'], errors='coerce')
+            df_history['datetime_rounded'] = df_history['datetime'].dt.floor("15min")
 
-            # Add the latest data to the history if not already present
-            latest_time = pd.to_datetime(carbon_data.get("datetime"))
-            if latest_time not in df_history['datetime'].values:
+            latest_time = pd.to_datetime(carbon_data.get("datetime")).floor("15min")
+
+            if latest_time not in df_history['datetime_rounded'].values:
                 latest_row = {
                     "zone": carbon_data.get("zone"),
                     "carbonIntensity": carbon_data.get("carbonIntensity"),
-                    "datetime": latest_time,
+                    "datetime": pd.to_datetime(carbon_data.get("datetime")),
                     "updatedAt": pd.to_datetime(carbon_data.get("updatedAt")),
                     "createdAt": pd.to_datetime(carbon_data.get("createdAt")),
                     "emissionFactorType": carbon_data.get("emissionFactorType"),
@@ -1400,25 +1401,41 @@ with tab4:
                     "estimationMethod": carbon_data.get("estimationMethod")
                 }
                 df_history = pd.concat([df_history, pd.DataFrame([latest_row])], ignore_index=True)
-                df_history = df_history.sort_values("datetime")
-            df_history = df_history.sort_values('datetime')
-
-            
+            # After appending latest row
+            df_history = df_history.sort_values("datetime")
+            df_history = df_history.drop(columns=["datetime_rounded"], errors="ignore")
 
             # Plot with Plotly
-            st.subheader("📈 Carbon Intensity Over Time")
-
             fig = px.line(
                 df_history,
                 x='datetime',
                 y='carbonIntensity',
-                title="Hourly Carbon Intensity (FR)",
+                title="15-Minute Carbon Intensity (FR)",
                 labels={"datetime": "Time", "carbonIntensity": "gCO₂eq/kWh"},
                 markers=True
             )
-            fig.update_layout(xaxis_title="Time", yaxis_title="Carbon Intensity", template="plotly_white")
+
+            fig.update_layout(
+                xaxis_title="Time",
+                yaxis_title="Carbon Intensity (gCO₂eq/kWh)",
+                template="plotly_white",
+                xaxis=dict(
+                    tickformat="%H:%M",
+                    tickangle=45
+                )
+            )
+
+            # Optional: highlight the latest point
+            fig.add_scatter(
+                x=[latest_row["datetime"]],
+                y=[latest_row["carbonIntensity"]],
+                mode="markers+text",
+                marker=dict(color="red", size=10),
+                text=["Latest"],
+                textposition="top center",
+                name="Latest"
+            )
 
             st.plotly_chart(fig, use_container_width=True)
-
         except requests.RequestException as e:
             st.error(f"❌ Failed to fetch carbon intensity history: {e}")
