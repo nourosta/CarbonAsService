@@ -9,7 +9,7 @@ from streamlit_autorefresh import st_autorefresh
 from datetime import datetime
 
 
-tab1, tab2 , tab3 = st.tabs(["🏠 System Overview", "📈 Live Monitoring","🚗💨 Carbon Emissions"])
+tab1, tab2 , tab3 , tab4= st.tabs(["🏠 System Overview", "📈 Live Monitoring","🚗💨 Carbon Emissions", "📊 System Summary Overview"])
 st.set_page_config(page_title="System Info Dashboard", layout="wide") 
 
 
@@ -1198,3 +1198,19 @@ with tab3:
 
     except Exception as e:
         st.error(f"Failed to load carbon footprint: {e}")
+
+
+with tab4:
+
+    st.title("Carbon Footprint Summary")
+    cols1 , col2 , cols3 = st.columns(3)
+    with cols1:
+        st.write("Scope 3 Value")
+
+    with col2:
+        st.write("Scope 2 Value")
+
+    with cols3:
+        st.write("Carbon Emissions Total")
+
+    
