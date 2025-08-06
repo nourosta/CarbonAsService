@@ -1387,6 +1387,14 @@ with tab4:
             df_history['datetime'] = pd.to_datetime(df_history['datetime'], errors='coerce')
             df_history['datetime_rounded'] = df_history['datetime'].dt.floor("15min")
 
+            latest_datetime_str = carbon_data.get("datetime")
+            if latest_datetime_str is not None:
+                latest_time = pd.to_datetime(latest_datetime_str).floor("15min")
+            else:
+                # handle the case when datetime is missing
+                st.error("Latest carbon intensity datetime is missing.")
+                st.stop()
+
             latest_time = pd.to_datetime(carbon_data.get("datetime")).floor("15min")
 
             if latest_time not in df_history['datetime_rounded'].values:
