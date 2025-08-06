@@ -1361,36 +1361,46 @@ with tab4:
         carbon_intensity = carbon_data.get("carbonIntensity")
         updated_at = carbon_data.get("updatedAt", "N/A")
 
-        if carbon_intensity is None:
-            st.error("Carbon intensity data is not available.")
-        else:
+    except requests.RequestException as e:
+        st.error(f"❌ Failed to fetch latest carbon intensity: {e}")
+        st.stop()
+
+    if carbon_intensity is None:
+        st.error("Carbon intensity data is not available.")
+    else:
+        st.metric("🌍 Latest Carbon Intensity (gCO₂eq/kWh)", f"{carbon_intensity}", help=f"Updated at: {updated_at}")
+
+        try:
             # Fetch carbon intensity history
             response_history = requests.get(f"{FASTAPI_BASE_URL}/carbon-intensity-history?zone=FR")
             response_history.raise_for_status()
-            # Assuming 'history_response' is your JSON object
-            history_list = response_history.get("history", [])
+            history_response = response_history.json()
+
+            history_list = history_response.get("history", [])
 
             if not history_list:
-                st.warning("No carbon intensity history data available.")
+                st.warning("⚠️ No carbon intensity history data available.")
                 st.stop()
 
             # Convert to DataFrame
             df_history = pd.DataFrame(history_list)
-
-            # Convert datetime strings to datetime objects
             df_history['datetime'] = pd.to_datetime(df_history['datetime'], errors='coerce')
-
-            # Sort by datetime
             df_history = df_history.sort_values('datetime')
 
-            # Plot
+            # Plot with Plotly
             st.subheader("📈 Carbon Intensity Over Time")
 
-            fig, ax = plt.subplots(figsize=(10, 4))
-            ax.plot(df_history['datetime'], df_history['carbonIntensity'], marker='o', linestyle='-')
-            ax.set_xlabel("Time")
-            ax.set_ylabel("Carbon Intensity (gCO2eq/kWh)")
-            ax.set_title("Hourly Carbon Intensity (FR)")
-            ax.grid(True)
+            fig = px.line(
+                df_history,
+                x='datetime',
+                y='carbonIntensity',
+                title="Hourly Carbon Intensity (FR)",
+                labels={"datetime": "Time", "carbonIntensity": "gCO₂eq/kWh"},
+                markers=True
+            )
+            fig.update_layout(xaxis_title="Time", yaxis_title="Carbon Intensity", template="plotly_white")
 
-            st.pyplot(fig)
+            st.plotly_chart(fig, use_container_width=True)
+
+        except requests.RequestException as e:
+            st.error(f"❌ Failed to fetch carbon intensity history: {e}")
