@@ -31,8 +31,8 @@ def scheduled_electricitymix_update():
 
 def start_scheduler():
     scheduler = BackgroundScheduler()
-    scheduler.add_job(scheduled_carbon_update, 'interval', minutes=5)
-    scheduler.add_job(scheduled_electricitymix_update, 'interval', minutes=5)
+    scheduler.add_job(scheduled_carbon_update, 'interval', minutes=15)
+    scheduler.add_job(scheduled_electricitymix_update, 'interval', minutes=15)
     scheduler.start()
-    print("🔄 Scheduler started: carbon intensity will update every 5 minutes.")
+    print("🔄 Scheduler started: carbon intensity will update every 15 minutes.")
     return scheduler
