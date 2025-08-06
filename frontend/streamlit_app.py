@@ -1,3 +1,4 @@
+import math
 import streamlit as st
 import requests
 import time
@@ -107,7 +108,7 @@ with tab1:
     ram_capacity = st.number_input(
         "Enter RAM Capacity (GB):",
         min_value=1,
-        value= 64 #int(math.ceil(float(parsed_info["RAM"].split()[0]) if parsed_info.get("RAM") != "Unknown" else 32))
+        value= int(math.ceil(round(data.get("ram_gb", 0), 2))) #int(math.ceil(float(parsed_info["RAM"].split()[0]) if parsed_info.get("RAM") != "Unknown" else 32))
     )
     ram_manufacturer = st.text_input("Enter RAM Manufacturer:", value="Samsung")
     ram_process = st.number_input("Enter Process (nm):", min_value=1, max_value=100, value=30)

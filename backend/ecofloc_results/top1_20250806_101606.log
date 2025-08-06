@@ -1,0 +1,500 @@
+[RES=nic] [PID=1153951] (python3)
+[CPU%=107.0] [RAM%=0.1]
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+*****************************
+/ECOFLOC_NIC_PID_1153951
+*****************************
+Average Power : 0.00 Watts
+Total Energy : 0.00 Joules
+*****************************
+
+*****************************
+[RES=nic] [PID=1153948] (uvicorn)
+[CPU%=100.0] [RAM%=0.1]
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+*****************************
+/ECOFLOC_NIC_PID_1153948
+*****************************
+Average Power : 0.00 Watts
+Total Energy : 0.00 Joules
+*****************************
+
+*****************************
+[RES=nic] [PID=1153949] (python3)
+[CPU%=80.0] [RAM%=0.1]
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+*****************************
+/ECOFLOC_NIC_PID_1153949
+*****************************
+Average Power : 0.00 Watts
+Total Energy : 0.00 Joules
+*****************************
+
+*****************************
+[RES=nic] [PID=1115239] (chrome)
+[CPU%=12.8] [RAM%=1.6]
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+*****************************
+/ECOFLOC_NIC_PID_1115239
+*****************************
+Average Power : 0.00 Watts
+Total Energy : 0.00 Joules
+*****************************
+
+*****************************
+[RES=nic] [PID=1153947] (uvicorn)
+[CPU%=28.0] [RAM%=0.0]
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+*****************************
+/ECOFLOC_NIC_PID_1153947
+*****************************
+Average Power : 0.00 Watts
+Total Energy : 0.00 Joules
+*****************************
+
+*****************************
+[RES=nic] [PID=1153950] (python3)
+[CPU%=5.2] [RAM%=0.0]
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+*****************************
+/ECOFLOC_NIC_PID_1153950
+*****************************
+Average Power : 0.00 Watts
+Total Energy : 0.00 Joules
+*****************************
+
+*****************************
+[RES=nic] [PID=1153935] (uv)
+[CPU%=2.7] [RAM%=0.1]
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+*****************************
+/ECOFLOC_NIC_PID_1153935
+*****************************
+Average Power : 0.00 Watts
+Total Energy : 0.00 Joules
+*****************************
+
+*****************************
+[RES=nic] [PID=1153936] (uv)
+[CPU%=2.6] [RAM%=0.1]
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+*****************************
+/ECOFLOC_NIC_PID_1153936
+*****************************
+Average Power : 0.00 Watts
+Total Energy : 0.00 Joules
+*****************************
+
+*****************************
+[RES=nic] [PID=1153937] (uv)
+[CPU%=2.4] [RAM%=0.1]
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+*****************************
+/ECOFLOC_NIC_PID_1153937
+*****************************
+Average Power : 0.00 Watts
+Total Energy : 0.00 Joules
+*****************************
+
+*****************************
+[RES=nic] [PID=1153934] (python3)
+[CPU%=2.2] [RAM%=0.0]
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+*****************************
+/ECOFLOC_NIC_PID_1153934
+*****************************
+Average Power : 0.00 Watts
+Total Energy : 0.00 Joules
+*****************************
+
+*****************************
+[RES=sd] [PID=1153949] (python3)
+[CPU%=80.0] [RAM%=0.1]
+*****************************
+/ECOFLOC_SD_PID_1153949
+*****************************
+Average Power : 0.00 Watts
+Total Energy : 0.00 Joules
+*****************************
+
+*****************************
+[RES=sd] [PID=1153951] (python3)
+[CPU%=107.0] [RAM%=0.1]
+*****************************
+/ECOFLOC_SD_PID_1153951
+*****************************
+Average Power : 0.00 Watts
+Total Energy : 0.00 Joules
+*****************************
+
+*****************************
+[RES=sd] [PID=1153947] (uvicorn)
+[CPU%=28.0] [RAM%=0.0]
+*****************************
+/ECOFLOC_SD_PID_1153947
+*****************************
+Average Power : 0.00 Watts
+Total Energy : 0.00 Joules
+*****************************
+
+*****************************
+[RES=sd] [PID=1153948] (uvicorn)
+[CPU%=100.0] [RAM%=0.1]
+*****************************
+/ECOFLOC_SD_PID_1153948
+*****************************
+Average Power : 0.00 Watts
+Total Energy : 0.00 Joules
+*****************************
+
+*****************************
+[RES=sd] [PID=1115239] (chrome)
+[CPU%=12.8] [RAM%=1.6]
+*****************************
+/ECOFLOC_SD_PID_1115239
+*****************************
+Average Power : 0.00 Watts
+Total Energy : 0.00 Joules
+*****************************
+
+*****************************
+[RES=sd] [PID=1153950] (python3)
+[CPU%=5.2] [RAM%=0.0]
+*****************************
+/ECOFLOC_SD_PID_1153950
+*****************************
+Average Power : 0.00 Watts
+Total Energy : 0.00 Joules
+*****************************
+
+*****************************
+[RES=sd] [PID=1153936] (uv)
+[CPU%=2.6] [RAM%=0.1]
+*****************************
+/ECOFLOC_SD_PID_1153936
+*****************************
+Average Power : 0.00 Watts
+Total Energy : 0.00 Joules
+*****************************
+
+*****************************
+[RES=sd] [PID=1153935] (uv)
+[CPU%=2.7] [RAM%=0.1]
+*****************************
+/ECOFLOC_SD_PID_1153935
+*****************************
+Average Power : 0.00 Watts
+Total Energy : 0.00 Joules
+*****************************
+
+*****************************
+[RES=sd] [PID=1153937] (uv)
+[CPU%=2.5] [RAM%=0.1]
+*****************************
+/ECOFLOC_SD_PID_1153937
+*****************************
+Average Power : 0.00 Watts
+Total Energy : 0.00 Joules
+*****************************
+
+*****************************
+[RES=sd] [PID=1153934] (python3)
+[CPU%=2.2] [RAM%=0.0]
+*****************************
+/ECOFLOC_SD_PID_1153934
+*****************************
+Average Power : 0.00 Watts
+Total Energy : 0.00 Joules
+*****************************
+
+*****************************
+[RES=nic] [PID=1153948] (uvicorn)
+[CPU%=9.1] [RAM%=0.4]
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+*****************************
+/ECOFLOC_NIC_PID_1153948
+*****************************
+Average Power : 0.00 Watts
+Total Energy : 0.00 Joules
+*****************************
+
+*****************************
+[RES=nic] [PID=1154466] (streamlit)
+[CPU%=24.1] [RAM%=0.6]
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+*****************************
+/ECOFLOC_NIC_PID_1154466
+*****************************
+Average Power : 0.00 Watts
+Total Energy : 0.00 Joules
+*****************************
+
+*****************************
+[RES=nic] [PID=1115239] (chrome)
+[CPU%=13.0] [RAM%=1.4]
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+*****************************
+/ECOFLOC_NIC_PID_1115239
+*****************************
+Average Power : 0.00 Watts
+Total Energy : 0.00 Joules
+*****************************
+
+*****************************
+[RES=nic] [PID=1153951] (python3)
+[CPU%=5.8] [RAM%=0.2]
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+*****************************
+/ECOFLOC_NIC_PID_1153951
+*****************************
+Average Power : 0.00 Watts
+Total Energy : 0.00 Joules
+*****************************
+
+*****************************
+[RES=nic] [PID=1153139] (chrome)
+[CPU%=5.6] [RAM%=1.4]
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+*****************************
+/ECOFLOC_NIC_PID_1153139
+*****************************
+Average Power : 0.00 Watts
+Total Energy : 0.00 Joules
+*****************************
+
+*****************************
+[RES=nic] [PID=   8570] (unknown)
+[CPU%=4.2] [RAM%=2.3]
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+*****************************
+/ECOFLOC_NIC_PID_8570
+*****************************
+Average Power : 0.00 Watts
+Total Energy : 0.00 Joules
+*****************************
+
+*****************************
+[RES=nic] [PID=   8625] (unknown)
+[CPU%=3.3] [RAM%=1.1]
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+*****************************
+/ECOFLOC_NIC_PID_8625
+*****************************
+Average Power : 0.00 Watts
+Total Energy : 0.00 Joules
+*****************************
+
+*****************************
+[RES=nic] [PID=1115288] (chrome)
+[CPU%=4.0] [RAM%=0.9]
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+*****************************
+/ECOFLOC_NIC_PID_1115288
+*****************************
+Average Power : 0.00 Watts
+Total Energy : 0.00 Joules
+*****************************
+
+*****************************
+[RES=nic] [PID=   9220] (unknown)
+[CPU%=2.1] [RAM%=0.6]
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+*****************************
+/ECOFLOC_NIC_PID_9220
+*****************************
+Average Power : 0.00 Watts
+Total Energy : 0.00 Joules
+*****************************
+
+*****************************
+[RES=nic] [PID=  85409] (unknown)
+[CPU%=1.6] [RAM%=0.6]
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+No devices to monitor. Use '-a' to allow monitoring loopback interfaces or devices that are not up/running
+*****************************
+/ECOFLOC_NIC_PID_85409
+*****************************
+Average Power : 0.00 Watts
+Total Energy : 0.00 Joules
+*****************************
+
+*****************************
+[RES=sd] [PID=1115239] (chrome)
+[CPU%=13.0] [RAM%=1.4]
+*****************************
+/ECOFLOC_SD_PID_1115239
+*****************************
+Average Power : 0.00 Watts
+Total Energy : 0.00 Joules
+*****************************
+
+*****************************
+[RES=sd] [PID=1153948] (uvicorn)
+[CPU%=9.1] [RAM%=0.4]
+*****************************
+/ECOFLOC_SD_PID_1153948
+*****************************
+Average Power : 0.00 Watts
+Total Energy : 0.00 Joules
+*****************************
+
+*****************************
+[RES=sd] [PID=1154466] (streamlit)
+[CPU%=24.1] [RAM%=0.6]
+*****************************
+/ECOFLOC_SD_PID_1154466
+*****************************
+Average Power : 0.00 Watts
+Total Energy : 0.00 Joules
+*****************************
+
+*****************************
+[RES=sd] [PID=1153139] (chrome)
+[CPU%=5.6] [RAM%=1.4]
+*****************************
+/ECOFLOC_SD_PID_1153139
+*****************************
+Average Power : 0.00 Watts
+Total Energy : 0.00 Joules
+*****************************
+
+*****************************
+[RES=sd] [PID=1153951] (python3)
+[CPU%=5.8] [RAM%=0.2]
+*****************************
+/ECOFLOC_SD_PID_1153951
+*****************************
+Average Power : 0.00 Watts
+Total Energy : 0.00 Joules
+*****************************
+
+*****************************
+[RES=sd] [PID=   8570] (unknown)
+[CPU%=4.2] [RAM%=2.3]
+*****************************
+/ECOFLOC_SD_PID_8570
+*****************************
+Average Power : 0.00 Watts
+Total Energy : 0.00 Joules
+*****************************
+
+*****************************
+[RES=sd] [PID=   8625] (unknown)
+[CPU%=3.3] [RAM%=1.1]
+*****************************
+/ECOFLOC_SD_PID_8625
+*****************************
+Average Power : 0.00 Watts
+Total Energy : 0.00 Joules
+*****************************
+
+*****************************
+[RES=sd] [PID=1115288] (chrome)
+[CPU%=4.0] [RAM%=0.9]
+*****************************
+/ECOFLOC_SD_PID_1115288
+*****************************
+Average Power : 0.00 Watts
+Total Energy : 0.00 Joules
+*****************************
+
+*****************************
+[RES=sd] [PID=   9220] (unknown)
+[CPU%=2.1] [RAM%=0.6]
+*****************************
+/ECOFLOC_SD_PID_9220
+*****************************
+Average Power : 0.00 Watts
+Total Energy : 0.00 Joules
+*****************************
+
+*****************************
+[RES=sd] [PID=  85409] (unknown)
+[CPU%=1.6] [RAM%=0.6]
+*****************************
+/ECOFLOC_SD_PID_85409
+*****************************
+Average Power : 0.00 Watts
+Total Energy : 0.00 Joules
+*****************************
+
+*****************************
