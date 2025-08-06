@@ -1314,5 +1314,5 @@ with tab4:
         scope_co2 = global_total_co2_kg.copy()
         combined_total_co2 = gwp_manufacture + scope_co2
         st.subheader("🌍 Combined Carbon Footprint Summary")
-        st.metric(f"💯 **Total Estimated CO₂ Footprint:**",f"{combined_total_co2:.8f} kg CO₂eq")
+        st.metric(f"💯 **Total Estimated CO₂ Footprint:**",f"{gwp_manufacture:.8f} kg CO₂eq")
 
