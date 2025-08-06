@@ -1385,7 +1385,25 @@ with tab4:
             # Convert to DataFrame
             df_history = pd.DataFrame(history_list)
             df_history['datetime'] = pd.to_datetime(df_history['datetime'], errors='coerce')
+
+            # Add the latest data to the history if not already present
+            latest_time = pd.to_datetime(carbon_data.get("datetime"))
+            if latest_time not in df_history['datetime'].values:
+                latest_row = {
+                    "zone": carbon_data.get("zone"),
+                    "carbonIntensity": carbon_data.get("carbonIntensity"),
+                    "datetime": latest_time,
+                    "updatedAt": pd.to_datetime(carbon_data.get("updatedAt")),
+                    "createdAt": pd.to_datetime(carbon_data.get("createdAt")),
+                    "emissionFactorType": carbon_data.get("emissionFactorType"),
+                    "isEstimated": carbon_data.get("isEstimated"),
+                    "estimationMethod": carbon_data.get("estimationMethod")
+                }
+                df_history = pd.concat([df_history, pd.DataFrame([latest_row])], ignore_index=True)
+                df_history = df_history.sort_values("datetime")
             df_history = df_history.sort_values('datetime')
+
+            
 
             # Plot with Plotly
             st.subheader("📈 Carbon Intensity Over Time")
