@@ -1315,7 +1315,17 @@ with tab4:
             return total_impacts
             
             # --- Sum all impacts ---
-        total_impacts = sum_impacts(cpu_data, ram_data, case_data, ssd_data, motherboard_impacts , hdd_data)  # Add SSD, HDD, Case, etc.
+        def safe_get(var_name):
+            return globals().get(var_name) or locals().get(var_name) or None
+
+        components = [cpu_data, ram_data, case_data, ssd_data, motherboard_impacts]
+
+        for optional_var in ['hdd_data', 'gpu_data']:
+            val = safe_get(optional_var)
+            if val is not None:
+                components.append(val)
+
+        total_impacts = sum_impacts(*components)
 
         st.subheader("Summary of Total Impacts")
         for impact_type, vals in total_impacts.items():
