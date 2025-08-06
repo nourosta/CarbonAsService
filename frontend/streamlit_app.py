@@ -170,7 +170,7 @@ with tab1:
             )
         selected_ssd = ssds[selected_ssd_index]
 
-        ssd_capacity = st.number_input("Enter SSD Capacity (GB):", min_value=1.0, value=parse_disk_size(selected_ssd["size"]))
+        ssd_capacity = st.number_input("Enter SSD Capacity (GB):", min_value=1, value=int(math.ceil(parse_disk_size(selected_ssd["size"]))))
         ssd_manufacturer = st.text_input("Enter SSD Manufacturer:", value=selected_ssd["model"] or "Unknown")
 
         try:
