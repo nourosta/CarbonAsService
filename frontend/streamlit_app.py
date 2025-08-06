@@ -1305,7 +1305,7 @@ with tab4:
     with col2:
         st.write("Scope 2 Value")
         st.subheader("🌍 Total CO₂ (Live Sum)")
-        st.metric("All Resources", f"{global_total_co2_kg:.4f} kg")
+        st.metric("All Resources", f"{global_total_co2_kg:.8f} kg")
 
 
     with cols3:
