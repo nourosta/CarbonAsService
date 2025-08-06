@@ -1354,7 +1354,7 @@ with tab4:
 
     try:
         # No payload needed if your FastAPI uses fixed token & params
-        response = requests.post(f"{FASTAPI_BASE_URL}/carbon-intensity-history", json={})
+        response = requests.get(f"{FASTAPI_BASE_URL}/carbon-intensity-history")
         response.raise_for_status()
         data = response.json()
 
