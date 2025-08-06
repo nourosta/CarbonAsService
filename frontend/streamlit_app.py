@@ -1357,6 +1357,8 @@ with tab4:
         response = requests.get(f"{FASTAPI_BASE_URL}/carbon-intensity/last?zone=FR")
         response.raise_for_status()
         carbon_data = response.json()
+        st.write("Carbon data fetched:", carbon_data)  # or print(carbon_data)
+
 
         carbon_intensity = carbon_data.get("carbonIntensity")
         updated_at = carbon_data.get("updatedAt", "N/A")
