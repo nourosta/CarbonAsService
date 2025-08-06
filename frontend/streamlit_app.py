@@ -1367,47 +1367,30 @@ with tab4:
             # Fetch carbon intensity history
             response_history = requests.get(f"{FASTAPI_BASE_URL}/carbon-intensity-history?zone=FR")
             response_history.raise_for_status()
-            history_data = response_history.json()
+            # Assuming 'history_response' is your JSON object
+            history_list = history_response.get("history", [])
 
-            # Get only the "history" list if returned in that format
-            history = history_data.get("history", history_data)  # fallback
-
-            # Build DataFrame
-            df_history = pd.DataFrame(history)
-
-            if 'updatedAt' in df_history.columns:
-                df_history['updatedAt'] = pd.to_datetime(df_history['updatedAt'], errors='coerce')
-            elif 'datetime' in df_history.columns:
-                df_history['updatedAt'] = pd.to_datetime(df_history['datetime'], errors='coerce')
-            else:
-                st.error("No timestamp column ('updatedAt' or 'datetime') found in the carbon intensity history data.")
+            if not history_list:
+                st.warning("No carbon intensity history data available.")
                 st.stop()
 
-            df_history['updatedAt'] = pd.to_datetime(df_history.get('updatedAt') or df_history.get('datetime'), errors='coerce')
-            df_history['carbonIntensity'] = pd.to_numeric(df_history['carbonIntensity'], errors='coerce')
-            df_history.dropna(subset=['updatedAt', 'carbonIntensity'], inplace=True)
-            df_history = df_history.sort_values('updatedAt')
+            # Convert to DataFrame
+            df_history = pd.DataFrame(history_list)
 
-            # Create line plot
-            fig_line = px.line(
-                df_history,
-                x='updatedAt',
-                y='carbonIntensity',
-                labels={'updatedAt': 'Updated Time', 'carbonIntensity': 'gCO₂/kWh'},
-                title='🧭 Carbon Intensity Over Time',
-                height=350
-            )
+            # Convert datetime strings to datetime objects
+            df_history['datetime'] = pd.to_datetime(df_history['datetime'], errors='coerce')
 
-            # Display metric + plot side-by-side
-            col1, col2 = st.columns([1, 3])
+            # Sort by datetime
+            df_history = df_history.sort_values('datetime')
 
-            with col1:
-                st.subheader("Live Carbon Intensity")
-                st.metric("Carbon Intensity", f"{carbon_intensity} gCO₂eq/kWh")
-                st.caption(f"Updated at: {updated_at}")
+            # Plot
+            st.subheader("📈 Carbon Intensity Over Time")
 
-            with col2:
-                st.plotly_chart(fig_line, use_container_width=True)
+            fig, ax = plt.subplots(figsize=(10, 4))
+            ax.plot(df_history['datetime'], df_history['carbonIntensity'], marker='o', linestyle='-')
+            ax.set_xlabel("Time")
+            ax.set_ylabel("Carbon Intensity (gCO2eq/kWh)")
+            ax.set_title("Hourly Carbon Intensity (FR)")
+            ax.grid(True)
 
-    except requests.exceptions.RequestException as e:
-        st.error(f"Failed to fetch carbon intensity data: {e}")
+            st.pyplot(fig)
