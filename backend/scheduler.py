@@ -1,4 +1,5 @@
-from carbon_intensity import fetch_carbon_intensity, store_carbon_intensity
+from crud import store_carbon_intensity
+from carbon_intensity import fetch_carbon_intensity
 from database import SessionLocal
 from apscheduler.schedulers.background import BackgroundScheduler
 
