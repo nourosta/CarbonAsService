@@ -1350,55 +1350,55 @@ with tab4:
 
 
 
-st.title("Carbon Intensity Viewer")
+    st.title("Carbon Intensity Viewer")
 
-try:
-    # Fetch latest carbon intensity
-    response = requests.get(f"{FASTAPI_BASE_URL}/carbon-intensity/last?zone=FR")
-    response.raise_for_status()
-    carbon_data = response.json()
+    try:
+        # Fetch latest carbon intensity
+        response = requests.get(f"{FASTAPI_BASE_URL}/carbon-intensity/last?zone=FR")
+        response.raise_for_status()
+        carbon_data = response.json()
 
-    carbon_intensity = carbon_data.get("carbonIntensity")
-    updated_at = carbon_data.get("updatedAt", "N/A")
+        carbon_intensity = carbon_data.get("carbonIntensity")
+        updated_at = carbon_data.get("updatedAt", "N/A")
 
-    if carbon_intensity is None:
-        st.error("Carbon intensity data is not available.")
-    else:
-        # Fetch carbon intensity history
-        response_history = requests.get(f"{FASTAPI_BASE_URL}/carbon-intensity-history?zone=FR")
-        response_history.raise_for_status()
-        history_data = response_history.json()
+        if carbon_intensity is None:
+            st.error("Carbon intensity data is not available.")
+        else:
+            # Fetch carbon intensity history
+            response_history = requests.get(f"{FASTAPI_BASE_URL}/carbon-intensity-history?zone=FR")
+            response_history.raise_for_status()
+            history_data = response_history.json()
 
-        # Get only the "history" list if returned in that format
-        history = history_data.get("history", history_data)  # fallback
+            # Get only the "history" list if returned in that format
+            history = history_data.get("history", history_data)  # fallback
 
-        # Build DataFrame
-        df_history = pd.DataFrame(history)
-        df_history['updatedAt'] = pd.to_datetime(df_history.get('updatedAt') or df_history.get('datetime'), errors='coerce')
-        df_history['carbonIntensity'] = pd.to_numeric(df_history['carbonIntensity'], errors='coerce')
-        df_history.dropna(subset=['updatedAt', 'carbonIntensity'], inplace=True)
-        df_history = df_history.sort_values('updatedAt')
+            # Build DataFrame
+            df_history = pd.DataFrame(history)
+            df_history['updatedAt'] = pd.to_datetime(df_history.get('updatedAt') or df_history.get('datetime'), errors='coerce')
+            df_history['carbonIntensity'] = pd.to_numeric(df_history['carbonIntensity'], errors='coerce')
+            df_history.dropna(subset=['updatedAt', 'carbonIntensity'], inplace=True)
+            df_history = df_history.sort_values('updatedAt')
 
-        # Create line plot
-        fig_line = px.line(
-            df_history,
-            x='updatedAt',
-            y='carbonIntensity',
-            labels={'updatedAt': 'Updated Time', 'carbonIntensity': 'gCO₂/kWh'},
-            title='🧭 Carbon Intensity Over Time',
-            height=350
-        )
+            # Create line plot
+            fig_line = px.line(
+                df_history,
+                x='updatedAt',
+                y='carbonIntensity',
+                labels={'updatedAt': 'Updated Time', 'carbonIntensity': 'gCO₂/kWh'},
+                title='🧭 Carbon Intensity Over Time',
+                height=350
+            )
 
-        # Display metric + plot side-by-side
-        col1, col2 = st.columns([1, 3])
+            # Display metric + plot side-by-side
+            col1, col2 = st.columns([1, 3])
 
-        with col1:
-            st.subheader("Live Carbon Intensity")
-            st.metric("Carbon Intensity", f"{carbon_intensity} gCO₂eq/kWh")
-            st.caption(f"Updated at: {updated_at}")
+            with col1:
+                st.subheader("Live Carbon Intensity")
+                st.metric("Carbon Intensity", f"{carbon_intensity} gCO₂eq/kWh")
+                st.caption(f"Updated at: {updated_at}")
 
-        with col2:
-            st.plotly_chart(fig_line, use_container_width=True)
+            with col2:
+                st.plotly_chart(fig_line, use_container_width=True)
 
-except requests.exceptions.RequestException as e:
-    st.error(f"Failed to fetch carbon intensity data: {e}")
+    except requests.exceptions.RequestException as e:
+        st.error(f"Failed to fetch carbon intensity data: {e}")
