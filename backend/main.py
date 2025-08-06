@@ -10,7 +10,7 @@ from system_info import collect_system_info, get_top_processes_ps
 import json 
 import requests
 from pydantic import BaseModel
-from crud import get_latest_carbon_intensity_by_zone, store_power_breakdown, store_carbon_intensity, save_ram,save_gpu,save_hdd,save_ssd, save_cpu
+from crud import get_all_carbon_intensity_by_zone, get_latest_carbon_intensity_by_zone, store_power_breakdown, store_carbon_intensity, save_ram,save_gpu,save_hdd,save_ssd, save_cpu
 from database import get_db, init_db
 from fastapi.middleware.cors import CORSMiddleware
 from system_info import get_top_processes_ps
@@ -557,3 +557,11 @@ def get_last_carbon_intensity(zone: str = "FR", db: Session = Depends(get_db)):
     if not result:
         raise HTTPException(status_code=404, detail="No data found")
     return result
+
+
+@app.get("/carbon-intensity/history")
+def get_carbon_intensity_history(zone: str = "FR", db: Session = Depends(get_db)):
+    data = get_all_carbon_intensity_by_zone(db, zone)
+    if not data:
+        raise HTTPException(status_code=404, detail="No historical data found.")
+    return data

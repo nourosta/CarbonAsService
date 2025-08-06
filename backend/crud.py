@@ -125,3 +125,25 @@ def get_latest_carbon_intensity_by_zone(db: Session, zone: str):
             "updatedAt": data.get("updatedAt")
         }
     return None
+
+
+def get_all_carbon_intensity_by_zone(db: Session, zone: str):
+    records = (
+        db.query(CarbonIntensity)
+        .filter(CarbonIntensity.zone == zone)
+        .order_by(CarbonIntensity.id.asc())  # oldest to newest
+        .all()
+    )
+    results = []
+    for record in records:
+        try:
+            data = json.loads(record.data)
+            results.append({
+                "carbonIntensity": data.get("carbonIntensity"),
+                "updatedAt": data.get("updatedAt")
+            })
+        except:
+            continue  # skip malformed data
+    return results
+
+
