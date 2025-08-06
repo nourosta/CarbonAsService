@@ -329,9 +329,14 @@ with tab1:
     total_pe  = motherboard_units * MOTHERBOARD_PE
 
     # --- Store in session_state (optional if used elsewhere) ---
-    st.session_state["motherboard_gwp"] = total_gwp
-    st.session_state["motherboard_adp"] = total_adp
-    st.session_state["motherboard_pe"]  = total_pe
+    motherboard_data = {
+    "gwp": total_gwp,
+    "adp": total_adp,
+    "pe": total_pe
+}
+
+    # Save in session state
+    st.session_state["motherboard_data"] = motherboard_data
 
     # --- Display in Columns ---
     left, middle, right = st.columns(3)
@@ -1292,7 +1297,7 @@ with tab4:
             return total_impacts
         
             # --- Sum all impacts ---
-        total_impacts = sum_impacts(cpu_data, ram_data)  # Add SSD, HDD, Case, etc.
+        total_impacts = sum_impacts(cpu_data, ram_data, case_data, motherboard_data)  # Add SSD, HDD, Case, etc.
 
         st.subheader("Summary of Total Impacts")
         for impact_type, vals in total_impacts.items():
