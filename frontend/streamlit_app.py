@@ -1208,11 +1208,6 @@ with tab3:
                 st.error(f"❌ Failed to fetch latest carbon intensity: {e}")
                 st.stop()
 
-            if carbon_intensity is None:
-                st.error("Carbon intensity data is not available.")
-            else:
-                st.metric("🌍 Latest Carbon Intensity (gCO₂eq/kWh)", f"{carbon_intensity}", help=f"Updated at: {updated_at}")
-
                 try:
                     # Fetch carbon intensity history
                     response_history = requests.get(f"{FASTAPI_BASE_URL}/carbon-intensity-history?zone=FR")
