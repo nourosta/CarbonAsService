@@ -1077,30 +1077,30 @@ with tab3:
             # st.metric("Carbon Intensity", f"{carbon_intensity} gCO₂eq/kWh")
             # st.caption(f"Updated at: {updated_at}")
 
-             # Fetch carbon intensity history
+            # Fetch carbon intensity history for line plot
             try:
                 response_history = requests.get(f"{FASTAPI_BASE_URL}/carbon-intensity/history?zone=FR")
                 response_history.raise_for_status()
                 history_data = response_history.json()
 
-                # Process into DataFrame
+                # Build DataFrame
                 df_history = pd.DataFrame(history_data)
                 df_history['updatedAt'] = pd.to_datetime(df_history['updatedAt'], errors='coerce')
                 df_history['carbonIntensity'] = pd.to_numeric(df_history['carbonIntensity'], errors='coerce')
                 df_history.dropna(subset=['updatedAt', 'carbonIntensity'], inplace=True)
                 df_history = df_history.sort_values('updatedAt')
 
-                # Create bar plot
-                fig = px.bar(
+                # Create line plot
+                fig_line = px.line(
                     df_history,
                     x='updatedAt',
                     y='carbonIntensity',
-                    labels={'updatedAt': 'Time', 'carbonIntensity': 'gCO₂/kWh'},
-                    title='Carbon Intensity Over Time',
+                    labels={'updatedAt': 'Updated Time', 'carbonIntensity': 'gCO₂/kWh'},
+                    title='🧭 Carbon Intensity Over Time',
                     height=350
                 )
 
-                # Columns for live metric and plot
+                # Display metric + line plot side-by-side
                 col1, col2 = st.columns([1, 3])
 
                 with col1:
@@ -1109,10 +1109,11 @@ with tab3:
                     st.caption(f"Updated at: {updated_at}")
 
                 with col2:
-                    st.plotly_chart(fig, use_container_width=True)
+                    st.plotly_chart(fig_line, use_container_width=True)
 
             except Exception as e:
                 st.warning(f"Could not load carbon intensity history: {e}")
+
 
             for resource_type in resource_types:
                 st.markdown(f"### 🔎 Resource: {resource_type.upper()}")
