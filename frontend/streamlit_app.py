@@ -1389,28 +1389,25 @@ with tab4:
             df_history['datetime'] = pd.to_datetime(df_history['datetime'], errors='coerce')
             df_history['datetime_rounded'] = df_history['datetime'].dt.floor("15min")
 
-            latest_datetime_str = carbon_data.get("datetime")
-            if latest_datetime_str is not None:
-                latest_time = pd.to_datetime(latest_datetime_str).floor("15min")
+            latest_datetime_str = carbon_data.get("datetime") or carbon_data.get("updatedAt")
+
+            if latest_datetime_str is None:
+                st.warning("Latest carbon intensity datetime is missing, cannot add latest data point.")
             else:
-                # handle the case when datetime is missing
-                st.error("Latest carbon intensity datetime is missing.")
-                st.stop()
+                latest_time = pd.to_datetime(latest_datetime_str).floor("15min")
 
-            latest_time = pd.to_datetime(carbon_data.get("datetime")).floor("15min")
-
-            if latest_time not in df_history['datetime_rounded'].values:
-                latest_row = {
-                    "zone": carbon_data.get("zone"),
-                    "carbonIntensity": carbon_data.get("carbonIntensity"),
-                    "datetime": pd.to_datetime(carbon_data.get("datetime")),
-                    "updatedAt": pd.to_datetime(carbon_data.get("updatedAt")),
-                    "createdAt": pd.to_datetime(carbon_data.get("createdAt")),
-                    "emissionFactorType": carbon_data.get("emissionFactorType"),
-                    "isEstimated": carbon_data.get("isEstimated"),
-                    "estimationMethod": carbon_data.get("estimationMethod")
-                }
-                df_history = pd.concat([df_history, pd.DataFrame([latest_row])], ignore_index=True)
+                if latest_time not in df_history['datetime_rounded'].values:
+                    latest_row = {
+                        "zone": carbon_data.get("zone"),
+                        "carbonIntensity": carbon_data.get("carbonIntensity"),
+                        "datetime": pd.to_datetime(latest_datetime_str),
+                        "updatedAt": pd.to_datetime(carbon_data.get("updatedAt")),
+                        "createdAt": pd.to_datetime(carbon_data.get("createdAt")),
+                        "emissionFactorType": carbon_data.get("emissionFactorType"),
+                        "isEstimated": carbon_data.get("isEstimated"),
+                        "estimationMethod": carbon_data.get("estimationMethod")
+                    }
+                    df_history = pd.concat([df_history, pd.DataFrame([latest_row])], ignore_index=True)
             # After appending latest row
             df_history = df_history.sort_values("datetime")
             df_history = df_history.drop(columns=["datetime_rounded"], errors="ignore")
