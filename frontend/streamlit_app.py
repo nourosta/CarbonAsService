@@ -1303,13 +1303,13 @@ with tab4:
 
 
     with col2:
-        st.write("Scope 2 Value")
+        st.subheader("Scope 2 Value")
         st.subheader("🌍 Total CO₂ (Live Sum)")
         st.metric("All Resources", f"{global_total_co2_kg:.8f} kg")
 
 
     with cols3:
-        st.write("Carbon Emissions Total")
+        st.subheader("Carbon Emissions Total")
         total_manufacture_emissions = sum(vals["manufacture"] for vals in total_impacts.values() if "manufacture" in vals)
         combined_total_co2 = total_manufacture_emissions + global_total_co2_kg
         st.subheader("🌍 Combined Carbon Footprint Summary")
