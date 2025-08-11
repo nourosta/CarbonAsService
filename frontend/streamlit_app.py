@@ -1,5 +1,5 @@
 import math
-from backend.crud import save_motherboard
+from crud import save_motherboard
 import streamlit as st
 import requests
 import time
@@ -1574,7 +1574,8 @@ with tab4:
 
 
         total_impacts = sum_impacts(*components)
-        
+        total_scope3_emissions = get_total_scope3_emissions()
+
 
         
 
