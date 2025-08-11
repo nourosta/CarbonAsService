@@ -486,11 +486,11 @@ with tab1:
 
         # --- Display results ---
         st.subheader("GPU Impact Results (Per GPU)")
-        for result in per_gpu_results:
-            st.markdown(f"**{result['gpu']}**")
-            st.markdown(f"- **GWP:** {result['gwp']} kgCO₂eq")
-            st.markdown(f"- **ADP:** {result['adp']} kgSbeq")
-            st.markdown(f"- **PE:** {result['pe']} MJ")
+        # for result in per_gpu_results:
+        #     st.markdown(f"**{result['gpu']}**")
+        #     st.markdown(f"- **GWP:** {result['gwp']} kgCO₂eq")
+        #     st.markdown(f"- **ADP:** {result['adp']} kgSbeq")
+        #     st.markdown(f"- **PE:** {result['pe']} MJ")
 
         st.markdown("**Total Environmental Impact (GPUs only):**")
         for impact_type, vals in gpu_data.items():
