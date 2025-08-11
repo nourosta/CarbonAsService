@@ -475,8 +475,11 @@ with tab1:
             })
 
         # --- Call cached API fetch ---
-        gpu_data, per_gpu_results = fetch_gpu_impacts(detected_GPU)
 
+        if "gpu_saved_saved" not in st.session_state:
+             gpu_data, per_gpu_results = fetch_gpu_impacts(detected_GPU)
+             st.session_state["gpu_saved"] = True
+       
         # Show per GPU
         for result in per_gpu_results:
             st.markdown(f"**{result['gpu']}**")
