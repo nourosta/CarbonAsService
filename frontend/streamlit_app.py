@@ -337,9 +337,9 @@ with tab1:
 
     # Convert to impacts structure
     motherboard_impacts = {
-        "gwp": {"manufacture": float(motherboard_data.get("gwp", 0)), "use": 0.0, "unit": "kgCO2eq"},
-        "adp": {"manufacture": float(motherboard_data.get("adp", 0)), "use": 0.0, "unit": "kgSbeq"},
-        "pe":  {"manufacture": float(motherboard_data.get("pe", 0)),  "use": 0.0, "unit": "MJ"},
+        "GWP": {"manufacture": float(motherboard_data.get("gwp", 0)), "use": 0.0, "unit": "kgCO2eq"},
+        "ADP": {"manufacture": float(motherboard_data.get("adp", 0)), "use": 0.0, "unit": "kgSbeq"},
+        "PE":  {"manufacture": float(motherboard_data.get("pe", 0)),  "use": 0.0, "unit": "MJ"},
     }
 
 
@@ -1558,20 +1558,28 @@ with tab4:
 
         total_gwp_manufacture = 0.0
 
+        total_gwp_manufacture = 0.0
+
         for i, component in enumerate(data):
             gwp = component.get("gwp") or component.get("GWP")
             if gwp:
+                # Some entries have manufacture as string or nested, handle both cases
                 manufacture_val = gwp.get("manufacture")
+                if manufacture_val is None:
+                    # Check if it's a direct number (sometimes data varies)
+                    manufacture_val = gwp if isinstance(gwp, (int, float)) else 0
+
                 try:
                     val = float(manufacture_val)
                     total_gwp_manufacture += val
-                    print(f"Component #{i+1}: manufacture GWP =     {val}")
-                except (TypeError, ValueError):
-                    print(f"Component #{i+1}: manufacture GWP is invalid: {manufacture_val}")
+                    print(f"Component #{i+1}: manufacture GWP = {val}")
+                except Exception as e:
+                    print(f"Component #{i+1}: Error reading manufacture GWP: {manufacture_val} ({e})")
             else:
                 print(f"Component #{i+1}: No GWP key found")
 
         print(f"Total manufacture GWP: {total_gwp_manufacture}")
+
 
 
         st.subheader("Summary of Total Impacts")
