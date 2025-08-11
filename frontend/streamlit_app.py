@@ -476,9 +476,12 @@ with tab1:
 
         # --- Call cached API fetch ---
 
-        if "gpu_saved_saved" not in st.session_state:
-             gpu_data, per_gpu_results = fetch_gpu_impacts(detected_GPU)
-             st.session_state["gpu_saved"] = True
+      if "gpu_saved" not in st.session_state:
+        gpu_data, per_gpu_results = fetch_gpu_impacts(detected_GPU)
+        st.session_state["gpu_saved"] = True
+    else:
+        # If you want, just fetch cached data or skip re-posting
+        gpu_data, per_gpu_results = fetch_gpu_impacts(detected_GPU)
        
         # Show per GPU
         for result in per_gpu_results:
