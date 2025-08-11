@@ -438,6 +438,9 @@ with tab1:
         # --- Call cached API fetch ---
         gpu_data, per_gpu_results = fetch_gpu_impacts(api_payloads)
 
+        gpu_data = {"impacts": gpu_data}
+
+
         # --- Display results ---
         st.subheader("GPU Impact Results (Per GPU)")
         for result in per_gpu_results:
