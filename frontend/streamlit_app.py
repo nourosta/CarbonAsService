@@ -1556,6 +1556,24 @@ with tab4:
         st.write("Total impacts calculated:")
         st.write(total_impacts)
 
+        total_gwp_manufacture = 0.0
+
+        for i, component in enumerate(data):
+            gwp = component.get("gwp") or component.get("GWP")
+            if gwp:
+                manufacture_val = gwp.get("manufacture")
+                try:
+                    val = float(manufacture_val)
+                    total_gwp_manufacture += val
+                    print(f"Component #{i+1}: manufacture GWP = {val}")
+                except (TypeError, ValueError):
+                    print(f"Component #{i+1}: manufacture GWP is invalid: {manufacture_val}")
+            else:
+                print(f"Component #{i+1}: No GWP key found")
+
+        print(f"Total manufacture GWP: {total_gwp_manufacture}")
+
+
         st.subheader("Summary of Total Impacts")
         for impact_type, vals in total_impacts.items():
             manufacture = vals["manufacture"]
