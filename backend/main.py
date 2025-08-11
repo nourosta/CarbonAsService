@@ -237,55 +237,59 @@ async def case_calc(case_spec: CaseSpec):
         raise HTTPException(status_code=500, detail=f"Failed to connect to Boavizta API: {str(e)}")
 
 @app.post("/GPU-Calc")
-def calculate_gpu(gpu: GPUInput):
-    model = gpu.model
-    die_mm2 = gpu.die_size_mm2
-    ram_gb = gpu.ram_size_gb
+def calculate_gpu(gpus: List[GPUInput]):
+    results = []
+    for gpu in gpus:
+        model = gpu.model
+        die_mm2 = gpu.die_size_mm2
+        ram_gb = gpu.ram_size_gb
 
-    # Constants
-    die_gwp = 1.97
-    die_adp = 5.80E-07
-    die_pe = 26.50
-    ram_density = 1.25
-    gpu_base = 23.71
+        # Constants
+        die_gwp = 1.97
+        die_adp = 5.80E-07
+        die_pe = 26.50
+        ram_density = 1.25
+        gpu_base = 23.71
 
-    # Calculate RAM impacts via internal function (no saving to DB)
-    ram_spec = RAMSpec(
-        capacity=int(ram_gb),
-        manufacturer="Samsung",  # Or get from frontend
-        process=30
-    )
-    ram_data = ram_impacts(ram_spec)
+        # Calculate RAM impacts via internal function (no saving to DB)
+        ram_spec = RAMSpec(
+            capacity=int(ram_gb),
+            manufacturer="Samsung",  # Or get from frontend
+            process=30
+        )
+        ram_data = ram_impacts(ram_spec)
 
-    # Extract impact values
-    impacts = ram_data.get("impacts", {})
-    ram_gwp = impacts.get("gwp", {}).get("manufacture", 0)
-    ram_adp = impacts.get("adp", {}).get("manufacture", 0)
-    ram_pe  = impacts.get("pe", {}).get("manufacture", 0)
+        # Extract impact values
+        impacts = ram_data.get("impacts", {})
+        ram_gwp = impacts.get("gwp", {}).get("manufacture", 0)
+        ram_adp = impacts.get("adp", {}).get("manufacture", 0)
+        ram_pe  = impacts.get("pe", {}).get("manufacture", 0)
 
-    # Calculate GPU impacts
-    gpu_gwp = (die_mm2 * die_gwp) + ram_gwp + gpu_base
-    gpu_adp = (die_mm2 * die_adp) + ram_adp + gpu_base
-    gpu_pe  = (die_mm2 * die_pe) + (ram_gb / ram_density) * ram_pe + gpu_base
+        # Calculate GPU impacts
+        gpu_gwp = (die_mm2 * die_gwp) + ram_gwp + gpu_base
+        gpu_adp = (die_mm2 * die_adp) + ram_adp + gpu_base
+        gpu_pe  = (die_mm2 * die_pe) + (ram_gb / ram_density) * ram_pe + gpu_base
 
-    print("Saving GPU to database:", model, die_mm2, ram_gb, gpu_gwp, gpu_adp, gpu_pe)
+        print("Saving GPU to database:", model, die_mm2, ram_gb, gpu_gwp, gpu_adp, gpu_pe)
 
-    # Save GPU to DB
-    save_gpu(
-        model=model,
-        die_size=die_mm2,
-        ram_size=ram_gb,
-        gwp=gpu_gwp,
-        adp=gpu_adp,
-        pe=gpu_pe
-    )
+        # Save GPU to DB
+        save_gpu(
+            model=model,
+            die_size=die_mm2,
+            ram_size=ram_gb,
+            gwp=gpu_gwp,
+            adp=gpu_adp,
+            pe=gpu_pe
+        )
 
-    return {
-        "gwp": round(gpu_gwp, 2),
-        "adp": round(gpu_adp, 8),
-        "pe": round(gpu_pe, 2)
-    }
+        results.append({
+            "model": model,
+            "gwp": round(gpu_gwp, 2),
+            "adp": round(gpu_adp, 8),
+            "pe": round(gpu_pe, 2)
+        })
 
+    return {"results": results}
 
 @app.get("/power-breakdown")
 async def get_power_breakdown(zone: str = 'FR',db: Session = Depends(get_db)):
