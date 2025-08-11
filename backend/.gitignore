@@ -11,3 +11,4 @@ wheels/
 .venv/
 
 backend/ecofloc_results/*.log
+*.log
