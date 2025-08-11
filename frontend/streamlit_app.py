@@ -1,4 +1,5 @@
 import math
+from backend.crud import save_motherboard
 import streamlit as st
 import requests
 import time
@@ -342,6 +343,7 @@ with tab1:
         "PE":  {"manufacture": float(motherboard_data.get("pe", 0)),  "use": 0.0, "unit": "MJ"},
     }
 
+    save_motherboard(motherboard_impacts["GWP"], motherboard_impacts["ADP"], motherboard_impacts["PE"])
 
     # --- Display in Columns ---
     left, middle, right = st.columns(3)

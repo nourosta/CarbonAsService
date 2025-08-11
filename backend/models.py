@@ -11,6 +11,21 @@ class CPUImpact(Base):
     pe = Column(Float)   # Primary Energy
     timestamp = Column(DateTime, default=datetime.utcnow)
 
+class CaseImpact(Base):
+    __tablename__ = "case_impact"
+    id = Column(Integer, primary_key=True, index=True)
+    type = Column(String, index=True)
+    gwp = Column(Float)  # Global Warming Potential
+    adp = Column(Float)  # Abiotic Depletion Potential
+    pe = Column(Float)   # Primary Energy
+
+class MotherboardImpact(Base):
+    __tablename__ = "motherboard_impact"
+    id = Column(Integer, primary_key=True, index=True)
+    gwp = Column(Float)
+    adp = Column(Float)
+    pe = Column(Float)
+
 
 class GPUImpact(Base):
     __tablename__ = "gpu_impacts"

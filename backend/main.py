@@ -11,7 +11,7 @@ from system_info import collect_system_info, get_top_processes_ps
 import json 
 import requests
 from pydantic import BaseModel
-from crud import get_all_carbon_intensity_by_zone, get_latest_carbon_intensity_by_zone, store_power_breakdown, store_carbon_intensity, save_ram,save_gpu,save_hdd,save_ssd, save_cpu
+from crud import get_all_carbon_intensity_by_zone, get_latest_carbon_intensity_by_zone, save_case, store_power_breakdown, store_carbon_intensity, save_ram,save_gpu,save_hdd,save_ssd, save_cpu
 from database import get_db, init_db
 from fastapi.middleware.cors import CORSMiddleware
 from system_info import get_top_processes_ps
@@ -232,9 +232,25 @@ async def case_calc(case_spec: CaseSpec):
         response = requests.post("http://localhost:5000/v1/component/case", headers={"accept": "application/json"}, json=payload)
         print(response.json())
         response.raise_for_status()  # Handle HTTP errors
-        return response.json()
+        data = response.json()
+        # Extract required fields
+        impacts = data.get("impacts", {})
+        gwp = impacts.get("gwp", {}).get("manufacture", 0)
+        adp = impacts.get("adp", {}).get("manufacture", 0)
+        pe  = impacts.get("pe", {}).get("manufacture", 0)
+
+        # Save to DB
+        save_case(
+            type=case_spec.case_type,
+            gwp=gwp,
+            adp=adp,
+            pe=pe
+        )
+        return data
     except requests.RequestException as e:
         raise HTTPException(status_code=500, detail=f"Failed to connect to Boavizta API: {str(e)}")
+    
+
 
 @app.post("/GPU-Calc")
 def calculate_gpu(gpus: List[GPUInput]):
