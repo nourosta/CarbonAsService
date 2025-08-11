@@ -273,24 +273,29 @@ def calculate_gpu(gpus: List[GPUInput]):
         print("Saving GPU to database:", model, die_mm2, ram_gb, gpu_gwp, gpu_adp, gpu_pe)
 
         # Save GPU to DB
-        save_gpu(
-            model=model,
-            die_size=die_mm2,
-            ram_size=ram_gb,
-            gwp=gpu_gwp,
-            adp=gpu_adp,
-            pe=gpu_pe
-        )
+        try:
+            save_gpu(
+                model=model,
+                die_size=die_mm2,
+                ram_size=ram_gb,
+                gwp=gpu_gwp,
+                adp=gpu_adp,
+                pe=gpu_pe
+            )
+            saved = True
+            message = "GPU saved successfully."
+        except Exception as e:
+            saved = False
+            message = f"Failed to save GPU: {e}"
+            print(message)  # Log error on server console
 
-        results.append({
-            "model": model,
-            "gwp": round(gpu_gwp, 2),
-            "adp": round(gpu_adp, 8),
-            "pe": round(gpu_pe, 2)
-        })
-
-    return {"results": results}
-
+    return {
+        "gwp": round(gpu_gwp, 2),
+        "adp": round(gpu_adp, 8),
+        "pe": round(gpu_pe, 2),
+        "saved": saved,
+        "message": message
+    }
 @app.get("/power-breakdown")
 async def get_power_breakdown(zone: str = 'FR',db: Session = Depends(get_db)):
     try:
