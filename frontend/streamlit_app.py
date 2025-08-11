@@ -361,18 +361,12 @@ with tab1:
 
     @st.cache_data(show_spinner=False)
     def fetch_gpu_impacts(gpus: list):
-        """Fetch and aggregate GPU impacts in sum_impacts-compatible format."""
         if not gpus:
             return None, []
 
         database = GPUDatabase.default()
 
-        gwp_total = {"manufacture": 0, "use": 0, "unit": "kgCO₂eq"}
-        adp_total = {"manufacture": 0, "use": 0, "unit": "kgSbeq"}
-        pe_total  = {"manufacture": 0, "use": 0, "unit": "MJ"}
-
-        per_gpu_results = []
-
+        api_payloads = []
         for gpu_brand in gpus:
             try:
                 spec = database.search(gpu_brand)
@@ -382,36 +376,47 @@ with tab1:
                 die_size = 100.0
                 ram_size = 8
 
-            payload = {
+            api_payloads.append({
                 "model": gpu_brand,
                 "die_size_mm2": die_size,
                 "ram_size_gb": ram_size
-            }
+            })
 
-            try:
-                response = requests.post(f"{FASTAPI_BASE_URL}/GPU-Calc", json=payload)
-                response.raise_for_status()
-                data = response.json()
+        try:
+            response = requests.post(f"{FASTAPI_BASE_URL}/GPU-Calc", json=api_payloads)  # send list here
+            response.raise_for_status()
+            data = response.json()  # This will be a list of results
 
-                gwp_total["manufacture"] += data.get("gwp", 0)
-                adp_total["manufacture"] += data.get("adp", 0)
-                pe_total["manufacture"]  += data.get("pe", 0)
+            # Initialize totals
+            gwp_total = {"manufacture": 0, "use": 0, "unit": "kgCO₂eq"}
+            adp_total = {"manufacture": 0, "use": 0, "unit": "kgSbeq"}
+            pe_total  = {"manufacture": 0, "use": 0, "unit": "MJ"}
+
+            per_gpu_results = []
+            for result in data:
+                gwp_total["manufacture"] += result.get("gwp", 0)
+                adp_total["manufacture"] += result.get("adp", 0)
+                pe_total["manufacture"]  += result.get("pe", 0)
 
                 per_gpu_results.append({
-                    "gpu": gpu_brand,
-                    "gwp": data.get("gwp", 0),
-                    "adp": data.get("adp", 0),
-                    "pe":  data.get("pe", 0)
+                    "gpu": result.get("model", "Unknown"),
+                    "gwp": result.get("gwp", 0),
+                    "adp": result.get("adp", 0),
+                    "pe":  result.get("pe", 0),
+                    "saved": result.get("saved", False),
+                    "message": result.get("message", "")
                 })
 
-            except requests.RequestException as e:
-                st.error(f"Failed to calculate GPU impact for {gpu_brand}: {str(e)}")
+            return {
+                "gwp": gwp_total,
+                "adp": adp_total,
+                "pe": pe_total
+            }, per_gpu_results
 
-        return {
-            "gwp": gwp_total,
-            "adp": adp_total,
-            "pe": pe_total
-        }, per_gpu_results
+        except requests.RequestException as e:
+            st.error(f"Failed to calculate GPU impact: {str(e)}")
+            return None, []
+
 
 
 
