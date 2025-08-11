@@ -1,4 +1,5 @@
 import json
+import os
 from database import SessionLocal
 from sqlalchemy.orm import Session
 from models import CarbonIntensity, CaseImpact, EcoflocResult, GPUImpact, MotherboardImpact, PowerBreakdown, RAMImpact, SSDImpact, HDDImpact, CPUImpact
@@ -170,6 +171,8 @@ def get_all_carbon_intensity_by_zone(db: Session, zone: str):
 
 def get_total_scope3_emissions():
     db = SessionLocal()
+    print("[DEBUG] DB Path:", os.path.abspath(db.bind.url.database))
+
     try:
         cpu_total = sum(float(c.gwp or 0) for c in db.query(CPUImpact).all())
         gpu_total = sum(float(g.gwp or 0) for g in db.query(GPUImpact).all())
