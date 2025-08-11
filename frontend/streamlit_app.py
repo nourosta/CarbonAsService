@@ -1524,18 +1524,36 @@ with tab4:
             for data in args:
                 if not data:
                     continue
-                impacts = data.get("impacts", {})
+
+                # Get impacts dict
+                impacts = data.get("impacts")
+                
+                # If no "impacts" key, try to get root-level impact keys (like "gwp" or "GWP")
+                if not impacts:
+                    impacts = {}
+                    for key in ["gwp", "GWP", "pe", "PE", "adp", "ADP"]:
+                        if key in data:
+                            impacts[key.lower()] = data[key]
+
                 for impact_type, impact_vals in impacts.items():
+                    impact_type = impact_type.lower()
                     if impact_type not in total_impacts:
-                        total_impacts[impact_type] = {"manufacture": 0.0, "use": 0.0, "unit": impact_vals.get("unit", "")}
-                    
-                    manufacture_val = safe_float(impact_vals.get("manufacture", 0))
-                    use_val = safe_float(impact_vals.get("use", 0))
-                    
+                        total_impacts[impact_type] = {"manufacture": 0.0, "use": 0.0, "unit": impact_vals.get("unit", "") if isinstance(impact_vals, dict) else ""}
+
+                    # If impact_vals is dict with manufacture/use
+                    if isinstance(impact_vals, dict):
+                        manufacture_val = safe_float(impact_vals.get("manufacture", 0))
+                        use_val = safe_float(impact_vals.get("use", 0))
+                    else:
+                        # If it's a direct number or string, assume manufacture only
+                        manufacture_val = safe_float(impact_vals)
+                        use_val = 0.0
+
                     total_impacts[impact_type]["manufacture"] += manufacture_val
                     total_impacts[impact_type]["use"] += use_val
+
             return total_impacts
-            
+
             # --- Sum all impacts ---
         def safe_get(var_name):
             return globals().get(var_name) or locals().get(var_name) or None
