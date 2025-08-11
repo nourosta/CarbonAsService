@@ -181,7 +181,7 @@ def get_total_scope3_emissions():
         
 
         print("[DEBUG] GPU records:", [(g.model, g.gwp) for g in db.query(GPUImpact).all()])
-        print("[DEBUG] Totals -> CPU:", cpu_total, "GPU:", gpu_total, "RAM:", ram_total, "SSD:", ssd_total, "HDD:", hdd_total)
+        print("[DEBUG] Totals -> CPU:", cpu_total, "GPU:", gpu_total, "RAM:", ram_total, "SSD:", ssd_total, "HDD:", hdd_total, "Case:", case_total, "Motherboard:", motherboard_total)
 
         total_scope3 = cpu_total + gpu_total + ram_total + ssd_total + hdd_total + case_total + motherboard_total
         return total_scope3
