@@ -337,9 +337,9 @@ with tab1:
 
     # Convert to impacts structure
     motherboard_impacts = {
-        "GWP": {"manufacture": float(motherboard_data.get("gwp", 0)), "use": 0.0, "unit": "kgCO2eq"},
-        "ADP": {"manufacture": float(motherboard_data.get("adp", 0)), "use": 0.0, "unit": "kgSbeq"},
-        "PE":  {"manufacture": float(motherboard_data.get("pe", 0)),  "use": 0.0, "unit": "MJ"},
+        "gwp": {"manufacture": float(motherboard_data.get("gwp", 0)), "use": 0.0, "unit": "kgCO2eq"},
+        "adp": {"manufacture": float(motherboard_data.get("adp", 0)), "use": 0.0, "unit": "kgSbeq"},
+        "pe":  {"manufacture": float(motherboard_data.get("pe", 0)),  "use": 0.0, "unit": "MJ"},
     }
 
 
@@ -1565,7 +1565,7 @@ with tab4:
                 try:
                     val = float(manufacture_val)
                     total_gwp_manufacture += val
-                    print(f"Component #{i+1}: manufacture GWP = {val}")
+                    print(f"Component #{i+1}: manufacture GWP =     {val}")
                 except (TypeError, ValueError):
                     print(f"Component #{i+1}: manufacture GWP is invalid: {manufacture_val}")
             else:
