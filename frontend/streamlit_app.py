@@ -371,7 +371,7 @@ with tab1:
 
     gpus = [gpu for gpu in detected_GPU]  # Ensure this is populated correctly
 
-    #@st.cache_data(show_spinner=False)
+    @st.cache_data(show_spinner=False, max_entries=1)
     def fetch_gpu_impacts(gpus: list):
         if not gpus:
             return None, []
@@ -475,12 +475,8 @@ with tab1:
             })
 
         # --- Call cached API fetch ---
-        if "gpu_data_saved" not in st.session_state:
-            gpu_data, per_gpu_results = fetch_gpu_impacts(detected_GPU)
-            st.session_state["gpu_data_saved"] = True
-        else:
-            # Optionally, you can call fetch_gpu_impacts again here if needed to get fresh data
-            gpu_data, per_gpu_results = fetch_gpu_impacts(detected_GPU)
+        gpu_data, per_gpu_results = fetch_gpu_impacts(detected_GPU)
+
         # Show per GPU
         for result in per_gpu_results:
             st.markdown(f"**{result['gpu']}**")
