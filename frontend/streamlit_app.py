@@ -369,72 +369,49 @@ with tab1:
     st.subheader("Boavizta GPU Calculations", divider=True)
     detected_GPU = data.get("gpus")
 
-    gpus = [gpu for gpu in detected_GPU]  # Ensure this is populated correctly
+   # Define your POST function to send data only once per session
+    def post_gpu_impacts_once(gpus):
+        if "gpu_post_done" not in st.session_state:
+            database = GPUDatabase.default()
+            api_payloads = []
 
-    #@st.cache_data(show_spinner=False)
-    def fetch_gpu_impacts(gpus: list):
-        if not gpus:
-            return None, []
+            for gpu_brand in gpus:
+                try:
+                    spec = database.search(gpu_brand)
+                    die_size = spec.die_size_mm2
+                    ram_size = spec.memory_size_gb
+                except KeyError:
+                    die_size = 100.0
+                    ram_size = 8
 
-        database = GPUDatabase.default()
-
-        api_payloads = []
-        for gpu_brand in gpus:
-            try:
-                spec = database.search(gpu_brand)
-                die_size = spec.die_size_mm2
-                ram_size = spec.memory_size_gb
-            except KeyError:
-                die_size = 100.0
-                ram_size = 8
-
-            api_payloads.append({
-                "model": gpu_brand,
-                "die_size_mm2": die_size,
-                "ram_size_gb": ram_size
-            })
-
-        try:
-            response = requests.post(f"{FASTAPI_BASE_URL}/GPU-Calc", json=api_payloads)  # send list here
-            response.raise_for_status()
-            data = response.json()  # This will be a list of results
-
-            # Initialize totals
-            gwp_total = {"manufacture": 0, "use": 0, "unit": "kgCO₂eq"}
-            adp_total = {"manufacture": 0, "use": 0, "unit": "kgSbeq"}
-            pe_total  = {"manufacture": 0, "use": 0, "unit": "MJ"}
-
-            per_gpu_results = []
-            for result in data:
-                gwp_total["manufacture"] += result.get("gwp", 0)
-                adp_total["manufacture"] += result.get("adp", 0)
-                pe_total["manufacture"]  += result.get("pe", 0)
-
-                per_gpu_results.append({
-                    "gpu": result.get("model", "Unknown"),
-                    "gwp": result.get("gwp", 0),
-                    "adp": result.get("adp", 0),
-                    "pe":  result.get("pe", 0),
-                    "saved": result.get("saved", False),
-                    "message": result.get("message", "")
+                api_payloads.append({
+                    "model": gpu_brand,
+                    "die_size_mm2": die_size,
+                    "ram_size_gb": ram_size
                 })
 
-            return {
-                "gwp": gwp_total,
-                "adp": adp_total,
-                "pe": pe_total
-            }, per_gpu_results
+            try:
+                response = requests.post(f"{FASTAPI_BASE_URL}/GPU-Calc", json=api_payloads)
+                response.raise_for_status()
+                st.session_state["gpu_post_done"] = True
+            except requests.RequestException as e:
+                st.error(f"Failed to send GPU impact data: {e}")
 
+    # Fetch totals separately, can be cached if preferred
+    @st.cache_data(show_spinner=False)
+    def fetch_gpu_totals():
+        try:
+            response = requests.get(f"{FASTAPI_BASE_URL}/scope3/total")
+            response.raise_for_status()
+            return response.json()
         except requests.RequestException as e:
-            st.error(f"Failed to calculate GPU impact: {str(e)}")
-            return None, []
+            st.error(f"Failed to fetch GPU totals: {e}")
+            return {}
 
-
-
-
-
-    # --- UI Part (widgets outside cache) ---
+    # Your editable GPU input UI with specs
     if gpus:
+        post_gpu_impacts_once(gpus)  # POST only once per session
+
         database = GPUDatabase.default()
         api_payloads = []
 
@@ -474,35 +451,19 @@ with tab1:
                 "ram_size_gb": ram_size_input
             })
 
-        # --- Call cached API fetch ---
-        gpu_data, per_gpu_results = fetch_gpu_impacts(detected_GPU)
+        # You can optionally call fetch_gpu_impacts(api_payloads) here to get per GPU results,
+        # but to avoid POST duplication, I suggest you rely on totals fetched below.
 
-        # Show per GPU
-        for result in per_gpu_results:
-            st.markdown(f"**{result['gpu']}**")
-            st.markdown(f"- **GWP:** {result['gwp']} kgCO₂eq")
-            st.markdown(f"- **ADP:** {result['adp']} kgSbeq")
-            st.markdown(f"- **PE:** {result['pe']} MJ")
+        gpu_data = fetch_gpu_totals()  # Get totals from backend
 
-
-
-        # --- Display results ---
-        st.subheader("GPU Impact Results (Per GPU)")
-        # for result in per_gpu_results:
-        #     st.markdown(f"**{result['gpu']}**")
-        #     st.markdown(f"- **GWP:** {result['gwp']} kgCO₂eq")
-        #     st.markdown(f"- **ADP:** {result['adp']} kgSbeq")
-        #     st.markdown(f"- **PE:** {result['pe']} MJ")
-
-        st.markdown("**Total Environmental Impact (GPUs only):**")
-        for impact_type, vals in gpu_data.items():
-            st.markdown(f"- **{impact_type.upper()}**: {vals['manufacture']} {vals['unit']}")
+        if gpu_data:
+            st.subheader("GPU Impact Results (Totals)")
+            st.markdown("**Total Environmental Impact (GPUs only):**")
+            for impact_type, vals in gpu_data.items():
+                st.markdown(f"- **{impact_type.upper()}**: {vals['manufacture']} {vals['unit']}")
 
     else:
         st.info("No GPUs detected in the system information.")
-
-
-
     # st.subheader("Boavizta GPU Calculations", divider=True, help="Based on formula found in the following article: https://hal.science/hal-04643414v1/document")
 
     # gpus = [gpu for gpu in detected_GPU]  # Populate from /system-info
