@@ -171,14 +171,17 @@ def get_all_carbon_intensity_by_zone(db: Session, zone: str):
 def get_total_scope3_emissions():
     db = SessionLocal()
     try:
-        cpu_total = sum([c.gwp for c in db.query(CPUImpact).all()])
-        gpu_total = sum([g.gwp for g in db.query(GPUImpact).all() if g.gwp is not None])
-        ram_total = sum([r.gwp for r in db.query(RAMImpact).all()])
-        ssd_total = sum([s.gwp for s in db.query(SSDImpact).all()])
-        hdd_total = sum([h.gwp for h in db.query(HDDImpact).all()])
-        case_total = sum([c.gwp for c in db.query(CaseImpact).all()])
-        motherboard_total = sum([m.gwp for m in db.query(MotherboardImpact).all()])
-        
+        cpu_total = sum(float(c.gwp or 0) for c in db.query(CPUImpact).all())
+        gpu_total = sum(float(g.gwp or 0) for g in db.query(GPUImpact).all())
+        ram_total = sum(float(r.gwp or 0) for r in db.query(RAMImpact).all())
+        ssd_total = sum(float(s.gwp or 0) for s in db.query(SSDImpact).all())
+        hdd_total = sum(float(h.gwp or 0) for h in db.query(HDDImpact).all())
+        case_total = 0.0  # static for now
+        motherboard_total = 0.0  # static for now
+
+        print("[DEBUG] GPU records:", [(g.model, g.gwp) for g in db.query(GPUImpact).all()])
+        print("[DEBUG] Totals -> CPU:", cpu_total, "GPU:", gpu_total, "RAM:", ram_total, "SSD:", ssd_total, "HDD:", hdd_total)
+
         total_scope3 = cpu_total + gpu_total + ram_total + ssd_total + hdd_total + case_total + motherboard_total
         return total_scope3
     finally:
