@@ -359,30 +359,60 @@ with tab1:
 
     gpus = [gpu for gpu in detected_GPU]  # Ensure this is populated correctly
 
-    #st.write("Detected GPUs:", gpus)
+    @st.cache_data(show_spinner=False)
+    def fetch_gpu_impacts_with_ui(gpus: list):
+        """
+        Fetch GPU impacts from API, allow per-GPU adjustments, and return:
+        - gpu_data (dict) in the same format as other components for sum_impacts()
+        - per_gpu_results (list) for display
+        """
+        if not gpus:
+            return None, []
 
-    if gpus:
-        results = []
         database = GPUDatabase.default()
 
-        for gpu_index, detected_gpu in enumerate(gpus):
-            st.markdown(f"### GPU {gpu_index + 1} ({detected_gpu})")
-            gpu_brand = st.text_input(f"GPU Model for GPU {gpu_index + 1}", value=detected_gpu, key=f"gpu_brand_{gpu_index}")
+        gwp_total = {"manufacture": 0, "use": 0, "unit": "kgCO₂eq"}
+        adp_total = {"manufacture": 0, "use": 0, "unit": "kgSbeq"}
+        pe_total  = {"manufacture": 0, "use": 0, "unit": "MJ"}
 
+        per_gpu_results = []
+
+        for gpu_index, gpu_brand in enumerate(gpus):
+            st.markdown(f"### GPU {gpu_index + 1} ({gpu_brand})")
+
+            # --- Let user override GPU model name ---
+            gpu_brand_input = st.text_input(
+                f"GPU Model for GPU {gpu_index + 1}",
+                value=gpu_brand,
+                key=f"gpu_brand_{gpu_index}"
+            )
+
+            # --- Try getting specs from DB ---
             try:
-                spec = database.search(gpu_brand)
+                spec = database.search(gpu_brand_input)
                 die_size = spec.die_size_mm2
                 ram_size = spec.memory_size_gb
             except KeyError:
-                st.warning(f"Specs for {gpu_brand} not found. Please enter manually.")
+                st.warning(f"Specs for {gpu_brand_input} not found. Please enter manually.")
                 die_size = 100.0
                 ram_size = 8
 
-            die_size_input = st.number_input(f"Die Size (mm²) for GPU {gpu_index + 1}", value=die_size, format="%.2f", key=f"die_size_{gpu_index}")
-            ram_size_input = st.number_input(f"RAM Size (GB) for GPU {gpu_index + 1}", value=ram_size, key=f"ram_size_{gpu_index}")
+            # --- User-adjustable specs ---
+            die_size_input = st.number_input(
+                f"Die Size (mm²) for GPU {gpu_index + 1}",
+                value=die_size,
+                format="%.2f",
+                key=f"die_size_{gpu_index}"
+            )
+            ram_size_input = st.number_input(
+                f"RAM Size (GB) for GPU {gpu_index + 1}",
+                value=ram_size,
+                key=f"ram_size_{gpu_index}"
+            )
 
+            # --- API payload ---
             payload = {
-                "model": gpu_brand,
+                "model": gpu_brand_input,
                 "die_size_mm2": die_size_input,
                 "ram_size_gb": ram_size_input
             }
@@ -392,41 +422,49 @@ with tab1:
                 response.raise_for_status()
                 data = response.json()
 
-                result = {
-                    "gwp": data['gwp'],
-                    "adp": data['adp'],
-                    "pe": data['pe'],
-                }
-                results.append((gpu_brand, result))
+                # Add to totals
+                gwp_total["manufacture"] += data["gwp"]
+                adp_total["manufacture"] += data["adp"]
+                pe_total["manufacture"]  += data["pe"]
+
+                # Store per GPU result
+                per_gpu_results.append({
+                    "gpu": gpu_brand_input,
+                    "gwp": data["gwp"],
+                    "adp": data["adp"],
+                    "pe": data["pe"]
+                })
 
             except requests.RequestException as e:
-                st.error(f"Failed to calculate GPU impact for {gpu_brand}: {str(e)}")
+                st.error(f"Failed to calculate GPU impact for {gpu_brand_input}: {str(e)}")
 
-        # Display cumulative results for all GPUs
-        st.subheader("GPU Impact Results")
-        gwp_total = 0
-        adp_total = 0
-        pe_total = 0
+        gpu_data = {
+            "gwp": gwp_total,
+            "adp": adp_total,
+            "pe": pe_total
+        }
 
-        for gpu_brand, result in results:
-            st.markdown(f"**{gpu_brand}**")
+        return gpu_data, per_gpu_results
+
+
+    # --- Call cached function ---
+    gpu_data, per_gpu_results = fetch_gpu_impacts_with_ui(gpus)
+
+    # --- Display results ---
+    if gpu_data:
+        st.subheader("GPU Impact Results (Per GPU)")
+        for result in per_gpu_results:
+            st.markdown(f"**{result['gpu']}**")
             st.markdown(f"- **GWP:** {result['gwp']} kgCO₂eq")
             st.markdown(f"- **ADP:** {result['adp']} kgSbeq")
             st.markdown(f"- **PE:** {result['pe']} MJ")
-            
-            # Accumulate for total impact
-            gwp_total += result['gwp']
-            adp_total += result['adp']
-            pe_total += result['pe']
 
-        st.markdown("**Total Environmental Impact:**")
-        st.markdown(f"- **Total GWP:** {gwp_total} kgCO₂eq")
-        st.markdown(f"- **Total ADP:** {adp_total} kgSbeq")
-        st.markdown(f"- **Total PE:** {pe_total} MJ")
+        st.markdown("**Total Environmental Impact (GPUs only):**")
+        for impact_type, vals in gpu_data.items():
+            st.markdown(f"- **{impact_type.upper()}**: {vals['manufacture']} {vals['unit']}")
 
     else:
         st.info("No GPUs detected in the system information.")
-
 
 
     # st.subheader("Boavizta GPU Calculations", divider=True, help="Based on formula found in the following article: https://hal.science/hal-04643414v1/document")
