@@ -343,7 +343,9 @@ with tab1:
     "adp": total_adp,
     "pe": total_pe
 }
-    post_motherboard_impact(motherboard_data)
+    if "motherboard_saved" not in st.session_state:
+        post_motherboard_impact(motherboard_data)
+        st.session_state["motherboard_saved"] = True
 
     # Convert to impacts structure
     motherboard_impacts = {
