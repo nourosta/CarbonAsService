@@ -172,7 +172,7 @@ def get_total_scope3_emissions():
     db = SessionLocal()
     try:
         cpu_total = sum([c.gwp for c in db.query(CPUImpact).all()])
-        gpu_total = sum([g.gwp for g in db.query(GPUImpact).all()])
+        gpu_total = sum([g.gwp for g in db.query(GPUImpact).all() if g.gwp is not None])
         ram_total = sum([r.gwp for r in db.query(RAMImpact).all()])
         ssd_total = sum([s.gwp for s in db.query(SSDImpact).all()])
         hdd_total = sum([h.gwp for h in db.query(HDDImpact).all()])
