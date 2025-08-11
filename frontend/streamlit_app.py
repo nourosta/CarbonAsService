@@ -1547,7 +1547,14 @@ with tab4:
             if val is not None:
                 components.append(val)
 
+    
+
+        st.write("Components being summed:")
+        st.write(components)
+
         total_impacts = sum_impacts(*components)
+        st.write("Total impacts calculated:")
+        st.write(total_impacts)
 
         st.subheader("Summary of Total Impacts")
         for impact_type, vals in total_impacts.items():
