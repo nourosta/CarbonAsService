@@ -358,7 +358,7 @@ with tab1:
     st.subheader("Boavizta GPU Calculations", divider=True, help="Based on formula found in the following article: https://hal.science/hal-04643414v1/document")
 
     gpus = [gpu for gpu in detected_GPU]  # Populate from /system-info
-    st.write(gpus)
+    
 
     # Check if there are GPUs detected
     if gpus:
@@ -368,6 +368,8 @@ with tab1:
         for gpu_index, detected_gpu in enumerate(gpus):
             st.markdown(f"### GPU {gpu_index + 1}")
             gpu_brand = st.text_input(f"GPU Model for GPU {gpu_index + 1}", value=detected_gpu, key=f"gpu_brand_{gpu_index}")
+            st.write(gpus)
+            
 
             # Auto-detect specs or set defaults
             database = GPUDatabase.default()
