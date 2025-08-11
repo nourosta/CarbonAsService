@@ -311,7 +311,7 @@ with tab1:
         url = f"{FASTAPI_BASE_URL}/motherboard/"  # Adjust if your backend runs elsewhere
         response = requests.post(url, json=data)
         if response.status_code == 200:
-            st.success("Motherboard impact saved!")
+            st.info("Motherboard impact saved!")
         else:
             st.error(f"Failed to save motherboard impact: {response.text}")
 
@@ -1583,6 +1583,19 @@ with tab4:
 
         total_impacts = sum_impacts(*components)
         
+        def get_total_scope3():
+            url = f"{FASTAPI_BASE_URL}/scope3/total"
+            try:
+                response = requests.get(url)
+                response.raise_for_status()
+                result = response.json()
+                return result.get("total_scope3_gwp", 0.0)
+            except Exception as e:
+                st.error(f"Error fetching total Scope 3: {e}")
+                return 0.0
+
+        # Display in Streamlit
+        total_scope3 = get_total_scope3()
 
         
 
