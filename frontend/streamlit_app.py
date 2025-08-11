@@ -408,12 +408,11 @@ with tab1:
                 st.error(f"Failed to calculate GPU impact for {gpu_brand}: {str(e)}")
 
         return {
-            "impacts": {
-                "gwp": gwp_total,
-                "adp": adp_total,
-                "pe": pe_total
-            }
+            "gwp": gwp_total,
+            "adp": adp_total,
+            "pe": pe_total
         }, per_gpu_results
+
 
 
 
