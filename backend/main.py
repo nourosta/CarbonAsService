@@ -11,7 +11,7 @@ from system_info import collect_system_info, get_top_processes_ps
 import json 
 import requests
 from pydantic import BaseModel
-from crud import get_all_carbon_intensity_by_zone, get_latest_carbon_intensity_by_zone, save_case, store_power_breakdown, store_carbon_intensity, save_ram,save_gpu,save_hdd,save_ssd, save_cpu
+from crud import get_all_carbon_intensity_by_zone, get_latest_carbon_intensity_by_zone, get_total_scope3_emissions, save_case, save_motherboard, store_power_breakdown, store_carbon_intensity, save_ram,save_gpu,save_hdd,save_ssd, save_cpu
 from database import get_db, init_db
 from fastapi.middleware.cors import CORSMiddleware
 from system_info import get_top_processes_ps
@@ -45,6 +45,11 @@ class HDDSpec(BaseModel):
 
 class CaseSpec(BaseModel):
     case_type : str
+
+class MotherboardImpactIn(BaseModel):
+    gwp: float
+    adp: float
+    pe: float
 
 class GPUInput(BaseModel):
     model : str
@@ -250,6 +255,13 @@ async def case_calc(case_spec: CaseSpec):
     except requests.RequestException as e:
         raise HTTPException(status_code=500, detail=f"Failed to connect to Boavizta API: {str(e)}")
     
+@app.post("/motherboard/")
+def create_motherboard_impact(data: MotherboardImpactIn):
+    try:
+        save_motherboard( data.gwp, data.adp, data.pe)
+        return {"message": "Motherboard impact saved successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error saving data: {e}")
 
 
 @app.post("/GPU-Calc")
@@ -629,3 +641,12 @@ async def get_carbon_intensity_evolution(
 ):
     data = get_all_carbon_intensity_by_zone(db, zone)
     return {"history": data}
+
+
+@app.get("/scope3/total")
+def read_total_scope3_emissions():
+    try:
+        total = get_total_scope3_emissions()
+        return {"total_scope3_gwp": total}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching total: {e}")

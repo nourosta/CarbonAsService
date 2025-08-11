@@ -1,5 +1,4 @@
 import math
-from crud import save_motherboard
 import streamlit as st
 import requests
 import time
@@ -307,6 +306,15 @@ with tab1:
 
     st.subheader("Boavizta Motherboard Calculations", divider = True)
 
+
+    def post_motherboard_impact(data):
+        url = f"{FASTAPI_BASE_URL}/motherboard/"  # Adjust if your backend runs elsewhere
+        response = requests.post(url, json=data)
+        if response.status_code == 200:
+            st.success("Motherboard impact saved!")
+        else:
+            st.error(f"Failed to save motherboard impact: {response.text}")
+
         # --- Constants ---
     MOTHERBOARD_GWP = 66.10   # kgCO2eq per unit
     MOTHERBOARD_ADP = 3.69E-03  # kgSbeq per unit
@@ -335,6 +343,7 @@ with tab1:
     "adp": total_adp,
     "pe": total_pe
 }
+    post_motherboard_impact(motherboard_data)
 
     # Convert to impacts structure
     motherboard_impacts = {
@@ -343,8 +352,7 @@ with tab1:
         "PE":  {"manufacture": float(motherboard_data.get("pe", 0)),  "use": 0.0, "unit": "MJ"},
     }
 
-    save_motherboard(motherboard_impacts["GWP"], motherboard_impacts["ADP"], motherboard_impacts["PE"])
-
+    
     # --- Display in Columns ---
     left, middle, right = st.columns(3)
     with left:
@@ -1574,8 +1582,7 @@ with tab4:
 
 
         total_impacts = sum_impacts(*components)
-        total_scope3_emissions = get_total_scope3_emissions()
-
+        
 
         
 
