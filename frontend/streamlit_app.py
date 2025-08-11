@@ -358,6 +358,7 @@ with tab1:
     st.subheader("Boavizta GPU Calculations", divider=True, help="Based on formula found in the following article: https://hal.science/hal-04643414v1/document")
 
     gpus = [gpu for gpu in detected_GPU]  # Populate from /system-info
+    st.write(gpus)
 
     # Check if there are GPUs detected
     if gpus:
