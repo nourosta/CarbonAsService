@@ -354,49 +354,110 @@ with tab1:
 
     detected_GPU = data.get("gpus")
 
+
     st.subheader("Boavizta GPU Calculations", divider=True, help="Based on formula found in the following article: https://hal.science/hal-04643414v1/document")
 
     gpus = [gpu for gpu in detected_GPU]  # Populate from /system-info
 
+    # Check if there are GPUs detected
     if gpus:
-        selected_gpu_index = st.selectbox("Select GPU:", range(len(gpus)), format_func=lambda x: f"GPU {x + 1}",  key="gpu_selectbox")
-        selected_gpu = gpus[selected_gpu_index]
-        gpu_brand = st.text_input("GPU Model", value=selected_gpu)
+        results = []  # Initialize an empty list to store results
 
-        # Try to auto-detect specs
-        database = GPUDatabase.default()
-        try:
-            spec = database.search(gpu_brand)
-            die_size = spec.die_size_mm2
-            ram_size = spec.memory_size_gb
-        except KeyError:
-            st.warning(f"Specs for {gpu_brand} not found. Please enter manually.")
-            die_size = 100.0
-            ram_size = 8
+        # Iterate over each detected GPU
+        for gpu_index, detected_gpu in enumerate(gpus):
+            st.markdown(f"### GPU {gpu_index + 1}")
+            gpu_brand = st.text_input(f"GPU Model for GPU {gpu_index + 1}", value=detected_gpu, key=f"gpu_brand_{gpu_index}")
 
-        die_size_input = st.number_input("Die Size (mm²)", value=die_size, format="%.2f")
-        ram_size_input = st.number_input("RAM Size (GB)", value=ram_size)
+            # Auto-detect specs or set defaults
+            database = GPUDatabase.default()
+            try:
+                spec = database.search(gpu_brand)
+                die_size = spec.die_size_mm2
+                ram_size = spec.memory_size_gb
+            except KeyError:
+                st.warning(f"Specs for {gpu_brand} not found. Please enter manually.")
+                die_size = 100.0
+                ram_size = 8
 
-        
-        payload = {
-            "model" : selected_gpu,
-            "die_size_mm2": die_size_input,
-            "ram_size_gb": ram_size_input
-        }
-        try:
-            response = requests.post(f"{FASTAPI_BASE_URL}/GPU-Calc", json=payload)
-            response.raise_for_status()
-            data = response.json()
+            die_size_input = st.number_input(f"Die Size (mm²) for GPU {gpu_index + 1}", value=die_size, format="%.2f", key=f"die_size_{gpu_index}")
+            ram_size_input = st.number_input(f"RAM Size (GB) for GPU {gpu_index + 1}", value=ram_size, key=f"ram_size_{gpu_index}")
 
-        
-            st.markdown(f"**GWP:** {data['gwp']} kgCO₂eq")
-            st.markdown(f"**ADP:** {data['adp']} kgSbeq")
-            st.markdown(f"**PE:** {data['pe']} MJ")
+            # Create payload for each GPU
+            payload = {
+                "model": gpu_brand,
+                "die_size_mm2": die_size_input,
+                "ram_size_gb": ram_size_input
+            }
+            try:
+                response = requests.post(f"{FASTAPI_BASE_URL}/GPU-Calc", json=payload)
+                response.raise_for_status()
+                data = response.json()
 
-        except requests.RequestException as e:
-            st.error(f"Failed to calculate GPU impact: {str(e)}")
+                result = {
+                    "gwp": data['gwp'],
+                    "adp": data['adp'],
+                    "pe": data['pe'],
+                }
+                results.append((gpu_brand, result))
+
+            except requests.RequestException as e:
+                st.error(f"Failed to calculate GPU impact for {gpu_brand}: {str(e)}")
+
+        # Display all results
+        st.subheader("GPU Impact Results")
+        for gpu_brand, result in results:
+            st.markdown(f"**{gpu_brand}**")
+            st.markdown(f"- **GWP:** {result['gwp']} kgCO₂eq")
+            st.markdown(f"- **ADP:** {result['adp']} kgSbeq")
+            st.markdown(f"- **PE:** {result['pe']} MJ")
+
     else:
         st.info("No GPUs detected in the system information.")
+
+
+    # st.subheader("Boavizta GPU Calculations", divider=True, help="Based on formula found in the following article: https://hal.science/hal-04643414v1/document")
+
+    # gpus = [gpu for gpu in detected_GPU]  # Populate from /system-info
+
+    # if gpus:
+    #     selected_gpu_index = st.selectbox("Select GPU:", range(len(gpus)), format_func=lambda x: f"GPU {x + 1}",  key="gpu_selectbox")
+    #     selected_gpu = gpus[selected_gpu_index]
+    #     gpu_brand = st.text_input("GPU Model", value=selected_gpu)
+
+    #     # Try to auto-detect specs
+    #     database = GPUDatabase.default()
+    #     try:
+    #         spec = database.search(gpu_brand)
+    #         die_size = spec.die_size_mm2
+    #         ram_size = spec.memory_size_gb
+    #     except KeyError:
+    #         st.warning(f"Specs for {gpu_brand} not found. Please enter manually.")
+    #         die_size = 100.0
+    #         ram_size = 8
+
+    #     die_size_input = st.number_input("Die Size (mm²)", value=die_size, format="%.2f")
+    #     ram_size_input = st.number_input("RAM Size (GB)", value=ram_size)
+
+        
+    #     payload = {
+    #         "model" : selected_gpu,
+    #         "die_size_mm2": die_size_input,
+    #         "ram_size_gb": ram_size_input
+    #     }
+    #     try:
+    #         response = requests.post(f"{FASTAPI_BASE_URL}/GPU-Calc", json=payload)
+    #         response.raise_for_status()
+    #         data = response.json()
+
+        
+    #         st.markdown(f"**GWP:** {data['gwp']} kgCO₂eq")
+    #         st.markdown(f"**ADP:** {data['adp']} kgSbeq")
+    #         st.markdown(f"**PE:** {data['pe']} MJ")
+
+    #     except requests.RequestException as e:
+    #         st.error(f"Failed to calculate GPU impact: {str(e)}")
+    # else:
+    #     st.info("No GPUs detected in the system information.")
 
     # st.title("System Info & Electricity Data")
 

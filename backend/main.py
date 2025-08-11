@@ -581,14 +581,23 @@ class CarbonRequest(BaseModel):
     token: str
     temporal_granularity: str = '15_minutes'
     
+# @app.get("/carbon-intensity-history")
+# async def get_carbon_intensity_evolution(
+#     zone: str = Query('FR', description="Zone code, e.g. 'FR'")
+# ):
+#     try:
+#         # Assuming fetch_history_carbon_intensity is defined and token + temporal granularity are hardcoded or managed internally
+#         # If you still need token and temporal_granularity as parameters, you can add them as query params as well
+#         data = fetch_history_carbon_intensity(zone=zone)
+#         return data
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.get("/carbon-intensity-history")
 async def get_carbon_intensity_evolution(
-    zone: str = Query('FR', description="Zone code, e.g. 'FR'")
+    zone: str = 'FR',
+    db: Session = Depends(get_db)
 ):
-    try:
-        # Assuming fetch_history_carbon_intensity is defined and token + temporal granularity are hardcoded or managed internally
-        # If you still need token and temporal_granularity as parameters, you can add them as query params as well
-        data = fetch_history_carbon_intensity(zone=zone)
-        return data
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    data = get_all_carbon_intensity_by_zone(db, zone)
+    return {"history": data}
