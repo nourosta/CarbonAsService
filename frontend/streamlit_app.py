@@ -359,7 +359,7 @@ with tab1:
 
     gpus = [gpu for gpu in detected_GPU]  # Ensure this is populated correctly
 
-    st.write("Detected GPUs:", gpus)
+    #st.write("Detected GPUs:", gpus)
 
     if gpus:
         results = []
