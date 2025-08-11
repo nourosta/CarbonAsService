@@ -364,14 +364,14 @@ with tab1:
     with right:
         st.metric("PE", f"{total_pe:.2f} MJ")
 
-    detected_GPU = data.get("gpus")
 
 
     st.subheader("Boavizta GPU Calculations", divider=True)
+    detected_GPU = data.get("gpus")
 
     gpus = [gpu for gpu in detected_GPU]  # Ensure this is populated correctly
 
-    @st.cache_data(show_spinner=False)
+    #@st.cache_data(show_spinner=False)
     def fetch_gpu_impacts(gpus: list):
         if not gpus:
             return None, []
