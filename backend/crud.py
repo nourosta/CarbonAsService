@@ -203,18 +203,48 @@ def store_scope2_result(db: Session, process_name: str, resource_type: str,co2_k
     return db_result
 
 
-def create_scope2_result(db: Session, process_name: str, resource_type: str, energy_kwh: float, co2_kg: float, carbon_intensity: float):
-    db_result = Scope2Result(
-        process_name=process_name,
-        resource_type=resource_type,
-        energy_kwh=energy_kwh,
-        co2_kg=co2_kg,
-        carbon_intensity=carbon_intensity
+def create_scope2_result(
+    db: Session,
+    process_name: str,
+    resource_type: str,
+    energy_kwh: float,
+    co2_kg: float,
+    carbon_intensity: float
+):
+    today = date.today()
+
+    # Check if an entry already exists for this resource today
+    existing = (
+        db.query(Scope2Result)
+        .filter(
+            Scope2Result.resource_type == resource_type,
+            func.date(Scope2Result.timestamp) == today
+        )
+        .first()
     )
-    db.add(db_result)
-    db.commit()
-    db.refresh(db_result)
-    return db_result
+
+    if existing:
+        # Update the existing record
+        existing.energy_kwh += energy_kwh
+        existing.co2_kg += co2_kg
+        existing.carbon_intensity = carbon_intensity  # Keep latest intensity
+        db.commit()
+        db.refresh(existing)
+        return existing
+    else:
+        # Insert new record
+        db_result = Scope2Result(
+            process_name=process_name,
+            resource_type=resource_type,
+            energy_kwh=energy_kwh,
+            co2_kg=co2_kg,
+            carbon_intensity=carbon_intensity
+        )
+        db.add(db_result)
+        db.commit()
+        db.refresh(db_result)
+        return db_result
+
 
 def get_scope2_results(db: Session, skip: int = 0, limit: int = 100):
     return db.query(Scope2Result).offset(skip).limit(limit).all()
