@@ -1482,27 +1482,24 @@ with tab3:
                 total_co2_kg = carbon_summary['co2_kg'].sum()
                 global_total_co2_kg += total_co2_kg
 
-                # In Streamlit, after computing carbon_summary
-                st.write(f"Carbon Summary for {resource_type}:")
-                st.write(carbon_summary)
-                
+                          
                 energy_kwh_total = pd.to_numeric(energy_df["energy_kwh"], errors="coerce").sum()
                 energy_kwh_total = float(energy_kwh_total) if not pd.isna(energy_kwh_total) else 0.0
 
-                for _, row in carbon_summary.iterrows():
-                    payload = {
-                        "process_name": str(row["process_name"]),
-                        "resource_type": resource_type,
-                        "energy_kwh": float(row["energy_kwh"]),
-                        "co2_kg": float(row["co2_kg"]),
-                        "carbon_intensity": float(carbon_intensity)
-                    }
+                # Save only today's total for this resource type
+                payload = {
+                    "process_name": "TOTAL",
+                    "resource_type": resource_type,
+                    "energy_kwh": float(energy_kwh_total),
+                    "co2_kg": float(total_co2_kg),
+                    "carbon_intensity": float(carbon_intensity)
+                }
 
-                    try:
-                        response = requests.post(f"{FASTAPI_BASE_URL}/scope2", json=payload)
-                        response.raise_for_status()
-                    except Exception as e:
-                        st.error(f"Error saving Scope 2 data for {resource_type} process {row['process_name']}: {e}")
+                try:
+                    requests.post(f"{FASTAPI_BASE_URL}/scope2", json=payload).raise_for_status()
+                except Exception as e:
+                    st.error(f"Error saving Scope 2 data for {resource_type}: {e}")
+
 
                 st.metric(f"🌫️ Total CO₂ Emissions Today ({resource_type.upper()})", f"{total_co2_kg:.8f} kg")
 
