@@ -1485,20 +1485,20 @@ with tab3:
                 energy_kwh_total = pd.to_numeric(energy_df["energy_kwh"], errors="coerce").sum()
                 energy_kwh_total = float(energy_kwh_total) if not pd.isna(energy_kwh_total) else 0.0
 
-                # In your Streamlit code
-                try:
-                    requests.post(
-                        f"{FASTAPI_BASE_URL}/scope2/",
-                        params={
-                            "process_name": "TOTAL",
-                            "resource_type": resource_type,
-                            "co2_kg": float(total_co2_kg),  # already scalar
-                            "energy_kwh": energy_kwh_total,
-                            "carbon_intensity": float(carbon_intensity)
-                        }
-                    )
-                except Exception as e:
-                    st.error(f"Error saving Scope 2 data for {resource_type}: {e}")
+                for _, row in carbon_summary.iterrows():
+                    payload = {
+                        "process_name": str(row["process_name"]),
+                        "resource_type": resource_type,
+                        "energy_kwh": float(row["energy_kwh"]),
+                        "co2_kg": float(row["co2_kg"]),
+                        "carbon_intensity": float(carbon_intensity)
+                    }
+
+                    try:
+                        response = requests.post(f"{FASTAPI_BASE_URL}/scope2", json=payload)
+                        response.raise_for_status()
+                    except Exception as e:
+                        st.error(f"Error saving Scope 2 data for {resource_type} process {row['process_name']}: {e}")
 
                 st.metric(f"🌫️ Total CO₂ Emissions Today ({resource_type.upper()})", f"{total_co2_kg:.8f} kg")
 

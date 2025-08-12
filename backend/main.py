@@ -681,6 +681,14 @@ def add_scope2_result(payload: dict, db: Session = Depends(get_db)):
     )
     return {"message": "Scope 2 result saved", "id": result.id}
 
+
+@app.post("/scope2")
+def post_scope2_result(payload: dict, db: Session = Depends(get_db)):
+    """
+    Save a Scope 2 result to the database.
+    """
+    return add_scope2_result(payload, db)
+
 @app.get("/scope2", response_model=list)
 def read_scope2_results(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     results = get_scope2_results(db, skip=skip, limit=limit)
