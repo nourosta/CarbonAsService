@@ -1475,8 +1475,7 @@ with tab3:
                     .reset_index()
                     .sort_values(by="co2_kg", ascending=False)
                 )
-                
-                # Save each process's Scope 2 record to DB
+                # 🔹 Save each process's Scope 2 CO₂ to DB
                 for _, row in carbon_summary.iterrows():
                     payload = {
                         "process_name": row["process_name"],
@@ -1489,14 +1488,11 @@ with tab3:
                         requests.post(f"{FASTAPI_BASE_URL}/scope2", json=payload)
                     except Exception as e:
                         st.error(f"Error saving Scope 2 data for {row['process_name']}: {e}")
-
                 # Total CO₂ today
                 total_co2_kg = carbon_summary['co2_kg'].sum()
                 global_total_co2_kg += total_co2_kg
 
                 st.metric(f"🌫️ Total CO₂ Emissions Today ({resource_type.upper()})", f"{total_co2_kg:.8f} kg")
-
-                
 
                 # 📊 Bar Plot: CO₂ by process
                 fig_bar = px.bar(
