@@ -1475,7 +1475,23 @@ with tab3:
                     .reset_index()
                     .sort_values(by="co2_kg", ascending=False)
                 )
-                
+
+                # In your Streamlit code
+                for _, row in carbon_summary.iterrows():
+                    payload = {
+                        "process_name": row["process_name"],
+                        "resource_type": resource_type,
+                        "energy_kwh": float(row["energy_kwh"]),
+                        "co2_kg": float(row["co2_kg"]),
+                        "carbon_intensity": float(carbon_intensity),  # Add this
+                        "timestamp": datetime.utcnow().isoformat()
+                    }
+                    try:
+                        response = requests.post(f"{FASTAPI_BASE_URL}/scope2", json=payload)
+                        response.raise_for_status()  # Raise exception for bad status codes
+                    except Exception as e:
+                        st.error(f"Error saving Scope 2 data for {row['process_name']}: {e}")
+
                 # Total CO₂ today
                 total_co2_kg = carbon_summary['co2_kg'].sum()
                 global_total_co2_kg += total_co2_kg
