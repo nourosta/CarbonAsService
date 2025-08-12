@@ -11,7 +11,7 @@ from system_info import collect_system_info, get_top_processes_ps
 import json 
 import requests
 from pydantic import BaseModel
-from crud import get_all_carbon_intensity_by_zone, get_latest_carbon_intensity_by_zone, get_total_scope3_emissions, save_case, save_motherboard, store_power_breakdown, store_carbon_intensity, save_ram,save_gpu,save_hdd,save_ssd, save_cpu
+from crud import get_all_carbon_intensity_by_zone, get_latest_carbon_intensity_by_zone, get_total_scope3_emissions, save_case, save_motherboard, store_power_breakdown, store_carbon_intensity, save_ram,save_gpu,save_hdd,save_ssd, save_cpu, store_scope2_result
 from database import get_db, init_db
 from fastapi.middleware.cors import CORSMiddleware
 from system_info import get_top_processes_ps
@@ -650,3 +650,13 @@ def read_total_scope3_emissions():
         return {"total_scope3_gwp": total}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching total: {e}")
+    
+
+@app.post("/scope2/")
+def add_scope2_result(process_name: str,
+                      resource_type: str,
+                      co2_kg: float,
+                      energy_kwh: float,
+                      carbon_intensity: float,
+                      db: Session = Depends(get_db)):
+    return store_scope2_result(db, process_name, resource_type, co2_kg, energy_kwh, carbon_intensity)

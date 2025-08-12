@@ -1,7 +1,7 @@
 import json
 from database import SessionLocal
 from sqlalchemy.orm import Session
-from models import CarbonIntensity, CaseImpact, EcoflocResult, GPUImpact, MotherboardImpact, PowerBreakdown, RAMImpact, SSDImpact, HDDImpact, CPUImpact
+from models import CarbonIntensity, CaseImpact, EcoflocResult, GPUImpact, MotherboardImpact, PowerBreakdown, RAMImpact, SSDImpact, HDDImpact, CPUImpact, Scope2Result
 
 
 def save_cpu(model, gwp, adp, pe):
@@ -187,3 +187,17 @@ def get_total_scope3_emissions():
         return total_scope3
     finally:
         db.close()
+
+def store_scope2_result(db: Session, process_name: str, resource_type: str,co2_kg: float, energy_kwh: float, carbon_intensity: float):
+    
+    db_result = Scope2Result(
+        process_name=process_name,
+        resource_type=resource_type,
+        co2_kg=co2_kg,
+        energy_kwh=energy_kwh,
+        carbon_intensity=carbon_intensity
+    )
+    db.add(db_result)
+    db.commit()
+    db.refresh(db_result)
+    return db_result

@@ -97,4 +97,15 @@ class EcoflocResult(Base):
     cpu_usage = Column(Float)
     ram_usage = Column(Float)
     timestamp = Column(DateTime, default=datetime.utcnow)
-    
+
+
+class Scope2Result(Base):
+    __tablename__ = "scope2_results"
+
+    id = Column(Integer, primary_key=True, index=True)
+    process_name = Column(String)           # Process name, optional
+    resource_type = Column(String)          # e.g., 'cpu', 'gpu', 'ram'
+    co2_kg = Column(Float)                   # Computed CO₂ in kilograms
+    energy_kwh = Column(Float)               # Energy in kWh
+    carbon_intensity = Column(Float)         # gCO₂/kWh at computation time
+    timestamp = Column(DateTime, default=datetime.utcnow)

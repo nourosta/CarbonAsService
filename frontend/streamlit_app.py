@@ -1482,6 +1482,21 @@ with tab3:
 
                 st.metric(f"🌫️ Total CO₂ Emissions Today ({resource_type.upper()})", f"{total_co2_kg:.8f} kg")
 
+                # Save Scope 2 data
+                try:
+                    requests.post(
+                        f"{FASTAPI_BASE_URL}/scope2/",
+                        params={
+                            "process_name": "TOTAL",  # Or loop per process_name if you want details
+                            "resource_type": resource_type,
+                            "co2_kg": float(total_co2_kg),
+                            "energy_kwh": float(energy_df['energy_kwh']),
+                            "carbon_intensity": float(carbon_intensity)
+                        }
+                    )
+                except Exception as e:
+                    st.error(f"Error saving Scope 2 data for {resource_type}: {e}")
+
                 # 📊 Bar Plot: CO₂ by process
                 fig_bar = px.bar(
                     carbon_summary,
