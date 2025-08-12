@@ -1442,6 +1442,7 @@ with tab3:
                     response = requests.get(f"{FASTAPI_BASE_URL}/ecofloc/{resource_type}")
                     response.raise_for_status()
                     df = pd.DataFrame(response.json())
+                    print(f"Columns for {resource_type}: {df.columns.tolist()}")
                 except Exception as e:
                     st.error(f"Error fetching data for {resource_type}: {e}")
                     continue
