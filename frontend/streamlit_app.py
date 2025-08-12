@@ -1483,14 +1483,17 @@ with tab3:
                 st.metric(f"🌫️ Total CO₂ Emissions Today ({resource_type.upper()})", f"{total_co2_kg:.8f} kg")
 
                 # Save Scope 2 data
+                energy_kwh_total = pd.to_numeric(energy_df["energy_kwh"], errors="coerce").sum()
+                energy_kwh_total = float(energy_kwh_total) if not pd.isna(energy_kwh_total) else 0.0
+
                 try:
                     requests.post(
                         f"{FASTAPI_BASE_URL}/scope2/",
                         params={
-                            "process_name": "TOTAL",  # Or loop per process_name if you want details
+                            "process_name": "TOTAL",
                             "resource_type": resource_type,
-                            "co2_kg": float(total_co2_kg),
-                            "energy_kwh": float(energy_df['energy_kwh']),
+                            "co2_kg": float(total_co2_kg),  # already scalar
+                            "energy_kwh": energy_kwh_total,
                             "carbon_intensity": float(carbon_intensity)
                         }
                     )
