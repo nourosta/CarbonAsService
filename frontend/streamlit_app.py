@@ -1477,21 +1477,20 @@ with tab3:
                 )
 
                 # In your Streamlit code
-                for _, row in carbon_summary.iterrows():
-                    payload = {
-                        "process_name": row["process_name"],
-                        "resource_type": resource_type,
-                        "energy_kwh": float(row["energy_kwh"]),
-                        "co2_kg": float(row["co2_kg"]),
-                        "carbon_intensity": carbon_intensity  # You already have this variable somewhere
-                    }
+                try:
+                    requests.post(
+                        f"{FASTAPI_BASE_URL}/scope2/",
+                        params={
+                            "process_name": "TOTAL",
+                            "resource_type": resource_type,
+                            "co2_kg": float(total_co2_kg),  # already scalar
+                            "energy_kwh": energy_kwh_total,
+                            "carbon_intensity": float(carbon_intensity)
+                        }
+                    )
+                except Exception as e:
+                    st.error(f"Error saving Scope 2 data for {resource_type}: {e}")
 
-                    try:
-                        response = requests.post(f"{FASTAPI_BASE_URL}/scope2", json=payload)
-                        response.raise_for_status()
-                    except Exception as e:
-                        st.error(f"Error saving Scope 2 data for {resource_type} process {row['process_name']}: {e}")
-                        
                 # Total CO₂ today
                 total_co2_kg = carbon_summary['co2_kg'].sum()
                 global_total_co2_kg += total_co2_kg
