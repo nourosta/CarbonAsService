@@ -1482,8 +1482,10 @@ with tab3:
                 total_co2_kg = carbon_summary['co2_kg'].sum()
                 global_total_co2_kg += total_co2_kg
 
+                # In Streamlit, after computing carbon_summary
+                st.write(f"Carbon Summary for {resource_type}:")
                 st.write(carbon_summary)
-
+                
                 energy_kwh_total = pd.to_numeric(energy_df["energy_kwh"], errors="coerce").sum()
                 energy_kwh_total = float(energy_kwh_total) if not pd.isna(energy_kwh_total) else 0.0
 
