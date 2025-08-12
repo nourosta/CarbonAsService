@@ -11,7 +11,7 @@ from system_info import collect_system_info, get_top_processes_ps
 import json 
 import requests
 from pydantic import BaseModel
-from crud import get_all_carbon_intensity_by_zone, get_latest_carbon_intensity_by_zone, get_total_scope3_emissions, save_case, save_motherboard, store_power_breakdown, store_carbon_intensity, save_ram,save_gpu,save_hdd,save_ssd, save_cpu, store_scope2_result
+from crud import create_scope2_result, get_all_carbon_intensity_by_zone, get_latest_carbon_intensity_by_zone, get_scope2_results, get_total_scope3_emissions, save_case, save_motherboard, store_power_breakdown, store_carbon_intensity, save_ram,save_gpu,save_hdd,save_ssd, save_cpu
 from database import get_db, init_db
 from fastapi.middleware.cors import CORSMiddleware
 from system_info import get_top_processes_ps
@@ -652,11 +652,40 @@ def read_total_scope3_emissions():
         raise HTTPException(status_code=500, detail=f"Error fetching total: {e}")
     
 
-@app.post("/scope2/")
-def add_scope2_result(process_name: str,
-                      resource_type: str,
-                      co2_kg: float,
-                      energy_kwh: float,
-                      carbon_intensity: float,
-                      db: Session = Depends(get_db)):
-    return store_scope2_result(db, process_name, resource_type, co2_kg, energy_kwh, carbon_intensity)
+# @app.post("/scope2/")
+# def add_scope2_result(process_name: str,
+#                       resource_type: str,
+#                       co2_kg: float,
+#                       energy_kwh: float,
+#                       carbon_intensity: float,
+#                       db: Session = Depends(get_db)):
+#     return store_scope2_result(db, process_name, resource_type, co2_kg, energy_kwh, carbon_intensity)@app.post("/scope2", response_model=dict)
+def add_scope2_result(payload: dict, db: Session = Depends(get_db)):
+    """
+    Expected payload:
+    {
+        "process_name": "chrome.exe",
+        "resource_type": "cpu",
+        "energy_kwh": 1.23,
+        "co2_kg": 0.456,
+        "carbon_intensity": 370.0
+    }
+    """
+    result = create_scope2_result(
+        db=db,
+        process_name=payload["process_name"],
+        resource_type=payload["resource_type"],
+        energy_kwh=payload["energy_kwh"],
+        co2_kg=payload["co2_kg"],
+        carbon_intensity=payload["carbon_intensity"]
+    )
+    return {"message": "Scope 2 result saved", "id": result.id}
+
+@app.get("/scope2", response_model=list)
+def read_scope2_results(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    results = get_scope2_results(db, skip=skip, limit=limit)
+    return [r.__dict__ for r in results]
+
+
+
+

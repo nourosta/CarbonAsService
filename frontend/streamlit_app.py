@@ -1483,15 +1483,15 @@ with tab3:
                         "resource_type": resource_type,
                         "energy_kwh": float(row["energy_kwh"]),
                         "co2_kg": float(row["co2_kg"]),
-                        "carbon_intensity": float(carbon_intensity),  # Add this
-                        "timestamp": datetime.utcnow().isoformat()
+                        "carbon_intensity": carbon_intensity  # You already have this variable somewhere
                     }
+
                     try:
                         response = requests.post(f"{FASTAPI_BASE_URL}/scope2", json=payload)
-                        response.raise_for_status()  # Raise exception for bad status codes
+                        response.raise_for_status()
                     except Exception as e:
-                        st.error(f"Error saving Scope 2 data for {row['process_name']}: {e}")
-
+                        st.error(f"Error saving Scope 2 data for {resource_type} process {row['process_name']}: {e}")
+                        
                 # Total CO₂ today
                 total_co2_kg = carbon_summary['co2_kg'].sum()
                 global_total_co2_kg += total_co2_kg

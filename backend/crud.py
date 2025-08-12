@@ -189,7 +189,7 @@ def get_total_scope3_emissions():
         db.close()
 
 def store_scope2_result(db: Session, process_name: str, resource_type: str,co2_kg: float, energy_kwh: float, carbon_intensity: float):
-    
+
     db_result = Scope2Result(
         process_name=process_name,
         resource_type=resource_type,
@@ -201,3 +201,20 @@ def store_scope2_result(db: Session, process_name: str, resource_type: str,co2_k
     db.commit()
     db.refresh(db_result)
     return db_result
+
+
+def create_scope2_result(db: Session, process_name: str, resource_type: str, energy_kwh: float, co2_kg: float, carbon_intensity: float):
+    db_result = Scope2Result(
+        process_name=process_name,
+        resource_type=resource_type,
+        energy_kwh=energy_kwh,
+        co2_kg=co2_kg,
+        carbon_intensity=carbon_intensity
+    )
+    db.add(db_result)
+    db.commit()
+    db.refresh(db_result)
+    return db_result
+
+def get_scope2_results(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(Scope2Result).offset(skip).limit(limit).all()
