@@ -1476,6 +1476,15 @@ with tab3:
                     .sort_values(by="co2_kg", ascending=False)
                 )
 
+                
+
+                # Total CO₂ today
+                total_co2_kg = carbon_summary['co2_kg'].sum()
+                global_total_co2_kg += total_co2_kg
+
+                energy_kwh_total = pd.to_numeric(energy_df["energy_kwh"], errors="coerce").sum()
+                energy_kwh_total = float(energy_kwh_total) if not pd.isna(energy_kwh_total) else 0.0
+
                 # In your Streamlit code
                 try:
                     requests.post(
@@ -1490,10 +1499,6 @@ with tab3:
                     )
                 except Exception as e:
                     st.error(f"Error saving Scope 2 data for {resource_type}: {e}")
-
-                # Total CO₂ today
-                total_co2_kg = carbon_summary['co2_kg'].sum()
-                global_total_co2_kg += total_co2_kg
 
                 st.metric(f"🌫️ Total CO₂ Emissions Today ({resource_type.upper()})", f"{total_co2_kg:.8f} kg")
 
