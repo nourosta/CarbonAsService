@@ -70,6 +70,15 @@ class EcoflocResultOut(BaseModel):
     class Config:
         orm_mode = True
 
+class Scope2Response(BaseModel):
+    id: int
+    process_name: str
+    resource_type: str
+    co2_kg: float
+    energy_kwh: float
+    carbon_intensity: float
+    timestamp: datetime
+
 def ram_impacts(ram_spec: RAMSpec):
     
     payload = ram_spec.dict()
