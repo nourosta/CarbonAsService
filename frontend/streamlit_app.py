@@ -972,127 +972,127 @@ with tab3:
     #     st.error(f"Failed to load carbon footprint: {e}")
 
    
-def render_tab3():
-    st.title("♻️ Scope 2 Emissions (Per Process + PID)")
+    def render_tab3():
+        st.title("♻️ Scope 2 Emissions (Per Process + PID)")
 
-    resource_types = ["cpu", "ram", "sd", "gpu", "nic"]
+        resource_types = ["cpu", "ram", "sd", "gpu", "nic"]
 
-    try:
-        # Fetch latest carbon intensity
-        response = requests.get(f"{FASTAPI_BASE_URL}/carbon-intensity/last?zone=FR")
-        response.raise_for_status()
-        carbon_data = response.json()
-        carbon_intensity = carbon_data.get("carbonIntensity")
-        updated_at = carbon_data.get("updatedAt", "N/A")
+        try:
+            # Fetch latest carbon intensity
+            response = requests.get(f"{FASTAPI_BASE_URL}/carbon-intensity/last?zone=FR")
+            response.raise_for_status()
+            carbon_data = response.json()
+            carbon_intensity = carbon_data.get("carbonIntensity")
+            updated_at = carbon_data.get("updatedAt", "N/A")
 
-        if carbon_intensity is None:
-            st.error("Carbon intensity data is not available.")
+            if carbon_intensity is None:
+                st.error("Carbon intensity data is not available.")
+                st.stop()
+
+        except requests.RequestException as e:
+            st.error(f"❌ Failed to fetch latest carbon intensity: {e}")
             st.stop()
 
-    except requests.RequestException as e:
-        st.error(f"❌ Failed to fetch latest carbon intensity: {e}")
-        st.stop()
+        # Show carbon intensity metric
+        st.metric("🌍 Current Carbon Intensity", f"{carbon_intensity} gCO₂eq/kWh")
+        st.caption(f"Updated at: {updated_at}")
 
-    # Show carbon intensity metric
-    st.metric("🌍 Current Carbon Intensity", f"{carbon_intensity} gCO₂eq/kWh")
-    st.caption(f"Updated at: {updated_at}")
+        global_total_co2_kg = 0
 
-    global_total_co2_kg = 0
+        for resource_type in resource_types:
+            st.markdown(f"### 🔎 Resource: {resource_type.upper()}")
 
-    for resource_type in resource_types:
-        st.markdown(f"### 🔎 Resource: {resource_type.upper()}")
-
-        # Fetch Ecofloc data
-        try:
-            response = requests.get(f"{FASTAPI_BASE_URL}/ecofloc/{resource_type}")
-            response.raise_for_status()
-            df = pd.DataFrame(response.json())
-        except Exception as e:
-            st.error(f"Error fetching data for {resource_type}: {e}")
-            continue
-
-        # Ensure required columns
-        required = ["timestamp", "metric_value", "metric_name", "process_name", "pid"]
-        if not all(col in df.columns for col in required):
-            st.warning(f"Skipping {resource_type} due to missing columns.")
-            continue
-
-        # Clean dataframe
-        df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
-        df["metric_value"] = pd.to_numeric(df["metric_value"], errors="coerce")
-        df.dropna(subset=["timestamp", "metric_value"], inplace=True)
-
-        # Filter only "total energy"
-        energy_df = df[df["metric_name"].str.lower().str.contains("total energy")].copy()
-        if energy_df.empty:
-            st.info(f"No total energy data for {resource_type}.")
-            continue
-
-        # Convert to kWh and CO₂
-        energy_df["energy_kwh"] = energy_df["metric_value"] / 3_600_000
-        energy_df["co2_g"] = energy_df["energy_kwh"] * carbon_intensity
-        energy_df["co2_kg"] = energy_df["co2_g"] / 1000
-
-        # Insert into DB per row (process + PID)
-        for _, row in energy_df.iterrows():
-            payload = {
-                "process_name": row["process_name"],
-                "pid": int(row["pid"]),
-                "resource_type": resource_type,
-                "timestamp": row["timestamp"].isoformat(),
-                "energy_kwh": float(row["energy_kwh"]),
-                "co2_kg": float(row["co2_kg"]),
-                "carbon_intensity": float(carbon_intensity),
-            }
+            # Fetch Ecofloc data
             try:
-                requests.post(f"{FASTAPI_BASE_URL}/scope2", json=payload).raise_for_status()
+                response = requests.get(f"{FASTAPI_BASE_URL}/ecofloc/{resource_type}")
+                response.raise_for_status()
+                df = pd.DataFrame(response.json())
             except Exception as e:
-                st.warning(f"⚠️ Could not insert row for {row['process_name']} (PID {row['pid']}): {e}")
+                st.error(f"Error fetching data for {resource_type}: {e}")
+                continue
 
-        # Aggregate per process + PID for visualization
-        carbon_summary = (
-            energy_df.groupby(["process_name", "pid"])[["co2_kg", "energy_kwh"]]
-            .sum()
-            .reset_index()
-            .sort_values(by="co2_kg", ascending=False)
-        )
+            # Ensure required columns
+            required = ["timestamp", "metric_value", "metric_name", "process_name", "pid"]
+            if not all(col in df.columns for col in required):
+                st.warning(f"Skipping {resource_type} due to missing columns.")
+                continue
 
-        # Total for this resource
-        total_co2_kg = carbon_summary["co2_kg"].sum()
-        global_total_co2_kg += total_co2_kg
+            # Clean dataframe
+            df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
+            df["metric_value"] = pd.to_numeric(df["metric_value"], errors="coerce")
+            df.dropna(subset=["timestamp", "metric_value"], inplace=True)
 
-        st.metric(
-            f"🌫️ Total CO₂ Emissions ({resource_type.upper()})",
-            f"{total_co2_kg:.6f} kg"
-        )
+            # Filter only "total energy"
+            energy_df = df[df["metric_name"].str.lower().str.contains("total energy")].copy()
+            if energy_df.empty:
+                st.info(f"No total energy data for {resource_type}.")
+                continue
 
-        # 📊 Bar Plot (per process + PID)
-        fig_bar = px.bar(
-            carbon_summary,
-            x=carbon_summary["process_name"] + " (PID " + carbon_summary["pid"].astype(str) + ")",
-            y="co2_kg",
-            labels={"x": "Process (PID)", "co2_kg": "CO₂ (kg)"},
-            title=f"{resource_type.upper()} - CO₂ Emissions by Process & PID",
-        )
-        st.plotly_chart(fig_bar, use_container_width=True, key=f"{resource_type}_bar")
+            # Convert to kWh and CO₂
+            energy_df["energy_kwh"] = energy_df["metric_value"] / 3_600_000
+            energy_df["co2_g"] = energy_df["energy_kwh"] * carbon_intensity
+            energy_df["co2_kg"] = energy_df["co2_g"] / 1000
 
-        # 📈 Line Plot (time series per process + PID)
-        fig_line = px.line(
-            energy_df,
-            x="timestamp",
-            y="co2_kg",
-            color=energy_df["process_name"] + " (PID " + energy_df["pid"].astype(str) + ")",
-            labels={"timestamp": "Time", "co2_kg": "CO₂ (kg)"},
-            title=f"{resource_type.upper()} - CO₂ Over Time",
-        )
-        st.plotly_chart(fig_line, use_container_width=True, key=f"{resource_type}_line")
+            # Insert into DB per row (process + PID)
+            for _, row in energy_df.iterrows():
+                payload = {
+                    "process_name": row["process_name"],
+                    "pid": int(row["pid"]),
+                    "resource_type": resource_type,
+                    "timestamp": row["timestamp"].isoformat(),
+                    "energy_kwh": float(row["energy_kwh"]),
+                    "co2_kg": float(row["co2_kg"]),
+                    "carbon_intensity": float(carbon_intensity),
+                }
+                try:
+                    requests.post(f"{FASTAPI_BASE_URL}/scope2", json=payload).raise_for_status()
+                except Exception as e:
+                    st.warning(f"⚠️ Could not insert row for {row['process_name']} (PID {row['pid']}): {e}")
 
-        # 🏭 Table of emitters
-        top5 = carbon_summary.head(5).copy()
-        st.subheader(f"🏭 Top 5 CO₂ Emitters ({resource_type.upper()})")
-        st.table(top5[["process_name", "pid", "co2_kg", "energy_kwh"]])
+            # Aggregate per process + PID for visualization
+            carbon_summary = (
+                energy_df.groupby(["process_name", "pid"])[["co2_kg", "energy_kwh"]]
+                .sum()
+                .reset_index()
+                .sort_values(by="co2_kg", ascending=False)
+            )
 
-    st.success(f"✅ Global Total CO₂ Recorded: {global_total_co2_kg:.6f} kg")
+            # Total for this resource
+            total_co2_kg = carbon_summary["co2_kg"].sum()
+            global_total_co2_kg += total_co2_kg
+
+            st.metric(
+                f"🌫️ Total CO₂ Emissions ({resource_type.upper()})",
+                f"{total_co2_kg:.6f} kg"
+            )
+
+            # 📊 Bar Plot (per process + PID)
+            fig_bar = px.bar(
+                carbon_summary,
+                x=carbon_summary["process_name"] + " (PID " + carbon_summary["pid"].astype(str) + ")",
+                y="co2_kg",
+                labels={"x": "Process (PID)", "co2_kg": "CO₂ (kg)"},
+                title=f"{resource_type.upper()} - CO₂ Emissions by Process & PID",
+            )
+            st.plotly_chart(fig_bar, use_container_width=True, key=f"{resource_type}_bar")
+
+            # 📈 Line Plot (time series per process + PID)
+            fig_line = px.line(
+                energy_df,
+                x="timestamp",
+                y="co2_kg",
+                color=energy_df["process_name"] + " (PID " + energy_df["pid"].astype(str) + ")",
+                labels={"timestamp": "Time", "co2_kg": "CO₂ (kg)"},
+                title=f"{resource_type.upper()} - CO₂ Over Time",
+            )
+            st.plotly_chart(fig_line, use_container_width=True, key=f"{resource_type}_line")
+
+            # 🏭 Table of emitters
+            top5 = carbon_summary.head(5).copy()
+            st.subheader(f"🏭 Top 5 CO₂ Emitters ({resource_type.upper()})")
+            st.table(top5[["process_name", "pid", "co2_kg", "energy_kwh"]])
+
+        st.success(f"✅ Global Total CO₂ Recorded: {global_total_co2_kg:.6f} kg")
     render_tab3()
 # with tab4:
 
