@@ -1069,26 +1069,36 @@ with tab3:
             # show metrics + graphs
             st.metric(f"🌫️ Total CO₂ Emissions ({resource_type.upper()})", f"{total_co2_kg:.4f} kg")
 
-            # 📊 bar chart per process
+            # 📊 Bar Plot: CO₂ by process
             fig_bar = px.bar(
                 carbon_summary,
                 x="process_name",
                 y="co2_kg",
                 labels={"process_name": "Process", "co2_kg": "CO₂ (kg)"},
-                title=f"{resource_type.upper()} – CO₂ by Process",
+                title=f"{resource_type.upper()} - CO₂ Emissions by Process",
             )
-            st.plotly_chart(fig_bar, use_container_width=True, key=f"{resource_type}_bar")
 
-            # 📈 line chart over time
+            # 📈 Line Plot: CO₂ over time
             fig_line = px.line(
                 energy_df,
                 x="timestamp",
                 y="co2_kg",
                 color="process_name",
                 labels={"timestamp": "Time", "co2_kg": "CO₂ (kg)", "process_name": "Process"},
-                title=f"{resource_type.upper()} – CO₂ Over Time",
+                title=f"{resource_type.upper()} - CO₂ Over Time"
             )
-            st.plotly_chart(fig_line, use_container_width=True, key=f"{resource_type}_line")
+            fig_line.update_layout(height=500)
+
+            col1, col2 = st.columns(2)
+
+            with col1:
+                st.subheader(f"📊 CO₂ by Process ({resource_type.upper()})")
+                st.plotly_chart(fig_bar, use_container_width=True, key=f"{resource_type}_co2_bar")  # 👈 key includes resource_type
+
+            with col2:
+                st.subheader("📈 CO₂ Over Time")
+                st.plotly_chart(fig_line, use_container_width=True, key=f"{resource_type}_co2_line")  # 👈 unique key
+
 
             # 🏭 table top 5 emitters
             top5 = carbon_summary.head(5).copy()
