@@ -1095,6 +1095,7 @@ with tab3:
             st.table(top5[['process_name', 'co2_kg', 'energy_kwh']])
 
         st.success(f"✅ Global Total CO₂ Across All Resources: {global_total_co2_kg:.4f} kg")
+    render_tab3()
 # with tab4:
 
 #     st.title("Carbon Footprint Summary")
