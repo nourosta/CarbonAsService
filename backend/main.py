@@ -11,7 +11,7 @@ from system_info import collect_system_info, get_top_processes_ps
 import json 
 import requests
 from pydantic import BaseModel
-from crud import create_scope2_result, get_all_carbon_intensity_by_zone, get_latest_carbon_intensity_by_zone, get_scope2_results, get_total_scope3_emissions, save_case, save_motherboard, store_power_breakdown, store_carbon_intensity, save_ram,save_gpu,save_hdd,save_ssd, save_cpu
+from crud import create_scope2_result, get_all_carbon_intensity_by_zone, get_latest_carbon_intensity_by_zone, get_scope2_results, get_total_scope3_emissions, process_and_store_scope2_results, save_case, save_motherboard, store_power_breakdown, store_carbon_intensity, save_ram,save_gpu,save_hdd,save_ssd, save_cpu
 from database import get_db, init_db
 from fastapi.middleware.cors import CORSMiddleware
 from system_info import get_top_processes_ps
@@ -703,6 +703,16 @@ def read_scope2_results(skip: int = 0, limit: int = 100, db: Session = Depends(g
     results = get_scope2_results(db, skip=skip, limit=limit)
     return [r.__dict__ for r in results]
 
+
+@app.post("/update-scope2-emissions")
+def update_scope2_emissions_endpoint(db: Session = Depends(get_db)):
+    # Fetch current carbon intensity
+    carbon_data = fetch_carbon_intensity()
+    carbon_intensity = carbon_data.get('carbonIntensity', 0)
+
+    # Update scope2 emissions based on fetched carbon intensity
+    process_and_store_scope2_results(db, carbon_intensity)
+    return {"message": "Scope 2 emissions updated successfully."}
 
 
 

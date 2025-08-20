@@ -1289,262 +1289,322 @@ with tab2 :
 with tab3:
     st.title("Carbon Footprint Dashboard")
 
-    try:
-        # Fetch latest carbon intensity
-        response = requests.get(f"{FASTAPI_BASE_URL}/carbon-intensity/last?zone=FR")
-        response.raise_for_status()
-        carbon_data = response.json()
+    # try:
+    #     # Fetch latest carbon intensity
+    #     response = requests.get(f"{FASTAPI_BASE_URL}/carbon-intensity/last?zone=FR")
+    #     response.raise_for_status()
+    #     carbon_data = response.json()
 
-        carbon_intensity = carbon_data.get("carbonIntensity")
-        updated_at = carbon_data.get("updatedAt", "N/A")
+    #     carbon_intensity = carbon_data.get("carbonIntensity")
+    #     updated_at = carbon_data.get("updatedAt", "N/A")
 
-        if carbon_intensity is None:
-            st.error("Carbon intensity data is not available.")
-        else:
-            # st.subheader("Latest Stored Carbon Intensity")
-            # st.metric("Carbon Intensity", f"{carbon_intensity} gCO₂eq/kWh")
-            # st.caption(f"Updated at: {updated_at}")
+    #     if carbon_intensity is None:
+    #         st.error("Carbon intensity data is not available.")
+    #     else:
+    #         # st.subheader("Latest Stored Carbon Intensity")
+    #         # st.metric("Carbon Intensity", f"{carbon_intensity} gCO₂eq/kWh")
+    #         # st.caption(f"Updated at: {updated_at}")
 
-            # Fetch carbon intensity history for line plot
-            try:
-                response_history = requests.get(f"{FASTAPI_BASE_URL}/carbon-intensity/history?zone=FR")
-                response_history.raise_for_status()
-                history_data = response_history.json()
+    #         # Fetch carbon intensity history for line plot
+    #         try:
+    #             response_history = requests.get(f"{FASTAPI_BASE_URL}/carbon-intensity/history?zone=FR")
+    #             response_history.raise_for_status()
+    #             history_data = response_history.json()
 
-                # Build DataFrame
-                df_history = pd.DataFrame(history_data)
-                df_history['updatedAt'] = pd.to_datetime(df_history['updatedAt'], errors='coerce')
-                df_history['carbonIntensity'] = pd.to_numeric(df_history['carbonIntensity'], errors='coerce')
-                df_history.dropna(subset=['updatedAt', 'carbonIntensity'], inplace=True)
-                df_history = df_history.sort_values('updatedAt')
+    #             # Build DataFrame
+    #             df_history = pd.DataFrame(history_data)
+    #             df_history['updatedAt'] = pd.to_datetime(df_history['updatedAt'], errors='coerce')
+    #             df_history['carbonIntensity'] = pd.to_numeric(df_history['carbonIntensity'], errors='coerce')
+    #             df_history.dropna(subset=['updatedAt', 'carbonIntensity'], inplace=True)
+    #             df_history = df_history.sort_values('updatedAt')
 
-                # Create line plot
-                fig_line = px.line(
-                    df_history,
-                    x='updatedAt',
-                    y='carbonIntensity',
-                    labels={'updatedAt': 'Updated Time', 'carbonIntensity': 'gCO₂/kWh'},
-                    title='🧭 Carbon Intensity Over Time',
-                    height=350
-                )
+    #             # Create line plot
+    #             fig_line = px.line(
+    #                 df_history,
+    #                 x='updatedAt',
+    #                 y='carbonIntensity',
+    #                 labels={'updatedAt': 'Updated Time', 'carbonIntensity': 'gCO₂/kWh'},
+    #                 title='🧭 Carbon Intensity Over Time',
+    #                 height=350
+    #             )
 
-                # Display metric + line plot side-by-side
-                col1, col2 = st.columns([1, 3])
+    #             # Display metric + line plot side-by-side
+    #             col1, col2 = st.columns([1, 3])
 
-                with col1:
-                    st.subheader("Live Carbon Intensity")
-                    st.metric("Carbon Intensity", f"{carbon_intensity} gCO₂eq/kWh")
-                    st.caption(f"Updated at: {updated_at}")
+    #             with col1:
+    #                 st.subheader("Live Carbon Intensity")
+    #                 st.metric("Carbon Intensity", f"{carbon_intensity} gCO₂eq/kWh")
+    #                 st.caption(f"Updated at: {updated_at}")
 
-                with col2:
-                    st.plotly_chart(fig_line, use_container_width=True)
+    #             with col2:
+    #                 st.plotly_chart(fig_line, use_container_width=True)
 
-            except Exception as e:
-                st.warning(f"Could not load carbon intensity history: {e}")
+    #         except Exception as e:
+    #             st.warning(f"Could not load carbon intensity history: {e}")
 
 
-            st.title("Carbon Intensity Viewer")
+    #         st.title("Carbon Intensity Viewer")
 
-            try:
-                # Fetch latest carbon intensity
-                response = requests.get(f"{FASTAPI_BASE_URL}/carbon-intensity/last?zone=FR")
-                response.raise_for_status()
-                carbon_data = response.json()
-                carbon_intensity = carbon_data.get("carbonIntensity")
-                updated_at = carbon_data.get("updatedAt", "N/A")
+    #         try:
+    #             # Fetch latest carbon intensity
+    #             response = requests.get(f"{FASTAPI_BASE_URL}/carbon-intensity/last?zone=FR")
+    #             response.raise_for_status()
+    #             carbon_data = response.json()
+    #             carbon_intensity = carbon_data.get("carbonIntensity")
+    #             updated_at = carbon_data.get("updatedAt", "N/A")
 
-            except requests.RequestException as e:
-                st.error(f"❌ Failed to fetch latest carbon intensity: {e}")
-                st.stop()
+    #         except requests.RequestException as e:
+    #             st.error(f"❌ Failed to fetch latest carbon intensity: {e}")
+    #             st.stop()
 
-                try:
-                    # Fetch carbon intensity history
-                    response_history = requests.get(f"{FASTAPI_BASE_URL}/carbon-intensity-history?zone=FR")
-                    response_history.raise_for_status()
-                    history_response = response_history.json()
+    #             try:
+    #                 # Fetch carbon intensity history
+    #                 response_history = requests.get(f"{FASTAPI_BASE_URL}/carbon-intensity-history?zone=FR")
+    #                 response_history.raise_for_status()
+    #                 history_response = response_history.json()
 
-                    history_list = history_response.get("history", [])
+    #                 history_list = history_response.get("history", [])
 
-                    if not history_list:
-                        st.warning("⚠️ No carbon intensity history data available.")
-                        st.stop()
+    #                 if not history_list:
+    #                     st.warning("⚠️ No carbon intensity history data available.")
+    #                     st.stop()
 
-                    # Convert to DataFrame
-                    df_history = pd.DataFrame(history_list)
-                    df_history['datetime'] = pd.to_datetime(df_history['datetime'], errors='coerce')
-                    df_history['datetime_rounded'] = df_history['datetime'].dt.floor("15min")
+    #                 # Convert to DataFrame
+    #                 df_history = pd.DataFrame(history_list)
+    #                 df_history['datetime'] = pd.to_datetime(df_history['datetime'], errors='coerce')
+    #                 df_history['datetime_rounded'] = df_history['datetime'].dt.floor("15min")
 
-                    latest_datetime_str = carbon_data.get("datetime") or carbon_data.get("updatedAt")
+    #                 latest_datetime_str = carbon_data.get("datetime") or carbon_data.get("updatedAt")
 
-                    if latest_datetime_str is None:
-                        st.warning("Latest carbon intensity datetime is missing, cannot add latest data point.")
-                    else:
-                        latest_time = pd.to_datetime(latest_datetime_str).floor("15min")
+    #                 if latest_datetime_str is None:
+    #                     st.warning("Latest carbon intensity datetime is missing, cannot add latest data point.")
+    #                 else:
+    #                     latest_time = pd.to_datetime(latest_datetime_str).floor("15min")
 
-                        if latest_time not in df_history['datetime_rounded'].values:
-                            latest_row = {
-                                "zone": carbon_data.get("zone"),
-                                "carbonIntensity": carbon_data.get("carbonIntensity"),
-                                "datetime": pd.to_datetime(latest_datetime_str),
-                                "updatedAt": pd.to_datetime(carbon_data.get("updatedAt")),
-                                "createdAt": pd.to_datetime(carbon_data.get("createdAt")),
-                                "emissionFactorType": carbon_data.get("emissionFactorType"),
-                                "isEstimated": carbon_data.get("isEstimated"),
-                                "estimationMethod": carbon_data.get("estimationMethod")
-                            }
-                            df_history = pd.concat([df_history, pd.DataFrame([latest_row])], ignore_index=True)
-                    # After appending latest row
-                    df_history = df_history.sort_values("datetime")
-                    df_history = df_history.drop(columns=["datetime_rounded"], errors="ignore")
+    #                     if latest_time not in df_history['datetime_rounded'].values:
+    #                         latest_row = {
+    #                             "zone": carbon_data.get("zone"),
+    #                             "carbonIntensity": carbon_data.get("carbonIntensity"),
+    #                             "datetime": pd.to_datetime(latest_datetime_str),
+    #                             "updatedAt": pd.to_datetime(carbon_data.get("updatedAt")),
+    #                             "createdAt": pd.to_datetime(carbon_data.get("createdAt")),
+    #                             "emissionFactorType": carbon_data.get("emissionFactorType"),
+    #                             "isEstimated": carbon_data.get("isEstimated"),
+    #                             "estimationMethod": carbon_data.get("estimationMethod")
+    #                         }
+    #                         df_history = pd.concat([df_history, pd.DataFrame([latest_row])], ignore_index=True)
+    #                 # After appending latest row
+    #                 df_history = df_history.sort_values("datetime")
+    #                 df_history = df_history.drop(columns=["datetime_rounded"], errors="ignore")
 
-                    # Plot with Plotly
-                    fig = px.line(
-                        df_history,
-                        x='datetime',
-                        y='carbonIntensity',
-                        title="15-Minute Carbon Intensity (FR)",
-                        labels={"datetime": "Time", "carbonIntensity": "gCO₂eq/kWh"},
-                        markers=True
-                    )
+    #                 # Plot with Plotly
+    #                 fig = px.line(
+    #                     df_history,
+    #                     x='datetime',
+    #                     y='carbonIntensity',
+    #                     title="15-Minute Carbon Intensity (FR)",
+    #                     labels={"datetime": "Time", "carbonIntensity": "gCO₂eq/kWh"},
+    #                     markers=True
+    #                 )
 
-                    fig.update_layout(
-                        xaxis_title="Time",
-                        yaxis_title="Carbon Intensity (gCO₂eq/kWh)",
-                        template="plotly_white",
-                        xaxis=dict(
-                            tickformat="%H:%M",
-                            tickangle=45
-                        )
-                    )
+    #                 fig.update_layout(
+    #                     xaxis_title="Time",
+    #                     yaxis_title="Carbon Intensity (gCO₂eq/kWh)",
+    #                     template="plotly_white",
+    #                     xaxis=dict(
+    #                         tickformat="%H:%M",
+    #                         tickangle=45
+    #                     )
+    #                 )
 
-                    # Optional: highlight the latest point
-                    fig.add_scatter(
-                        x=[latest_row["datetime"]],
-                        y=[latest_row["carbonIntensity"]],
-                        mode="markers+text",
-                        marker=dict(color="red", size=10),
-                        text=["Latest"],
-                        textposition="top center",
-                        name="Latest"
-                    )
+    #                 # Optional: highlight the latest point
+    #                 fig.add_scatter(
+    #                     x=[latest_row["datetime"]],
+    #                     y=[latest_row["carbonIntensity"]],
+    #                     mode="markers+text",
+    #                     marker=dict(color="red", size=10),
+    #                     text=["Latest"],
+    #                     textposition="top center",
+    #                     name="Latest"
+    #                 )
 
-                    st.plotly_chart(fig, use_container_width=True)
-                except requests.RequestException as e:
-                    st.error(f"❌ Failed to fetch carbon intensity history: {e}")
+    #                 st.plotly_chart(fig, use_container_width=True)
+    #             except requests.RequestException as e:
+    #                 st.error(f"❌ Failed to fetch carbon intensity history: {e}")
         
-            global_total_co2_kg = 0  # Accumulator for all resources
+    #         global_total_co2_kg = 0  # Accumulator for all resources
 
-            for resource_type in resource_types:
-                st.markdown(f"### 🔎 Resource: {resource_type.upper()}")
+    #         for resource_type in resource_types:
+    #             st.markdown(f"### 🔎 Resource: {resource_type.upper()}")
 
-                # Fetch energy data
-                try:
-                    response = requests.get(f"{FASTAPI_BASE_URL}/ecofloc/{resource_type}")
-                    response.raise_for_status()
-                    df = pd.DataFrame(response.json())
-                except Exception as e:
-                    st.error(f"Error fetching data for {resource_type}: {e}")
-                    continue
+    #             # Fetch energy data
+    #             try:
+    #                 response = requests.get(f"{FASTAPI_BASE_URL}/ecofloc/{resource_type}")
+    #                 response.raise_for_status()
+    #                 df = pd.DataFrame(response.json())
+    #             except Exception as e:
+    #                 st.error(f"Error fetching data for {resource_type}: {e}")
+    #                 continue
 
-                # Ensure required columns
-                required = ['timestamp', 'metric_value', 'metric_name', 'process_name']
-                if not all(col in df.columns for col in required):
-                    st.warning(f"Skipping {resource_type} due to missing columns.")
-                    continue
+    #             # Ensure required columns
+    #             required = ['timestamp', 'metric_value', 'metric_name', 'process_name']
+    #             if not all(col in df.columns for col in required):
+    #                 st.warning(f"Skipping {resource_type} due to missing columns.")
+    #                 continue
 
-                df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
-                df['metric_value'] = pd.to_numeric(df['metric_value'], errors='coerce')
-                df.dropna(subset=['timestamp', 'metric_value'], inplace=True)
-                df['process_name'] = df['process_name'].astype(str)
+    #             df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
+    #             df['metric_value'] = pd.to_numeric(df['metric_value'], errors='coerce')
+    #             df.dropna(subset=['timestamp', 'metric_value'], inplace=True)
+    #             df['process_name'] = df['process_name'].astype(str)
 
-                # Filter for total energy metrics
-                energy_df = df[df['metric_name'].str.lower().str.contains("total energy")]
-                if energy_df.empty:
-                    st.info(f"No total energy data for {resource_type}.")
-                    continue
+    #             # Filter for total energy metrics
+    #             energy_df = df[df['metric_name'].str.lower().str.contains("total energy")]
+    #             if energy_df.empty:
+    #                 st.info(f"No total energy data for {resource_type}.")
+    #                 continue
 
-                # Convert to kWh and compute CO₂
-                energy_df['energy_kwh'] = energy_df['metric_value'] / 3_600_000
-                energy_df['co2_g'] = energy_df['energy_kwh'] * carbon_intensity
-                energy_df['co2_kg'] = energy_df['co2_g'] / 1000
+    #             # Convert to kWh and compute CO₂
+    #             energy_df['energy_kwh'] = energy_df['metric_value'] / 3_600_000
+    #             energy_df['co2_g'] = energy_df['energy_kwh'] * carbon_intensity
+    #             energy_df['co2_kg'] = energy_df['co2_g'] / 1000
 
-                # Total CO₂ per process
-                carbon_summary = (
-                    energy_df.groupby("process_name")[["co2_kg", "energy_kwh"]]
-                    .sum()
-                    .reset_index()
-                    .sort_values(by="co2_kg", ascending=False)
-                )
+    #             # Total CO₂ per process
+    #             carbon_summary = (
+    #                 energy_df.groupby("process_name")[["co2_kg", "energy_kwh"]]
+    #                 .sum()
+    #                 .reset_index()
+    #                 .sort_values(by="co2_kg", ascending=False)
+    #             )
 
                 
 
-                # Total CO₂ today
-                total_co2_kg = carbon_summary['co2_kg'].sum()
-                global_total_co2_kg += total_co2_kg
+    #             # Total CO₂ today
+    #             total_co2_kg = carbon_summary['co2_kg'].sum()
+    #             global_total_co2_kg += total_co2_kg
 
                           
-                energy_kwh_total = pd.to_numeric(energy_df["energy_kwh"], errors="coerce").sum()
-                energy_kwh_total = float(energy_kwh_total) if not pd.isna(energy_kwh_total) else 0.0
+    #             energy_kwh_total = pd.to_numeric(energy_df["energy_kwh"], errors="coerce").sum()
+    #             energy_kwh_total = float(energy_kwh_total) if not pd.isna(energy_kwh_total) else 0.0
 
-                # Get last stored value for this resource
-                resp = requests.get(f"{FASTAPI_BASE_URL}/scope2/last/{resource_type}")
-                last_value = resp.json().get("co2_kg", 0.0)
+    #             # Get last stored value for this resource
+    #             resp = requests.get(f"{FASTAPI_BASE_URL}/scope2/last/{resource_type}")
+    #             last_value = resp.json().get("co2_kg", 0.0)
 
-                increment = float(total_co2_kg) - float(last_value)
-                for _, row in carbon_summary.iterrows():
-                    if increment > 0:
+    #             increment = float(total_co2_kg) - float(last_value)
+    #             for _, row in carbon_summary.iterrows():
+    #                 if increment > 0:
 
-                        # Save only today's total for this resource type
-                        payload = {
-                            "process_name": row["process_name"],
-                            "resource_type": resource_type,
-                            "energy_kwh": float(energy_kwh_total),
-                            "co2_kg": float(total_co2_kg),
-                            "carbon_intensity": float(carbon_intensity)
-                        }
+    #                     # Save only today's total for this resource type
+    #                     payload = {
+    #                         "process_name": row["process_name"],
+    #                         "resource_type": resource_type,
+    #                         "energy_kwh": float(energy_kwh_total),
+    #                         "co2_kg": float(total_co2_kg),
+    #                         "carbon_intensity": float(carbon_intensity)
+    #                     }
 
-                        requests.post(f"{FASTAPI_BASE_URL}/scope2", json=payload).raise_for_status()
+    #                     requests.post(f"{FASTAPI_BASE_URL}/scope2", json=payload).raise_for_status()
                    
 
-                st.metric(f"🌫️ Total CO₂ Emissions Today ({resource_type.upper()})", f"{total_co2_kg:.8f} kg")
+    #             st.metric(f"🌫️ Total CO₂ Emissions Today ({resource_type.upper()})", f"{total_co2_kg:.8f} kg")
 
-                # 📊 Bar Plot: CO₂ by process
-                fig_bar = px.bar(
-                    carbon_summary,
-                    x="process_name",
-                    y="co2_kg",
-                    labels={"process_name": "Process", "co2_kg": "CO₂ (kg)"},
-                    title=f"{resource_type.upper()} - CO₂ Emissions by Process",
-                )
+    #             # 📊 Bar Plot: CO₂ by process
+    #             fig_bar = px.bar(
+    #                 carbon_summary,
+    #                 x="process_name",
+    #                 y="co2_kg",
+    #                 labels={"process_name": "Process", "co2_kg": "CO₂ (kg)"},
+    #                 title=f"{resource_type.upper()} - CO₂ Emissions by Process",
+    #             )
 
-                # 📈 Line Plot: CO₂ over time
-                fig_line = px.line(
-                    energy_df,
-                    x="timestamp",
-                    y="co2_kg",
-                    color="process_name",
-                    labels={"timestamp": "Time", "co2_kg": "CO₂ (kg)", "process_name": "Process"},
-                    title=f"{resource_type.upper()} - CO₂ Over Time"
-                )
-                fig_line.update_layout(height=500)
+    #             # 📈 Line Plot: CO₂ over time
+    #             fig_line = px.line(
+    #                 energy_df,
+    #                 x="timestamp",
+    #                 y="co2_kg",
+    #                 color="process_name",
+    #                 labels={"timestamp": "Time", "co2_kg": "CO₂ (kg)", "process_name": "Process"},
+    #                 title=f"{resource_type.upper()} - CO₂ Over Time"
+    #             )
+    #             fig_line.update_layout(height=500)
 
-                col1, col2 = st.columns(2)
+    #             col1, col2 = st.columns(2)
 
-                with col1:
-                    st.subheader(f"📊 CO₂ by Process ({resource_type.upper()})")
-                    st.plotly_chart(fig_bar, use_container_width=True, key=f"{resource_type}_co2_bar")
+    #             with col1:
+    #                 st.subheader(f"📊 CO₂ by Process ({resource_type.upper()})")
+    #                 st.plotly_chart(fig_bar, use_container_width=True, key=f"{resource_type}_co2_bar")
 
-                with col2:
-                    st.subheader("📈 CO₂ Over Time")
-                    st.plotly_chart(fig_line, use_container_width=True, key=f"{resource_type}_co2_line")
+    #             with col2:
+    #                 st.subheader("📈 CO₂ Over Time")
+    #                 st.plotly_chart(fig_line, use_container_width=True, key=f"{resource_type}_co2_line")
 
-                # 🏭 Table: Top 5 emitters
-                top5 = carbon_summary.head(5).copy()
-                st.subheader(f"🏭 Top 5 CO₂ Emitters ({resource_type.upper()})")
-                st.table(top5[['process_name', 'co2_kg', 'energy_kwh']])
+    #             # 🏭 Table: Top 5 emitters
+    #             top5 = carbon_summary.head(5).copy()
+    #             st.subheader(f"🏭 Top 5 CO₂ Emitters ({resource_type.upper()})")
+    #             st.table(top5[['process_name', 'co2_kg', 'energy_kwh']])
 
-    except Exception as e:
-        st.error(f"Failed to load carbon footprint: {e}")
+    # except Exception as e:
+    #     st.error(f"Failed to load carbon footprint: {e}")
+
+    # Title of the Dashboard
+    st.title("Carbon Emissions Dashboard")
+    st.subheader("Scope 2 Emissions")
+
+    # Helper Function to Fetch Scope 2 Emissions Data
+    def fetch_scope2_data():
+        """Fetch scope 2 emissions data from FastAPI."""
+        try:
+            response = requests.get(f"{FASTAPI_BASE_URL}/scope2")
+            response.raise_for_status()  # Ensure no HTTP errors occurred
+            return response.json()
+        except requests.RequestException as e:
+            st.error(f"Error fetching Scope 2 emissions data: {str(e)}")
+            return []
+
+    # Function to Display Scope 2 Data
+    def display_scope2_data(scope2_data):
+        """Display Scope 2 emissions in a table and charts."""
+        if scope2_data:
+            # Convert to DataFrame for easier manipulation and visualization
+            df = pd.DataFrame(scope2_data)
+
+            # Check if there are necessary columns
+            if not {'process_name', 'resource_type', 'co2_kg', 'energy_kwh', 'timestamp'}.issubset(df.columns):
+                st.error("Missing data columns.")
+                return
+
+            # Display Raw Data
+            st.dataframe(df)
+
+            # Total Scope 2 Emissions
+            total_co2_kg = df['co2_kg'].sum()
+            st.metric(label="🏭 Total CO₂ Emissions", value=f"{total_co2_kg:.2f} kg")
+
+            # Plotting - CO₂ Emissions by Process
+            fig_bar = px.bar(
+                df,
+                x='process_name',
+                y='co2_kg',
+                color='resource_type',
+                title='CO₂ Emissions by Process',
+                labels={'co2_kg': 'CO₂ (kg)', 'process_name': 'Process Name'}
+            )
+            st.plotly_chart(fig_bar, use_container_width=True)
+
+            # Filter by Resource Type
+            resource_options = df['resource_type'].unique()
+            selected_resource = st.selectbox("Select a Resource Type", resource_options)
+
+            # Optionally filter data based on selection
+            filtered_data = df[df['resource_type'] == selected_resource]
+            st.subheader(f"Filtered Scope 2 Emissions for: {selected_resource}")
+            st.dataframe(filtered_data)
+        else:
+            st.warning("No Scope 2 emissions data found.")
+
+    # Main Execution: Fetch and Display Data
+    scope2_data = fetch_scope2_data()
+    display_scope2_data(scope2_data)
 
 
 with tab4:

@@ -218,3 +218,33 @@ def create_scope2_result(db: Session, process_name: str, resource_type: str, ene
 
 def get_scope2_results(db: Session, skip: int = 0, limit: int = 100):
     return db.query(Scope2Result).offset(skip).limit(limit).all()
+
+
+def process_and_store_scope2_results(db: Session, carbon_intensity: float):
+    """
+    Processes ecofloc results, computes CO₂ emissions using the carbon intensity, 
+    and stores them in the Scope2Result table.
+    """
+    # Fetch relevant ecofloc results
+    ecofloc_results = db.query(EcoflocResult).all()
+    
+    for result in ecofloc_results:
+        # Convert energy metric to kWh
+        energy_kwh = result.metric_value / 3_600_000  
+        # Compute CO₂ in kilograms
+        co2_kg = energy_kwh * carbon_intensity / 1000  
+
+        # Create Scope2Result entry
+        scope2_result = Scope2Result(
+            process_name=result.process_name,
+            resource_type=result.resource_type,
+            energy_kwh=energy_kwh,
+            co2_kg=co2_kg,
+            carbon_intensity=carbon_intensity,
+            timestamp=result.timestamp
+        )
+        
+        # Add and commit scope2 result to the database
+        db.add(scope2_result)
+    
+    db.commit()
