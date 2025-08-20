@@ -681,11 +681,11 @@ with tab2 :
                     "energy_kwh": row['metric_value_kwh'],
                     "co2_g": row['co2_g']
                 }
-            try:
-                post_resp = requests.post(f"{FASTAPI_BASE_URL}/eco-scope2-co2/", json=payload)
-                post_resp.raise_for_status()
-            except requests.RequestException as e:
-                st.error(f"Failed to post energy data: {e}")
+                try:
+                    post_resp = requests.post(f"{FASTAPI_BASE_URL}/eco-scope2-co2/", json=payload)
+                    post_resp.raise_for_status()
+                except requests.RequestException as e:
+                    st.error(f"Failed to post energy data: {e}")
 
         except Exception as e:
             st.error(f"Error fetching carbon intensity: {e}")
