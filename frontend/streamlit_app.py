@@ -1617,107 +1617,107 @@ with tab3:
 
     st.markdown("---")
     st.caption("Tip: you can set Tab 3 to auto-refresh if you want to trigger ingests periodically, or schedule it in the backend.")
-with tab4:
+# with tab4:
 
-    st.title("Carbon Footprint Summary")
-    cols1 , col2 , cols3 = st.columns(3)
-    with cols1:
-        st.subheader("Scope 3 Value")
+#     st.title("Carbon Footprint Summary")
+#     cols1 , col2 , cols3 = st.columns(3)
+#     with cols1:
+#         st.subheader("Scope 3 Value")
 
-        def sum_impacts(*args):
+#         def sum_impacts(*args):
 
-            def safe_float(val):
-                try:
-                    return float(val)
-                except (TypeError, ValueError):
-                    return 0.0
+#             def safe_float(val):
+#                 try:
+#                     return float(val)
+#                 except (TypeError, ValueError):
+#                     return 0.0
 
-            total_impacts = {}
+#             total_impacts = {}
 
-            for data in args:
-                if not data:
-                    continue
+#             for data in args:
+#                 if not data:
+#                     continue
 
-                # Get impacts dict
-                impacts = data.get("impacts")
+#                 # Get impacts dict
+#                 impacts = data.get("impacts")
                 
-                # If no "impacts" key, try to get root-level impact keys (like "gwp" or "GWP")
-                if not impacts:
-                    impacts = {}
-                    for key in ["gwp", "GWP", "pe", "PE", "adp", "ADP"]:
-                        if key in data:
-                            impacts[key.lower()] = data[key]
+#                 # If no "impacts" key, try to get root-level impact keys (like "gwp" or "GWP")
+#                 if not impacts:
+#                     impacts = {}
+#                     for key in ["gwp", "GWP", "pe", "PE", "adp", "ADP"]:
+#                         if key in data:
+#                             impacts[key.lower()] = data[key]
 
-                for impact_type, impact_vals in impacts.items():
-                    impact_type = impact_type.lower()
-                    if impact_type not in total_impacts:
-                        total_impacts[impact_type] = {"manufacture": 0.0, "use": 0.0, "unit": impact_vals.get("unit", "") if isinstance(impact_vals, dict) else ""}
+#                 for impact_type, impact_vals in impacts.items():
+#                     impact_type = impact_type.lower()
+#                     if impact_type not in total_impacts:
+#                         total_impacts[impact_type] = {"manufacture": 0.0, "use": 0.0, "unit": impact_vals.get("unit", "") if isinstance(impact_vals, dict) else ""}
 
-                    # If impact_vals is dict with manufacture/use
-                    if isinstance(impact_vals, dict):
-                        manufacture_val = safe_float(impact_vals.get("manufacture", 0))
-                        use_val = safe_float(impact_vals.get("use", 0))
-                    else:
-                        # If it's a direct number or string, assume manufacture only
-                        manufacture_val = safe_float(impact_vals)
-                        use_val = 0.0
+#                     # If impact_vals is dict with manufacture/use
+#                     if isinstance(impact_vals, dict):
+#                         manufacture_val = safe_float(impact_vals.get("manufacture", 0))
+#                         use_val = safe_float(impact_vals.get("use", 0))
+#                     else:
+#                         # If it's a direct number or string, assume manufacture only
+#                         manufacture_val = safe_float(impact_vals)
+#                         use_val = 0.0
 
-                    total_impacts[impact_type]["manufacture"] += manufacture_val
-                    total_impacts[impact_type]["use"] += use_val
+#                     total_impacts[impact_type]["manufacture"] += manufacture_val
+#                     total_impacts[impact_type]["use"] += use_val
 
-            return total_impacts
+#             return total_impacts
 
-            # --- Sum all impacts ---
-        def safe_get(var_name):
-            return globals().get(var_name) or locals().get(var_name) or None
+#             # --- Sum all impacts ---
+#         def safe_get(var_name):
+#             return globals().get(var_name) or locals().get(var_name) or None
 
-        components = [cpu_data, ram_data, case_data, ssd_data, motherboard_impacts]
+#         components = [cpu_data, ram_data, case_data, ssd_data, motherboard_impacts]
 
-        for optional_var in ['hdd_data', 'gpu_data']:
-            val = safe_get(optional_var)
-            if val is not None:
-                components.append(val)
+#         for optional_var in ['hdd_data', 'gpu_data']:
+#             val = safe_get(optional_var)
+#             if val is not None:
+#                 components.append(val)
 
 
-        total_impacts = sum_impacts(*components)
+#         total_impacts = sum_impacts(*components)
         
-        def get_total_scope3():
-            url = f"{FASTAPI_BASE_URL}/scope3/total"
-            try:
-                response = requests.get(url)
-                response.raise_for_status()
-                result = response.json()
-                return result.get("total_scope3_gwp", 0.0)
-            except Exception as e:
-                st.error(f"Error fetching total Scope 3: {e}")
-                return 0.0
+#         def get_total_scope3():
+#             url = f"{FASTAPI_BASE_URL}/scope3/total"
+#             try:
+#                 response = requests.get(url)
+#                 response.raise_for_status()
+#                 result = response.json()
+#                 return result.get("total_scope3_gwp", 0.0)
+#             except Exception as e:
+#                 st.error(f"Error fetching total Scope 3: {e}")
+#                 return 0.0
 
-        # Display in Streamlit
-        total_scope3 = get_total_scope3()
+#         # Display in Streamlit
+#         total_scope3 = get_total_scope3()
 
         
 
 
-        st.subheader("Summary of Total Impacts")
-        for impact_type, vals in total_impacts.items():
-            manufacture = vals["manufacture"]
-            use = vals["use"]
-            unit = vals["unit"]
-            st.write(f"**{impact_type.upper()}**: Manufacture = {manufacture} {unit}")
+#         st.subheader("Summary of Total Impacts")
+#         for impact_type, vals in total_impacts.items():
+#             manufacture = vals["manufacture"]
+#             use = vals["use"]
+#             unit = vals["unit"]
+#             st.write(f"**{impact_type.upper()}**: Manufacture = {manufacture} {unit}")
 
 
-    with col2:
-        st.subheader("Scope 2 Value")
-        st.subheader("🌍 Total CO₂ (Live Sum)")
-        st.metric("All Resources", f"{global_total_co2_kg:.8f} kg")
+#     with col2:
+#         st.subheader("Scope 2 Value")
+#         st.subheader("🌍 Total CO₂ (Live Sum)")
+#         st.metric("All Resources", f"{global_total_co2_kg:.8f} kg")
 
 
-    with cols3:
-        st.subheader("Carbon Emissions Total")
-        total_manufacture_emissions = sum(vals["manufacture"] for vals in total_impacts.values() if "kgCO2eq" in vals["unit"])
-        combined_total_co2 = total_manufacture_emissions + global_total_co2_kg
-        st.subheader("🌍 Combined Carbon Footprint Summary")
-        st.metric(f"💯 **Total Estimated CO₂ Footprint:**",f"{combined_total_co2:.8f} kg CO₂eq")
+#     with cols3:
+#         st.subheader("Carbon Emissions Total")
+#         total_manufacture_emissions = sum(vals["manufacture"] for vals in total_impacts.values() if "kgCO2eq" in vals["unit"])
+#         combined_total_co2 = total_manufacture_emissions + global_total_co2_kg
+#         st.subheader("🌍 Combined Carbon Footprint Summary")
+#         st.metric(f"💯 **Total Estimated CO₂ Footprint:**",f"{combined_total_co2:.8f} kg CO₂eq")
 
 
 
