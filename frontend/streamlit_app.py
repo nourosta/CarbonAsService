@@ -971,12 +971,12 @@ with tab3:
     # except Exception as e:
     #     st.error(f"Failed to load carbon footprint: {e}")
 
-    resource_types = ["cpu", "gpu", "ram", "sd", "nic"]
+   
 
     def render_tab3():
         st.title("Scope 2 – Automatic CO₂ Conversion & Storage")
 
-        resource_types = ["cpu", "memory", "disk", "network"]
+        resource_types = ["cpu", "gpu", "ram", "sd", "nic"]
 
         try:
             # 🔎 Get latest carbon intensity
