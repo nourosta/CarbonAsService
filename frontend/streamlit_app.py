@@ -1491,18 +1491,19 @@ with tab3:
                 last_value = resp.json().get("co2_kg", 0.0)
 
                 increment = float(total_co2_kg) - float(last_value)
-                if increment > 0:
+                for _, row in carbon_summary.iterrows():
+                    if increment > 0:
 
-                    # Save only today's total for this resource type
-                    payload = {
-                        "process_name": "TOTAL",
-                        "resource_type": resource_type,
-                        "energy_kwh": float(energy_kwh_total),
-                        "co2_kg": float(total_co2_kg),
-                        "carbon_intensity": float(carbon_intensity)
-                    }
+                        # Save only today's total for this resource type
+                        payload = {
+                            "process_name": row["process_name"],
+                            "resource_type": resource_type,
+                            "energy_kwh": float(energy_kwh_total),
+                            "co2_kg": float(total_co2_kg),
+                            "carbon_intensity": float(carbon_intensity)
+                        }
 
-                    requests.post(f"{FASTAPI_BASE_URL}/scope2", json=payload).raise_for_status()
+                        requests.post(f"{FASTAPI_BASE_URL}/scope2", json=payload).raise_for_status()
                    
 
                 st.metric(f"🌫️ Total CO₂ Emissions Today ({resource_type.upper()})", f"{total_co2_kg:.8f} kg")
