@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from typing import List, Optional
 from scheduler import start_scheduler
-from models import EcoflocResult
+from models import Eco_Scope2Co2, EcoflocResult
 from fastapi import FastAPI,HTTPException , APIRouter, Query, Depends
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
@@ -742,17 +742,14 @@ class EcoScope2Co2Create(BaseModel):
     
 @app.post("/eco-scope2-co2")
 def save_co2(entry: EcoScope2Co2Create, db: Session = Depends(get_db)):
-    print("Received payload:", entry.dict())  # <-- debug
-    try:
-        result = create_eco_scope2_co2(
-            db,
-            pid=entry.pid,
-            resource_type=entry.resource_type,
-            energy_kwh=entry.energy_kwh,
-            co2_g=entry.co2_g
-        )
-        print("Inserted:", result)
-        return result
-    except Exception as e:
-        print("Error in create_eco_scope2_co2:", e)
-        raise HTTPException(status_code=500, detail=str(e))
+    db_entry = Eco_Scope2Co2(
+        pid=entry.pid,
+        process_name=entry.process_name,
+        energy_kwh=entry.energy_kwh,
+        carbon_intensity_gco2_per_kwh=entry.carbon_intensity_gco2_per_kwh,
+        carbon_emission_gco2=entry.carbon_emission_gco2
+    )
+    db.add(db_entry)
+    db.commit()
+    db.refresh(db_entry)
+    return db_entry
