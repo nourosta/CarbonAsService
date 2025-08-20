@@ -1276,7 +1276,7 @@ with tab2 :
           # Metrics summary
         total_energy_sum_j = total_energy['metric_value'].sum()
         total_energy_sum_kwh = total_energy_sum_j / 3_600_000
-        st.metric(f"🔋 Total Energy Today ({resource_type.upper()})", f"{total_energy_sum_j:.2f} J / {total_energy_sum_kwh:.2f} kWh")
+        st.metric(f"🔋 Total Energy Today ({resource_type.upper()})", f"{total_energy_sum_j:.2f} J / {total_energy_sum_kwh:.8f} kWh")
 
         top5 = total_energy.head(5).copy()
         top5['metric_value_kwh'] = top5['metric_value'] / 3_600_000
