@@ -631,7 +631,8 @@ with tab2 :
             continue  # Skip to next resource_type
 
         # Validate and clean data
-        required = ['timestamp', 'metric_value', 'metric_name', 'process_name']
+      # Validate and clean data
+        required = ['timestamp', 'metric_value', 'metric_name', 'process_name', 'pid']
         missing = [col for col in required if col not in df.columns]
         if missing:
             st.error(f"Missing expected columns in {resource_type}: {missing}")
@@ -651,42 +652,41 @@ with tab2 :
         if energy_df.empty:
             st.info(f"No energy data available for {resource_type}.")
             continue
-        
 
         # Total energy consumed today
         total_energy = (
-            energy_df.groupby("process_name")["metric_value"]
+            energy_df.groupby(["process_name", "pid"])["metric_value"]
             .sum()
             .reset_index()
             .sort_values(by="metric_value", ascending=False)
         )
 
-          # Calculate total energy in kWh
-        total_energy['metric_value_kwh'] = total_energy['metric_value'] / (3.6 / 10**6)  # Convert J to kWh
+        # Calculate total energy in kWh
+        total_energy['metric_value_kwh'] = total_energy['metric_value'] / 3_600_000  # Corrected: 1 kWh = 3,600,000 J
 
+        # Fetch carbon intensity and calculate CO2 emissions
         try:
             response = requests.get(f"{FASTAPI_BASE_URL}/carbon-intensity/last?zone=FR")
             response.raise_for_status()
             carbon_data = response.json()
-            carbon_intensity = carbon_data.get("carbonIntensity")  # in gCO2/kWh
-
-            # Multiply for each process
+            carbon_intensity = carbon_data.get("carbonIntensity", 370)  # Fallback value
             total_energy['co2_emission_g'] = total_energy['metric_value_kwh'] * carbon_intensity
 
+            # Store in eco_scope2co2 table
             for _, row in total_energy.iterrows():
                 payload = {
-                    "pid": row.get("process_name", None),
-                    "process_name": row.get("process_name", None),
-                    "energy_kwh": row['metric_value_kwh'],
-                    "carbon_intensity_gco2_per_kwh": carbon_intensity,
-                    "carbon_emission_gco2": row['co2_emission_g']
+                    "pid": str(row['pid']),
+                    "process_name": row['process_name'],  # Added process_name
+                    "resource_type": resource_type,
+                    "energy_kwh": float(row['metric_value_kwh']),
+                    "co2_g": float(row['co2_emission_g'])
                 }
                 try:
-                    post_resp = requests.post(f"{FASTAPI_BASE_URL}/eco-scope2-co2/", json=payload)
+                    post_resp = requests.post(f"{FASTAPI_BASE_URL}/eco-scope2-co2", json=payload)
                     post_resp.raise_for_status()
-                    st.write(f"Posted CO2 for process {row.get('process_name')}")
+                    st.success(f"Stored CO2 data for {row['process_name']} ({resource_type})")
                 except requests.RequestException as e:
-                    st.error(f"Failed to post energy data: {e}")
+                    st.error(f"Failed to store CO2 data for {row['process_name']} ({resource_type}): {e}")
         except Exception as e:
             st.error(f"Error fetching carbon intensity: {e}")
 
