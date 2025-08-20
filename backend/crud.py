@@ -262,9 +262,10 @@ def ingest_scope2_from_ecofloc(db, carbon_intensity_g_per_kwh: float, since_utc:
     return inserted
 
 
-def create_eco_scope2_co2(db: Session, pid: str, resource_type: str, energy_kwh: float, co2_g: float):
+def create_eco_scope2_co2(db: Session, pid: str, process_name: str, resource_type: str, energy_kwh: float, co2_g: float):
     db_entry = Eco_Scope2Co2(
         pid=pid,
+        process_name=process_name,  # Added process_name
         resource_type=resource_type,
         energy_kwh=energy_kwh,
         co2_g=co2_g,
