@@ -3,6 +3,7 @@ import json
 from database import SessionLocal
 from sqlalchemy.orm import Session
 from sqlalchemy import func
+from typing import Optional
 from models import CarbonIntensity, CaseImpact, EcoflocResult, GPUImpact, MotherboardImpact, PowerBreakdown, RAMImpact, SSDImpact, HDDImpact, CPUImpact, Scope2Result
 
 
@@ -223,7 +224,7 @@ def get_scope2_results(db: Session, skip: int = 0, limit: int = 100):
 
 
 
-def ingest_scope2_from_ecofloc(db, carbon_intensity_g_per_kwh: float, since_utc: datetime | None):
+def ingest_scope2_from_ecofloc(db, carbon_intensity_g_per_kwh: float, since_utc: Optional[datetime] = None):
     if since_utc is None:
         since_utc = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
 
