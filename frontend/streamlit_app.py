@@ -1547,7 +1547,7 @@ with tab3:
     #     st.error(f"Failed to load carbon footprint: {e}")
 
     def render_tab3():
-     st.title("🌍 Scope 2 CO₂ Emissions - Auto Refresh")
+        st.title("🌍 Scope 2 CO₂ Emissions - Auto Refresh")
 
         # 🔄 auto-refresh every 10s
         count = st_autorefresh(interval=10 * 1000, key="tab3refresh")
