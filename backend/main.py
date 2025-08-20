@@ -741,6 +741,9 @@ class EcoScope2Co2Create(BaseModel):
 
 @app.post("/eco-scope2-co2")
 def save_co2(entry: EcoScope2Co2Create, db: Session = Depends(get_db)):
+    # DEBUG: show incoming data
+    print("Incoming CO2 entry:", entry.dict())
+    
     return create_eco_scope2_co2(
         db,
         pid=entry.pid,
