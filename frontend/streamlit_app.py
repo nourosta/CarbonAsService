@@ -1546,77 +1546,114 @@ with tab3:
     # except Exception as e:
     #     st.error(f"Failed to load carbon footprint: {e}")
 
-    colA, colB = st.columns([1, 2])
+    def render_tab3():
+     st.title("🌍 Scope 2 CO₂ Emissions - Auto Refresh")
 
-    with colA:
-        st.caption("Carbon Intensity")
-        # 1) fetch current carbon intensity (gCO₂/kWh)
-        ci = None
-        updated_at = None
+        # 🔄 auto-refresh every 10s
+        count = st_autorefresh(interval=10 * 1000, key="tab3refresh")
+
+        # 🌫️ fetch latest carbon intensity
         try:
-            r = requests.get(f"{FASTAPI_BASE_URL}/carbon-intensity/last", params={"zone": ZONE}, timeout=10)
-            r.raise_for_status()
-            js = r.json()
-            ci = float(js.get("carbonIntensity"))
-            updated_at = js.get("updatedAt", "N/A")
-            st.metric("Current CI", f"{ci:.0f} gCO₂/kWh")
-            st.caption(f"Updated at: {updated_at}")
+            resp = requests.get(f"{FASTAPI_BASE_URL}/carbon-intensity/last?zone=FR")
+            resp.raise_for_status()
+            ci_data = resp.json()
+            carbon_intensity = ci_data.get("carbonIntensity")  # gCO₂/kWh
+            updated_at = ci_data.get("updatedAt", "N/A")
         except Exception as e:
-            st.warning(f"Could not fetch live carbon intensity ({e}). Using a fallback.")
-            ci = 370.0  # sensible default (adjust to your region)
+            st.error(f"❌ Failed to fetch carbon intensity: {e}")
+            st.stop()
 
-        # optional: let user override CI
-        ci = st.number_input("Override CI (gCO₂/kWh)", value=float(ci), min_value=0.0, step=1.0)
+        st.metric("Live Carbon Intensity", f"{carbon_intensity} gCO₂/kWh")
+        st.caption(f"Updated at: {updated_at}")
 
-        # since_utc (default = start of UTC day if left blank)
-        use_default_since = st.checkbox("Use start of today (UTC)", value=True)
-        since_utc = None
-        if not use_default_since:
-            since_utc = st.datetime_input("Since (UTC)", value=pd.Timestamp.utcnow().to_pydatetime())
+        global_total_co2_kg = 0
 
-        run_btn = st.button("Compute & Save Scope 2 from Ecofloc")
+        for resource_type in resource_types:
+            st.markdown(f"---\n### 🔎 Resource: {resource_type.upper()}")
 
-    with colB:
-        st.caption("Results")
-
-        if run_btn:
-            payload = {"carbon_intensity": float(ci)}
-            if since_utc:
-                payload["since_utc"] = pd.Timestamp(since_utc).tz_localize(None).isoformat()
-
+            # 📥 fetch ecofloc data
             try:
-                rr = requests.post(f"{FASTAPI_BASE_URL}/scope2/ingest", json=payload, timeout=30)
-                rr.raise_for_status()
-                rows = rr.json()
-
-                if not rows:
-                    st.info("No Ecofloc 'total energy' data found for the period.")
-                else:
-                    df_ins = pd.DataFrame(rows)
-                    # Quick metrics
-                    total_energy_kwh = df_ins["energy_kwh"].sum()
-                    total_co2_kg = df_ins["co2_kg"].sum()
-                    st.metric("Total energy (kWh)", f"{total_energy_kwh:.6f}")
-                    st.metric("Total CO₂ (kg)", f"{total_co2_kg:.6f}")
-
-                    # Top emitters
-                    by_proc = (
-                        df_ins.groupby(["process_name", "resource_type"], as_index=False)[["energy_kwh", "co2_kg"]]
-                        .sum()
-                        .sort_values("co2_kg", ascending=False)
-                    )
-                    st.subheader("Top emitters (this ingest)")
-                    st.table(by_proc.head(10))
-
-                    # Raw inserted rows
-                    with st.expander("Show inserted rows"):
-                        st.dataframe(df_ins)
-
+                resp = requests.get(f"{FASTAPI_BASE_URL}/ecofloc/{resource_type}")
+                resp.raise_for_status()
+                df = pd.DataFrame(resp.json())
             except Exception as e:
-                st.error(f"Ingest failed: {e}")
+                st.error(f"Error fetching {resource_type}: {e}")
+                continue
 
+            required = ['timestamp', 'metric_value', 'metric_name', 'process_name']
+            if not all(c in df.columns for c in required):
+                st.warning(f"Skipping {resource_type}, missing required cols.")
+                continue
+
+            # 🧹 clean
+            df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
+            df['metric_value'] = pd.to_numeric(df['metric_value'], errors='coerce')
+            df.dropna(subset=['timestamp', 'metric_value'], inplace=True)
+
+            # ⚡ only total energy
+            energy_df = df[df['metric_name'].str.lower().str.contains("total energy")]
+            if energy_df.empty:
+                st.info(f"No energy data for {resource_type}.")
+                continue
+
+            # 🔄 convert J → kWh → CO₂
+            energy_df['energy_kwh'] = energy_df['metric_value'] / 3_600_000
+            energy_df['co2_kg'] = (energy_df['energy_kwh'] * carbon_intensity) / 1000
+
+            # 📊 group by process
+            carbon_summary = (
+                energy_df.groupby("process_name")[["energy_kwh", "co2_kg"]]
+                .sum()
+                .reset_index()
+                .sort_values(by="co2_kg", ascending=False)
+            )
+
+            total_co2_kg = carbon_summary['co2_kg'].sum()
+            global_total_co2_kg += total_co2_kg
+
+            # 🌡️ show metric
+            st.metric(f"Total CO₂ Today ({resource_type.upper()})", f"{total_co2_kg:.4f} kg")
+
+            # 💾 insert into DB automatically
+            payload = {
+                "process_name": "TOTAL",
+                "resource_type": resource_type,
+                "energy_kwh": float(energy_df['energy_kwh'].sum()),
+                "co2_kg": float(total_co2_kg),
+                "carbon_intensity": float(carbon_intensity)
+            }
+            try:
+                requests.post(f"{FASTAPI_BASE_URL}/scope2", json=payload).raise_for_status()
+            except Exception as e:
+                st.warning(f"DB insert failed for {resource_type}: {e}")
+
+            # 📊 bar + line plots
+            fig_bar = px.bar(
+                carbon_summary, x="process_name", y="co2_kg",
+                labels={"process_name": "Process", "co2_kg": "CO₂ (kg)"},
+                title=f"{resource_type.upper()} - CO₂ by Process"
+            )
+
+            fig_line = px.line(
+                energy_df, x="timestamp", y="co2_kg", color="process_name",
+                labels={"timestamp": "Time", "co2_kg": "CO₂ (kg)", "process_name": "Process"},
+                title=f"{resource_type.upper()} - CO₂ over Time"
+            )
+
+            col1, col2 = st.columns(2)
+            with col1:
+                st.plotly_chart(fig_bar, use_container_width=True, key=f"{resource_type}_bar")
+            with col2:
+                st.plotly_chart(fig_line, use_container_width=True, key=f"{resource_type}_line")
+
+            # 🏭 Top emitters table
+            top5 = carbon_summary.head(5).copy()
+            st.subheader(f"🏭 Top 5 CO₂ Emitters ({resource_type.upper()})")
+            st.table(top5[['process_name', 'co2_kg', 'energy_kwh']])
+
+    # 🌍 show global summary
     st.markdown("---")
-    st.caption("Tip: you can set Tab 3 to auto-refresh if you want to trigger ingests periodically, or schedule it in the backend.")
+    st.metric("🌍 Global Total CO₂ (all resources)", f"{global_total_co2_kg:.4f} kg")
 # with tab4:
 
 #     st.title("Carbon Footprint Summary")
