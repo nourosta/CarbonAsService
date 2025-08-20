@@ -733,12 +733,13 @@ def ingest_scope2(payload: Scope2IngestRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Ingest failed: {e}")
     
 class EcoScope2Co2Create(BaseModel):
-    pid: str
-    resource_type: str
+    pid: int                          # must be integer
+    process_name: str                  # instead of resource_type
     energy_kwh: float
-    co2_g: float
-    
+    carbon_intensity_gco2_per_kwh: float
+    carbon_emission_gco2: float
 
+    
 @app.post("/eco-scope2-co2")
 def save_co2(entry: EcoScope2Co2Create, db: Session = Depends(get_db)):
     print("Received payload:", entry.dict())  # <-- debug
