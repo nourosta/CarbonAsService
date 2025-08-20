@@ -738,9 +738,8 @@ class EcoScope2Co2Create(BaseModel):
     energy_kwh: float
     co2_g: float
     
-router = APIRouter()
 
-@router.post("/eco-scope2-co2")
+@app.post("/eco-scope2-co2")
 def save_co2(entry: EcoScope2Co2Create, db: Session = Depends(get_db)):
     return create_eco_scope2_co2(
         db,
