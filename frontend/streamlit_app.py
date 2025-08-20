@@ -664,6 +664,33 @@ with tab2 :
           # Calculate total energy in kWh
         total_energy['metric_value_kwh'] = total_energy['metric_value'] / (3.6 / 10**6)  # Convert J to kWh
 
+        try:
+            response = requests.get(f"{FASTAPI_BASE_URL}/carbon-intensity/last?zone=FR")
+            response.raise_for_status()
+            carbon_data = response.json()
+            carbon_intensity = carbon_data.get("carbonIntensity")  # in gCO2/kWh
+
+            # Multiply for each process
+            total_energy['co2_emission_g'] = total_energy['metric_value_kwh'] * carbon_intensity
+
+              # Optionally: store into DB
+            for _, row in total_energy.iterrows():
+                payload = {
+                    "pid": row.get("pid", None),  # if available in your dataframe
+                    "resource_type": resource_type,
+                    "energy_kwh": row['metric_value_kwh'],
+                    "co2_g": row['co2_g']
+                }
+            try:
+                post_resp = requests.post(f"{FASTAPI_BASE_URL}/eco-scope2-co2/", json=payload)
+                post_resp.raise_for_status()
+            except requests.RequestException as e:
+                st.error(f"Failed to post energy data: {e}")
+
+        except Exception as e:
+            st.error(f"Error fetching carbon intensity: {e}")
+
+
         # Layout: bar + line plots
         col1, col2 = st.columns(2)
 

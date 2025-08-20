@@ -109,3 +109,14 @@ class Scope2Result(Base):
     energy_kwh = Column(Float)               # Energy in kWh
     carbon_intensity = Column(Float)         # gCO₂/kWh at computation time
     timestamp = Column(DateTime, default=datetime.utcnow)
+
+class Eco_Scope2Co2(Base):
+    __tablename__ = "eco_scope2co2"
+
+    id = Column(Integer, primary_key=True, index=True)
+    pid = Column(Integer, nullable=False)                    # Process ID
+    process_name = Column(String, nullable=False)            # Name of the monitored process
+    energy_kwh = Column(Float, nullable=False)               # Energy consumption in kWh
+    carbon_intensity_gco2_per_kwh = Column(Float, nullable=False)  # Current carbon intensity
+    carbon_emission_gco2 = Column(Float, nullable=False)     # Computed CO2 emissions
+    timestamp = Column(DateTime, default=datetime.utcnow)

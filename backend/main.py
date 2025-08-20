@@ -11,7 +11,7 @@ from system_info import collect_system_info, get_top_processes_ps
 import json 
 import requests
 from pydantic import BaseModel
-from crud import create_scope2_result, get_all_carbon_intensity_by_zone, get_latest_carbon_intensity_by_zone, get_scope2_results, get_total_scope3_emissions, ingest_scope2_from_ecofloc, save_case, save_motherboard, store_power_breakdown, store_carbon_intensity, save_ram,save_gpu,save_hdd,save_ssd, save_cpu
+from crud import create_eco_scope2_co2, create_scope2_result, get_all_carbon_intensity_by_zone, get_latest_carbon_intensity_by_zone, get_scope2_results, get_total_scope3_emissions, ingest_scope2_from_ecofloc, save_case, save_motherboard, store_power_breakdown, store_carbon_intensity, save_ram,save_gpu,save_hdd,save_ssd, save_cpu
 from database import get_db, init_db
 from fastapi.middleware.cors import CORSMiddleware
 from system_info import get_top_processes_ps
@@ -731,3 +731,21 @@ def ingest_scope2(payload: Scope2IngestRequest, db: Session = Depends(get_db)):
         return results
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Ingest failed: {e}")
+    
+class EcoScope2Co2Create(BaseModel):
+    pid: str
+    resource_type: str
+    energy_kwh: float
+    co2_g: float
+    
+router = APIRouter()
+
+@router.post("/eco-scope2-co2")
+def save_co2(entry: EcoScope2Co2Create, db: Session = Depends(get_db)):
+    return create_eco_scope2_co2(
+        db,
+        pid=entry.pid,
+        resource_type=entry.resource_type,
+        energy_kwh=entry.energy_kwh,
+        co2_g=entry.co2_g
+    )

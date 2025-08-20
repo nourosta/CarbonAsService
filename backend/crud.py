@@ -4,7 +4,7 @@ from database import SessionLocal
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from typing import Optional
-from models import CarbonIntensity, CaseImpact, EcoflocResult, GPUImpact, MotherboardImpact, PowerBreakdown, RAMImpact, SSDImpact, HDDImpact, CPUImpact, Scope2Result
+from models import CarbonIntensity, CaseImpact, Eco_Scope2Co2, EcoflocResult, GPUImpact, MotherboardImpact, PowerBreakdown, RAMImpact, SSDImpact, HDDImpact, CPUImpact, Scope2Result
 
 
 def save_cpu(model, gwp, adp, pe):
@@ -260,3 +260,17 @@ def ingest_scope2_from_ecofloc(db, carbon_intensity_g_per_kwh: float, since_utc:
         db.refresh(s)
 
     return inserted
+
+
+def create_eco_scope2_co2(db: Session, pid: str, resource_type: str, energy_kwh: float, co2_g: float):
+    db_entry = Eco_Scope2Co2(
+        pid=pid,
+        resource_type=resource_type,
+        energy_kwh=energy_kwh,
+        co2_g=co2_g,
+        timestamp=datetime.utcnow()
+    )
+    db.add(db_entry)
+    db.commit()
+    db.refresh(db_entry)
+    return db_entry
