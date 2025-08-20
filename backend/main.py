@@ -733,23 +733,28 @@ def ingest_scope2(payload: Scope2IngestRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Ingest failed: {e}")
     
 class EcoScope2Co2Create(BaseModel):
-    pid: int                          # must be integer
-    process_name: str                  # instead of resource_type
+    pid: str
+    process_name: str
+    resource_type: str
     energy_kwh: float
-    carbon_intensity_gco2_per_kwh: float
-    carbon_emission_gco2: float
+    carbon_intensity_gco2_per_kwh: float  # Added
+    carbon_emission_gco2: float  # Renamed from co2_g
 
-    
 @app.post("/eco-scope2-co2")
 def save_co2(entry: EcoScope2Co2Create, db: Session = Depends(get_db)):
-    db_entry = Eco_Scope2Co2(
-        pid=entry.pid,
-        process_name=entry.process_name,
-        energy_kwh=entry.energy_kwh,
-        carbon_intensity_gco2_per_kwh=entry.carbon_intensity_gco2_per_kwh,
-        carbon_emission_gco2=entry.carbon_emission_gco2
-    )
-    db.add(db_entry)
-    db.commit()
-    db.refresh(db_entry)
-    return db_entry
+    print("Received payload:", entry.dict())
+    try:
+        result = create_eco_scope2_co2(
+            db,
+            pid=entry.pid,
+            process_name=entry.process_name,
+            resource_type=entry.resource_type,
+            energy_kwh=entry.energy_kwh,
+            carbon_intensity_gco2_per_kwh=entry.carbon_intensity_gco2_per_kwh,
+            carbon_emission_gco2=entry.carbon_emission_gco2
+        )
+        print("Inserted:", result)
+        return result
+    except Exception as e:
+        print("Error in create_eco_scope2_co2:", e)
+        raise HTTPException(status_code=500, detail=str(e))

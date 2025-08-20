@@ -662,7 +662,7 @@ with tab2 :
         )
 
         # Calculate total energy in kWh
-        total_energy['metric_value_kwh'] = total_energy['metric_value'] / 3_600_000  # Corrected: 1 kWh = 3,600,000 J
+        total_energy['metric_value_kwh'] = total_energy['metric_value'] / 3_600_000  # 1 kWh = 3,600,000 J
 
         # Fetch carbon intensity and calculate CO2 emissions
         try:
@@ -676,17 +676,20 @@ with tab2 :
             for _, row in total_energy.iterrows():
                 payload = {
                     "pid": str(row['pid']),
-                    "process_name": row['process_name'],  # Added process_name
+                    "process_name": row['process_name'],
                     "resource_type": resource_type,
                     "energy_kwh": float(row['metric_value_kwh']),
-                    "co2_g": float(row['co2_emission_g'])
+                    "carbon_intensity_gco2_per_kwh": float(carbon_intensity),
+                    "carbon_emission_gco2": float(row['co2_emission_g'])
                 }
                 try:
+                    st.write(f"Posting payload: {payload}")  # Debug
                     post_resp = requests.post(f"{FASTAPI_BASE_URL}/eco-scope2-co2", json=payload)
                     post_resp.raise_for_status()
                     st.success(f"Stored CO2 data for {row['process_name']} ({resource_type})")
                 except requests.RequestException as e:
                     st.error(f"Failed to store CO2 data for {row['process_name']} ({resource_type}): {e}")
+
         except Exception as e:
             st.error(f"Error fetching carbon intensity: {e}")
 
