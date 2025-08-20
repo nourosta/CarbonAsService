@@ -1,6 +1,8 @@
+from datetime import datetime
 import json
 from database import SessionLocal
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from models import CarbonIntensity, CaseImpact, EcoflocResult, GPUImpact, MotherboardImpact, PowerBreakdown, RAMImpact, SSDImpact, HDDImpact, CPUImpact, Scope2Result
 
 
@@ -220,31 +222,40 @@ def get_scope2_results(db: Session, skip: int = 0, limit: int = 100):
     return db.query(Scope2Result).offset(skip).limit(limit).all()
 
 
-def process_and_store_scope2_results(db: Session, carbon_intensity: float):
-    """
-    Processes ecofloc results, computes CO₂ emissions using the carbon intensity, 
-    and stores them in the Scope2Result table.
-    """
-    # Fetch relevant ecofloc results
-    ecofloc_results = db.query(EcoflocResult).all()
-    
-    for result in ecofloc_results:
-        # Convert energy metric to kWh
-        energy_kwh = result.metric_value / 3_600_000  
-        # Compute CO₂ in kilograms
-        co2_kg = energy_kwh * carbon_intensity / 1000  
 
-        # Create Scope2Result entry
-        scope2_result = Scope2Result(
-            process_name=result.process_name,
-            resource_type=result.resource_type,
-            energy_kwh=energy_kwh,
-            co2_kg=co2_kg,
-            carbon_intensity=carbon_intensity,
-            timestamp=result.timestamp
+def ingest_scope2_from_ecofloc(db, carbon_intensity_g_per_kwh: float, since_utc: datetime | None):
+    if since_utc is None:
+        since_utc = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+
+    # sum Joules per (process_name, resource_type) for “total energy” today
+    rows = (
+        db.query(
+            EcoflocResult.process_name.label("process_name"),
+            EcoflocResult.resource_type.label("resource_type"),
+            func.sum(EcoflocResult.metric_value).label("total_j")
         )
-        
-        # Add and commit scope2 result to the database
-        db.add(scope2_result)
-    
+        .filter(EcoflocResult.metric_name.ilike("%total energy%"))
+        .filter(EcoflocResult.timestamp >= since_utc)
+        .group_by(EcoflocResult.process_name, EcoflocResult.resource_type)
+        .all()
+    )
+    JOULES_PER_KWH = 3_600_000
+    inserted = []
+    for r in rows:
+        energy_kwh = (r.total_j or 0.0) / JOULES_PER_KWH
+        co2_kg = (energy_kwh * carbon_intensity_g_per_kwh) / 1000.0
+        s = Scope2Result(
+            process_name=r.process_name or "unknown",
+            resource_type=r.resource_type,
+            energy_kwh=float(energy_kwh),
+            co2_kg=float(co2_kg),
+            carbon_intensity=float(carbon_intensity_g_per_kwh),
+        )
+        db.add(s)
+        inserted.append(s)
+
     db.commit()
+    for s in inserted:
+        db.refresh(s)
+
+    return inserted

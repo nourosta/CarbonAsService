@@ -1546,67 +1546,77 @@ with tab3:
     # except Exception as e:
     #     st.error(f"Failed to load carbon footprint: {e}")
 
-    # Title of the Dashboard
-    st.title("Carbon Emissions Dashboard")
-    st.subheader("Scope 2 Emissions")
+    colA, colB = st.columns([1, 2])
 
-    # Helper Function to Fetch Scope 2 Emissions Data
-    def fetch_scope2_data():
-        """Fetch scope 2 emissions data from FastAPI."""
+    with colA:
+        st.caption("Carbon Intensity")
+        # 1) fetch current carbon intensity (gCO₂/kWh)
+        ci = None
+        updated_at = None
         try:
-            response = requests.get(f"{FASTAPI_BASE_URL}/scope2")
-            response.raise_for_status()  # Ensure no HTTP errors occurred
-            return response.json()
-        except requests.RequestException as e:
-            st.error(f"Error fetching Scope 2 emissions data: {str(e)}")
-            return []
+            r = requests.get(f"{FASTAPI_BASE_URL}/carbon-intensity/last", params={"zone": ZONE}, timeout=10)
+            r.raise_for_status()
+            js = r.json()
+            ci = float(js.get("carbonIntensity"))
+            updated_at = js.get("updatedAt", "N/A")
+            st.metric("Current CI", f"{ci:.0f} gCO₂/kWh")
+            st.caption(f"Updated at: {updated_at}")
+        except Exception as e:
+            st.warning(f"Could not fetch live carbon intensity ({e}). Using a fallback.")
+            ci = 370.0  # sensible default (adjust to your region)
 
-    # Function to Display Scope 2 Data
-    def display_scope2_data(scope2_data):
-        """Display Scope 2 emissions in a table and charts."""
-        if scope2_data:
-            # Convert to DataFrame for easier manipulation and visualization
-            df = pd.DataFrame(scope2_data)
+        # optional: let user override CI
+        ci = st.number_input("Override CI (gCO₂/kWh)", value=float(ci), min_value=0.0, step=1.0)
 
-            # Check if there are necessary columns
-            if not {'process_name', 'resource_type', 'co2_kg', 'energy_kwh', 'timestamp'}.issubset(df.columns):
-                st.error("Missing data columns.")
-                return
+        # since_utc (default = start of UTC day if left blank)
+        use_default_since = st.checkbox("Use start of today (UTC)", value=True)
+        since_utc = None
+        if not use_default_since:
+            since_utc = st.datetime_input("Since (UTC)", value=pd.Timestamp.utcnow().to_pydatetime())
 
-            # Display Raw Data
-            st.dataframe(df)
+        run_btn = st.button("Compute & Save Scope 2 from Ecofloc")
 
-            # Total Scope 2 Emissions
-            total_co2_kg = df['co2_kg'].sum()
-            st.metric(label="🏭 Total CO₂ Emissions", value=f"{total_co2_kg:.2f} kg")
+    with colB:
+        st.caption("Results")
 
-            # Plotting - CO₂ Emissions by Process
-            fig_bar = px.bar(
-                df,
-                x='process_name',
-                y='co2_kg',
-                color='resource_type',
-                title='CO₂ Emissions by Process',
-                labels={'co2_kg': 'CO₂ (kg)', 'process_name': 'Process Name'}
-            )
-            st.plotly_chart(fig_bar, use_container_width=True)
+        if run_btn:
+            payload = {"carbon_intensity": float(ci)}
+            if since_utc:
+                payload["since_utc"] = pd.Timestamp(since_utc).tz_localize(None).isoformat()
 
-            # Filter by Resource Type
-            resource_options = df['resource_type'].unique()
-            selected_resource = st.selectbox("Select a Resource Type", resource_options)
+            try:
+                rr = requests.post(f"{FASTAPI_BASE_URL}/scope2/ingest", json=payload, timeout=30)
+                rr.raise_for_status()
+                rows = rr.json()
 
-            # Optionally filter data based on selection
-            filtered_data = df[df['resource_type'] == selected_resource]
-            st.subheader(f"Filtered Scope 2 Emissions for: {selected_resource}")
-            st.dataframe(filtered_data)
-        else:
-            st.warning("No Scope 2 emissions data found.")
+                if not rows:
+                    st.info("No Ecofloc 'total energy' data found for the period.")
+                else:
+                    df_ins = pd.DataFrame(rows)
+                    # Quick metrics
+                    total_energy_kwh = df_ins["energy_kwh"].sum()
+                    total_co2_kg = df_ins["co2_kg"].sum()
+                    st.metric("Total energy (kWh)", f"{total_energy_kwh:.6f}")
+                    st.metric("Total CO₂ (kg)", f"{total_co2_kg:.6f}")
 
-    # Main Execution: Fetch and Display Data
-    scope2_data = fetch_scope2_data()
-    display_scope2_data(scope2_data)
+                    # Top emitters
+                    by_proc = (
+                        df_ins.groupby(["process_name", "resource_type"], as_index=False)[["energy_kwh", "co2_kg"]]
+                        .sum()
+                        .sort_values("co2_kg", ascending=False)
+                    )
+                    st.subheader("Top emitters (this ingest)")
+                    st.table(by_proc.head(10))
 
+                    # Raw inserted rows
+                    with st.expander("Show inserted rows"):
+                        st.dataframe(df_ins)
 
+            except Exception as e:
+                st.error(f"Ingest failed: {e}")
+
+    st.markdown("---")
+    st.caption("Tip: you can set Tab 3 to auto-refresh if you want to trigger ingests periodically, or schedule it in the backend.")
 with tab4:
 
     st.title("Carbon Footprint Summary")
