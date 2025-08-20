@@ -676,7 +676,7 @@ with tab2 :
               # Optionally: store into DB
             for _, row in total_energy.iterrows():
                 payload = {
-                    "pid": row.get("pid", None),  # if available in your dataframe
+                    "pid": row.get("process_name", None),  # if available in your dataframe
                     "resource_type": resource_type,
                     "energy_kwh": row['metric_value_kwh'],
                     "co2_g": row['co2_g']
