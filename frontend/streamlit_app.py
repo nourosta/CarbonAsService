@@ -1001,113 +1001,192 @@ with tab3:
     #     st.error(f"Failed to load carbon footprint: {e}")
 
    
-    st.title("⚡ Live Carbon Footprint per Resource")
+    # st.title("⚡ Live Carbon Footprint per Resource")
 
-    # Fetch latest carbon intensity
+    # # Fetch latest carbon intensity
+    # try:
+    #     response = requests.get(f"{FASTAPI_BASE_URL}/carbon-intensity/last?zone=FR")
+    #     response.raise_for_status()
+    #     carbon_data = response.json()
+    #     carbon_intensity = carbon_data.get("carbonIntensity")
+    #     updated_at = carbon_data.get("updatedAt", "N/A")
+
+    #     if carbon_intensity is None:
+    #         st.error("Carbon intensity data is not available.")
+    #         st.stop()
+
+    #     st.subheader("Live Carbon Intensity")
+    #     st.metric("Carbon Intensity", f"{carbon_intensity} gCO₂eq/kWh", delta=None)
+    #     st.caption(f"Updated at: {updated_at}")
+
+    # except Exception as e:
+    #     st.error(f"Failed to fetch carbon intensity: {e}")
+    #     st.stop()
+
+    # # Global CO₂ accumulator
+    # global_total_co2_kg = 0
+
+    # # Loop over all resources
+    # for resource_type in resource_types:
+    #     st.markdown(f"### 🔎 Resource: {resource_type.upper()}")
+
+    #     try:
+    #         # Fetch Ecofloc data
+    #         response = requests.get(f"{FASTAPI_BASE_URL}/ecofloc/{resource_type}")
+    #         response.raise_for_status()
+    #         df = pd.DataFrame(response.json())
+    #     except Exception as e:
+    #         st.error(f"Error fetching data for {resource_type}: {e}")
+    #         continue
+
+    #     required_cols = ['timestamp', 'metric_value', 'metric_name', 'process_name', 'pid']
+    #     if not all(col in df.columns for col in required_cols):
+    #         st.warning(f"Skipping {resource_type} due to missing columns")
+    #         continue
+
+    #     df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
+    #     df['metric_value'] = pd.to_numeric(df['metric_value'], errors='coerce')
+    #     df.dropna(subset=['timestamp', 'metric_value'], inplace=True)
+    #     df['process_name'] = df['process_name'].astype(str)
+
+    #     # Filter total energy metrics
+    #     energy_df = df[df['metric_name'].str.lower().str.contains("total energy")]
+    #     if energy_df.empty:
+    #         st.info(f"No total energy data for {resource_type}.")
+    #         continue
+
+    #     # Energy → kWh and CO₂ conversion
+    #     energy_df['energy_kwh'] = energy_df['metric_value'] / 3_600_000
+    #     energy_df['co2_g'] = energy_df['energy_kwh'] * carbon_intensity
+    #     energy_df['co2_kg'] = energy_df['co2_g'] / 1000
+
+    #     # Group by process & PID
+    #     carbon_summary = (
+    #         energy_df.groupby(["process_name", "pid"])[["co2_kg", "energy_kwh"]]
+    #         .sum()
+    #         .reset_index()
+    #         .sort_values(by="co2_kg", ascending=False)
+    #     )
+
+    #     total_co2_kg = carbon_summary['co2_kg'].sum()
+    #     global_total_co2_kg += total_co2_kg
+
+    #     st.metric(f"🌫️ Total CO₂ Emissions Today ({resource_type.upper()})", f"{total_co2_kg:.8f} kg")
+
+    #     # Bar chart: CO₂ by process
+    #     fig_bar = px.bar(
+    #         carbon_summary,
+    #         x="process_name",
+    #         y="co2_kg",
+    #         color="process_name",
+    #         labels={"process_name": "Process", "co2_kg": "CO₂ (kg)"},
+    #         title=f"{resource_type.upper()} - CO₂ by Process",
+    #     )
+
+    #     # Line chart: CO₂ over time per process
+    #     fig_line = px.line(
+    #         energy_df,
+    #         x="timestamp",
+    #         y="co2_kg",
+    #         color="process_name",
+    #         labels={"timestamp": "Time", "co2_kg": "CO₂ (kg)", "process_name": "Process"},
+    #         title=f"{resource_type.upper()} - CO₂ Over Time"
+    #     )
+    #     fig_line.update_layout(height=500)
+
+    #     # Display charts with unique keys
+    #     col1, col2 = st.columns(2)
+    #     with col1:
+    #         st.plotly_chart(fig_bar, use_container_width=True, key=f"{resource_type}_bar_{datetime.now().timestamp()}")
+    #     with col2:
+    #         st.plotly_chart(fig_line, use_container_width=True, key=f"{resource_type}_line_{datetime.now().timestamp()}")
+
+    #     # Top 5 emitters
+    #     top5 = carbon_summary.head(5).copy()
+    #     st.subheader(f"🏭 Top 5 CO₂ Emitters ({resource_type.upper()})")
+    #     st.table(top5[['process_name', 'pid', 'co2_kg', 'energy_kwh']])
+
+    # st.markdown(f"## 🌍 Total CO₂ Today Across All Resources: {global_total_co2_kg:.8f} kg")
+    # #render_tab3()
+
+    # Fetch stored data from eco_scope2co2 table
     try:
-        response = requests.get(f"{FASTAPI_BASE_URL}/carbon-intensity/last?zone=FR")
+        response = requests.get(f"{FASTAPI_BASE_URL}/eco-scope2-co2")
         response.raise_for_status()
-        carbon_data = response.json()
-        carbon_intensity = carbon_data.get("carbonIntensity")
-        updated_at = carbon_data.get("updatedAt", "N/A")
-
-        if carbon_intensity is None:
-            st.error("Carbon intensity data is not available.")
-            st.stop()
-
-        st.subheader("Live Carbon Intensity")
-        st.metric("Carbon Intensity", f"{carbon_intensity} gCO₂eq/kWh", delta=None)
-        st.caption(f"Updated at: {updated_at}")
-
+        data = response.json()
+        df = pd.DataFrame(data)
     except Exception as e:
-        st.error(f"Failed to fetch carbon intensity: {e}")
+        st.error(f"Error fetching stored CO2 data: {e}")
         st.stop()
 
-    # Global CO₂ accumulator
-    global_total_co2_kg = 0
+    if df.empty:
+        st.info("No stored CO2 data available.")
+        st.stop()
 
-    # Loop over all resources
-    for resource_type in resource_types:
-        st.markdown(f"### 🔎 Resource: {resource_type.upper()}")
+    # Clean data
+    df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
+    df['energy_kwh'] = pd.to_numeric(df['energy_kwh'], errors='coerce')
+    df['carbon_emission_gco2'] = pd.to_numeric(df['carbon_emission_gco2'], errors='coerce')
+    df['co2_kg'] = df['carbon_emission_gco2'] / 1000  # Convert g to kg for plotting
+    df.dropna(subset=['timestamp', 'co2_kg'], inplace=True)
 
-        try:
-            # Fetch Ecofloc data
-            response = requests.get(f"{FASTAPI_BASE_URL}/ecofloc/{resource_type}")
-            response.raise_for_status()
-            df = pd.DataFrame(response.json())
-        except Exception as e:
-            st.error(f"Error fetching data for {resource_type}: {e}")
-            continue
+    # Total stored CO2
+    total_co2_kg = df['co2_kg'].sum()
+    st.metric("🌫️ Total Stored CO₂ Emissions", f"{total_co2_kg:.8f} kg")
 
-        required_cols = ['timestamp', 'metric_value', 'metric_name', 'process_name', 'pid']
-        if not all(col in df.columns for col in required_cols):
-            st.warning(f"Skipping {resource_type} due to missing columns")
-            continue
+    # Bar Plot: Total CO2 by Resource Type
+    carbon_summary_resource = (
+        df.groupby("resource_type")["co2_kg"]
+        .sum()
+        .reset_index()
+        .sort_values(by="co2_kg", ascending=False)
+    )
+    fig_bar_resource = px.bar(
+        carbon_summary_resource,
+        x="resource_type",
+        y="co2_kg",
+        labels={"resource_type": "Resource Type", "co2_kg": "CO₂ (kg)"},
+        title="Stored CO₂ Emissions by Resource Type"
+    )
+    st.plotly_chart(fig_bar_resource, use_container_width=True)
 
-        df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
-        df['metric_value'] = pd.to_numeric(df['metric_value'], errors='coerce')
-        df.dropna(subset=['timestamp', 'metric_value'], inplace=True)
-        df['process_name'] = df['process_name'].astype(str)
+    # Bar Plot: Total CO2 by Process Name
+    carbon_summary_process = (
+        df.groupby("process_name")["co2_kg"]
+        .sum()
+        .reset_index()
+        .sort_values(by="co2_kg", ascending=False)
+    )
+    fig_bar_process = px.bar(
+        carbon_summary_process,
+        x="process_name",
+        y="co2_kg",
+        labels={"process_name": "Process", "co2_kg": "CO₂ (kg)"},
+        title="Stored CO₂ Emissions by Process"
+    )
+    st.plotly_chart(fig_bar_process, use_container_width=True)
 
-        # Filter total energy metrics
-        energy_df = df[df['metric_name'].str.lower().str.contains("total energy")]
-        if energy_df.empty:
-            st.info(f"No total energy data for {resource_type}.")
-            continue
+    # Line Plot: CO2 Over Time (colored by process_name)
+    fig_line = px.line(
+        df,
+        x="timestamp",
+        y="co2_kg",
+        color="process_name",
+        labels={"timestamp": "Time", "co2_kg": "CO₂ (kg)", "process_name": "Process"},
+        title="Stored CO₂ Emissions Over Time"
+    )
+    fig_line.update_layout(height=500)
+    st.plotly_chart(fig_line, use_container_width=True)
 
-        # Energy → kWh and CO₂ conversion
-        energy_df['energy_kwh'] = energy_df['metric_value'] / 3_600_000
-        energy_df['co2_g'] = energy_df['energy_kwh'] * carbon_intensity
-        energy_df['co2_kg'] = energy_df['co2_g'] / 1000
+    # Table: Top 5 Emitters (by CO2 kg)
+    top5 = carbon_summary_process.head(5).copy()
+    st.subheader("🏭 Top 5 Stored CO₂ Emitters")
+    st.table(top5[['process_name', 'co2_kg']])
 
-        # Group by process & PID
-        carbon_summary = (
-            energy_df.groupby(["process_name", "pid"])[["co2_kg", "energy_kwh"]]
-            .sum()
-            .reset_index()
-            .sort_values(by="co2_kg", ascending=False)
-        )
+    # Full Data Table (optional, for reference)
+    st.subheader("Raw Stored Data")
+    st.dataframe(df[['process_name', 'resource_type', 'energy_kwh', 'carbon_emission_gco2', 'co2_kg', 'timestamp']])
 
-        total_co2_kg = carbon_summary['co2_kg'].sum()
-        global_total_co2_kg += total_co2_kg
-
-        st.metric(f"🌫️ Total CO₂ Emissions Today ({resource_type.upper()})", f"{total_co2_kg:.8f} kg")
-
-        # Bar chart: CO₂ by process
-        fig_bar = px.bar(
-            carbon_summary,
-            x="process_name",
-            y="co2_kg",
-            color="process_name",
-            labels={"process_name": "Process", "co2_kg": "CO₂ (kg)"},
-            title=f"{resource_type.upper()} - CO₂ by Process",
-        )
-
-        # Line chart: CO₂ over time per process
-        fig_line = px.line(
-            energy_df,
-            x="timestamp",
-            y="co2_kg",
-            color="process_name",
-            labels={"timestamp": "Time", "co2_kg": "CO₂ (kg)", "process_name": "Process"},
-            title=f"{resource_type.upper()} - CO₂ Over Time"
-        )
-        fig_line.update_layout(height=500)
-
-        # Display charts with unique keys
-        col1, col2 = st.columns(2)
-        with col1:
-            st.plotly_chart(fig_bar, use_container_width=True, key=f"{resource_type}_bar_{datetime.now().timestamp()}")
-        with col2:
-            st.plotly_chart(fig_line, use_container_width=True, key=f"{resource_type}_line_{datetime.now().timestamp()}")
-
-        # Top 5 emitters
-        top5 = carbon_summary.head(5).copy()
-        st.subheader(f"🏭 Top 5 CO₂ Emitters ({resource_type.upper()})")
-        st.table(top5[['process_name', 'pid', 'co2_kg', 'energy_kwh']])
-
-    st.markdown(f"## 🌍 Total CO₂ Today Across All Resources: {global_total_co2_kg:.8f} kg")
-    #render_tab3()
 with tab4:
 
     st.title("Carbon Footprint Summary")

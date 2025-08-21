@@ -758,3 +758,20 @@ def save_co2(entry: EcoScope2Co2Create, db: Session = Depends(get_db)):
     except Exception as e:
         print("Error in create_eco_scope2_co2:", e)
         raise HTTPException(status_code=500, detail=str(e))
+    
+class EcoScope2Co2Out(BaseModel):
+    id: int
+    pid: str
+    process_name: str
+    resource_type: str
+    energy_kwh: float
+    carbon_intensity_gco2_per_kwh: float
+    carbon_emission_gco2: float
+    timestamp: datetime
+
+    class Config:
+        orm_mode = True
+
+@app.get("/eco-scope2-co2", response_model=List[EcoScope2Co2Out])
+def get_eco_scope2_co2(db: Session = Depends(get_db)):
+    return db.query(Eco_Scope2Co2).order_by(Eco_Scope2Co2.timestamp.asc()).all()
