@@ -1110,6 +1110,7 @@ with tab3:
     # #render_tab3()
 
     # Fetch stored data from eco_scope2co2 table
+    # Fetch stored data from eco_scope2co2 table
     try:
         response = requests.get(f"{FASTAPI_BASE_URL}/eco-scope2-co2")
         response.raise_for_status()
@@ -1128,63 +1129,69 @@ with tab3:
     df['energy_kwh'] = pd.to_numeric(df['energy_kwh'], errors='coerce')
     df['carbon_emission_gco2'] = pd.to_numeric(df['carbon_emission_gco2'], errors='coerce')
     df['co2_kg'] = df['carbon_emission_gco2'] / 1000  # Convert g to kg for plotting
-    df.dropna(subset=['timestamp', 'co2_kg'], inplace=True)
+    df.dropna(subset=['timestamp', 'co2_kg', 'resource_type', 'process_name'], inplace=True)
+    df['process_name'] = df['process_name'].astype(str)
+    df['resource_type'] = df['resource_type'].astype(str)
 
-    # Total stored CO2
-    total_co2_kg = df['co2_kg'].sum()
-    st.metric("🌫️ Total Stored CO₂ Emissions", f"{total_co2_kg:.8f} kg")
+    # Global total CO2 across all resources
+    global_total_co2_kg = df['co2_kg'].sum()
+    st.metric("🌫️ Total Stored CO₂ Emissions (All Resources)", f"{global_total_co2_kg:.8f} kg")
 
-    # Bar Plot: Total CO2 by Resource Type
-    carbon_summary_resource = (
-        df.groupby("resource_type")["co2_kg"]
-        .sum()
-        .reset_index()
-        .sort_values(by="co2_kg", ascending=False)
-    )
-    fig_bar_resource = px.bar(
-        carbon_summary_resource,
-        x="resource_type",
-        y="co2_kg",
-        labels={"resource_type": "Resource Type", "co2_kg": "CO₂ (kg)"},
-        title="Stored CO₂ Emissions by Resource Type"
-    )
-    st.plotly_chart(fig_bar_resource, use_container_width=True)
+    # Iterate over resource types
+    resource_types = df['resource_type'].unique()
+    for resource_type in resource_types:
+        st.markdown(f"### 🔎 Resource: {resource_type.upper()}")
 
-    # Bar Plot: Total CO2 by Process Name
-    carbon_summary_process = (
-        df.groupby("process_name")["co2_kg"]
-        .sum()
-        .reset_index()
-        .sort_values(by="co2_kg", ascending=False)
-    )
-    fig_bar_process = px.bar(
-        carbon_summary_process,
-        x="process_name",
-        y="co2_kg",
-        labels={"process_name": "Process", "co2_kg": "CO₂ (kg)"},
-        title="Stored CO₂ Emissions by Process"
-    )
-    st.plotly_chart(fig_bar_process, use_container_width=True)
+        # Filter data for the current resource type
+        resource_df = df[df['resource_type'] == resource_type]
 
-    # Line Plot: CO2 Over Time (colored by process_name)
-    fig_line = px.line(
-        df,
-        x="timestamp",
-        y="co2_kg",
-        color="process_name",
-        labels={"timestamp": "Time", "co2_kg": "CO₂ (kg)", "process_name": "Process"},
-        title="Stored CO₂ Emissions Over Time"
-    )
-    fig_line.update_layout(height=500)
-    st.plotly_chart(fig_line, use_container_width=True)
+        if resource_df.empty:
+            st.info(f"No stored CO2 data for {resource_type}.")
+            continue
 
-    # Table: Top 5 Emitters (by CO2 kg)
-    top5 = carbon_summary_process.head(5).copy()
-    st.subheader("🏭 Top 5 Stored CO₂ Emitters")
-    st.table(top5[['process_name', 'co2_kg']])
+        # Total CO2 for this resource
+        total_co2_kg = resource_df['co2_kg'].sum()
+        st.metric(f"🌫️ Total CO₂ Emissions Stored ({resource_type.upper()})", f"{total_co2_kg:.8f} kg")
 
-    # Full Data Table (optional, for reference)
-    st.subheader("Raw Stored Data")
+        # Total CO2 per process
+        carbon_summary = (
+            resource_df.groupby("process_name")[["co2_kg", "energy_kwh"]]
+            .sum()
+            .reset_index()
+            .sort_values(by="co2_kg", ascending=False)
+        )
+
+        # Bar Plot: CO2 by process
+        fig_bar = px.bar(
+            carbon_summary,
+            x="process_name",
+            y="co2_kg",
+            labels={"process_name": "Process", "co2_kg": "CO₂ (kg)"},
+            title=f"{resource_type.upper()} - Stored CO₂ Emissions by Process"
+        )
+        st.plotly_chart(fig_bar, use_container_width=True, key=f"{resource_type}_co2_bar_stored")
+
+        # Line Plot: CO2 over time
+        fig_line = px.line(
+            resource_df,
+            x="timestamp",
+            y="co2_kg",
+            color="process_name",
+            labels={"timestamp": "Time", "co2_kg": "CO₂ (kg)", "process_name": "Process"},
+            title=f"{resource_type.upper()} - Stored CO₂ Over Time"
+        )
+        fig_line.update_layout(height=500)
+        st.plotly_chart(fig_line, use_container_width=True, key=f"{resource_type}_co2_line_stored")
+
+        # Table: Top 5 emitters
+        top5 = carbon_summary.head(5).copy()
+        st.subheader(f"🏭 Top 5 Stored CO₂ Emitters ({resource_type.upper()})")
+        st.table(top5[['process_name', 'co2_kg', 'energy_kwh']])
+
+        st.markdown("---")
+
+    # Optional: Full data table for reference
+    st.subheader("Raw Stored CO2 Data")
     st.dataframe(df[['process_name', 'resource_type', 'energy_kwh', 'carbon_emission_gco2', 'co2_kg', 'timestamp']])
 
 with tab4:
