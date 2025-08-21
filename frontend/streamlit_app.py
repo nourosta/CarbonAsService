@@ -1128,7 +1128,7 @@ with tab3:
     df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
     df['energy_kwh'] = pd.to_numeric(df['energy_kwh'], errors='coerce')
     df['carbon_emission_gco2'] = pd.to_numeric(df['carbon_emission_gco2'], errors='coerce')
-    #df['co2_kg'] = df['carbon_emission_gco2'] / 1000  # Convert g to kg for plotting
+    df['co2_kg'] = df['carbon_emission_gco2'] #/ 1000  # Convert g to kg for plotting
     df.dropna(subset=['timestamp', 'co2_kg', 'resource_type', 'process_name'], inplace=True)
     df['process_name'] = df['process_name'].astype(str)
     df['resource_type'] = df['resource_type'].astype(str)
