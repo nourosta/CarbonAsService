@@ -670,7 +670,7 @@ with tab2 :
             response.raise_for_status()
             carbon_data = response.json()
             carbon_intensity = carbon_data.get("carbonIntensity", 370)  # Fallback value
-            total_energy['co2_emission_g'] = total_energy['metric_value_kwh'] * carbon_intensity
+            total_energy['co2_emission_g'] = total_energy['metric_value_kwh'] * carbon_intensity / 1000 # Convert kWh to KgCO2 
 
             # Store in eco_scope2co2 table
             for _, row in total_energy.iterrows():
