@@ -116,6 +116,7 @@ class Eco_Scope2Co2(Base):
     id = Column(Integer, primary_key=True, index=True)
     pid = Column(Integer, nullable=False)                    # Process ID
     process_name = Column(String, nullable=False)            # Name of the monitored process
+    resource_type = Column(String, nullable=False)  # Added resource_type
     energy_kwh = Column(Float, nullable=False)               # Energy consumption in kWh
     carbon_intensity_gco2_per_kwh = Column(Float, nullable=False)  # Current carbon intensity
     carbon_emission_gco2 = Column(Float, nullable=False)     # Computed CO2 emissions
