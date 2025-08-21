@@ -683,10 +683,9 @@ with tab2 :
                     "carbon_emission_gco2": float(row['co2_emission_g'])
                 }
                 try:
-                    st.write(f"Posting payload: {payload}")  # Debug
+                   
                     post_resp = requests.post(f"{FASTAPI_BASE_URL}/eco-scope2-co2", json=payload)
                     post_resp.raise_for_status()
-                    st.success(f"Stored CO2 data for {row['process_name']} ({resource_type})")
                 except requests.RequestException as e:
                     st.error(f"Failed to store CO2 data for {row['process_name']} ({resource_type}): {e}")
 
