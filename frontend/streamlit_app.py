@@ -678,10 +678,10 @@ with tab2 :
                     "pid": str(row['pid']),
                     "process_name": row['process_name'],
                     "resource_type": resource_type,
-                    "energy_kwh": float(row['metric_value_kwh']),
+                    "energy_kwh": round(float(row['metric_value_kwh']), 8),  # Format to 8 decimal places
                     "carbon_intensity_gco2_per_kwh": float(carbon_intensity),
-                    "carbon_emission_gco2": float(row['co2_emission_g'])
-                }
+                    "carbon_emission_gco2": round(float(row['co2_emission_g']), 8)  # Format to 8 decimal places
+                    }
                 try:
                    
                     post_resp = requests.post(f"{FASTAPI_BASE_URL}/eco-scope2-co2", json=payload)
