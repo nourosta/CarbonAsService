@@ -9,6 +9,7 @@ import concurrent.futures
 from database import SessionLocal, init_db
 from models import EcoflocResult
 
+
 # --- CONFIG --- #
 RESOURCES = os.getenv("ECO_RESOURCES", "cpu,ram,sd,nic,gpu").split(",")
 INTERVAL_MS = int(os.getenv("ECO_INTERVAL_MS", 1000))
