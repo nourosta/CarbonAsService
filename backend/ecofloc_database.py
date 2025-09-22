@@ -14,7 +14,7 @@ from models import EcoflocResult
 RESOURCES = os.getenv("ECO_RESOURCES", "cpu,ram,sd,nic,gpu").split(",")
 INTERVAL_MS = int(os.getenv("ECO_INTERVAL_MS", 1000))
 DURATION_S = int(os.getenv("ECO_DURATION_S", 5))
-MAX_PIDS = int(os.getenv("ECO_MAX_PIDS", 10))
+MAX_PIDS = int(os.getenv("ECO_MAX_PIDS", 30))
 OUTPUT_DIR = os.getenv("ECO_OUTPUT_DIR", "./ecofloc_results")
 
 if not os.path.exists(OUTPUT_DIR):
