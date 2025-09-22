@@ -5,7 +5,7 @@ import time
 from datetime import datetime
 import signal
 import shutil
-
+import concurrent.futures
 from database import SessionLocal, init_db
 from models import EcoflocResult
 
@@ -115,6 +115,33 @@ def monitor_resource_for_pid(args):
     except Exception as e:
         print(f"[ERROR] Unexpected: {e}")
 
+# def main():
+#     if not shutil.which("ecofloc"):
+#         print("[ERROR] ecofloc not found in PATH.")
+#         exit(1)
+
+#     init_db()
+#     print("[INFO] Starting continuous monitoring...")
+
+#     def handle_shutdown(signum, frame):
+#         print("[INFO] Shutting down...")
+#         exit(0)
+#     signal.signal(signal.SIGINT, handle_shutdown)
+
+#     while True:
+#         pids = get_active_pids()
+#         if not pids:
+#             print("[ERROR] No active processes found.")
+#             time.sleep(5)
+#             continue
+
+#         monitored_pids = [(pid, res) for pid in pids for res in RESOURCES]
+#         with multiprocessing.Pool() as pool:
+#             pool.map(monitor_resource_for_pid, monitored_pids)
+#         time.sleep(10)
+
+
+
 def main():
     if not shutil.which("ecofloc"):
         print("[ERROR] ecofloc not found in PATH.")
@@ -136,9 +163,16 @@ def main():
             continue
 
         monitored_pids = [(pid, res) for pid in pids for res in RESOURCES]
-        with multiprocessing.Pool() as pool:
-            pool.map(monitor_resource_for_pid, monitored_pids)
+
+        # Use ThreadPoolExecutor for I/O-bound tasks
+        with concurrent.futures.ThreadPoolExecutor(max_workers=multiprocessing.cpu_count()) as executor:
+            executor.map(lambda args: monitor_resource_for_pid(args), monitored_pids)
+
         time.sleep(10)
+
+if __name__ == "__main__":
+    main()
+
 
 if __name__ == "__main__":
     main()
